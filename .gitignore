@@ -1,4 +1,8 @@
+# Personal stuff
 notes.txt
+
+# Leonhard specific stuff
+lsf.*
 
 # User-specific stuff
 .idea/**/workspace.xml
