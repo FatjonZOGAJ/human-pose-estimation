@@ -190,4 +190,5 @@ def main():
     torch.save(model.module.state_dict(), final_model_state_file)
 
 if __name__ == '__main__':
+    os.chdir('..')
     main()
