@@ -102,5 +102,4 @@ def main():
     acc = evaluate(0, preds_in_patch_with_score, valid_loader, final_output_dir, config.DEBUG.DEBUG, writer_dict)
 
 if __name__ == '__main__':
-    os.chdir('..')
     main()

@@ -37,4 +37,4 @@ TRAIN:
 TEST:
   BATCH_SIZE: 32
 DEBUG:
-  DEBUG: false # set this to true to visualize results in tensorboard
+  DEBUG: TRUE # set this to true to visualize results in tensorboard

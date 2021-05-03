@@ -1,6 +1,6 @@
 opencv-python==4.5.1.48
 torch==1.7.1
-torch-vision
+torch-vision==0.1.6.dev0
 pyyaml==5.4.1
 easydict==1.9
 scikit-image==0.18.1
@@ -8,4 +8,4 @@ matplotlib==3.4.1
 numpy==1.19.2
 scipy==1.6.2
 tensorboardX==2.2
-h5py
+h5py==3.2.1
