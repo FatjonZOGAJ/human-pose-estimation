@@ -16,6 +16,7 @@ MODEL:
   PRETRAINED: 'lib/models/pretrained_data/alexnet.pth'
   RESUME: 'checkpoint.pth.tar'
   NUM_JOINTS: 17
+  NUM_DEPTH: 32
 LOSS:
   FN: 'L1JointRegressionLoss'
 TRAIN:

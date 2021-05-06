@@ -20,6 +20,7 @@ config.MODEL.INIT_WEIGHTS = True
 config.MODEL.PRETRAINED = ''
 config.MODEL.RESUME = ''
 config.MODEL.NUM_JOINTS = 17
+config.MODEL.NUM_DEPTH = 32
 config.MODEL.IMAGE_SIZE = [256, 256]  # width * height, ex: 192 * 256
 config.MODEL.EXTRA = {}
 
