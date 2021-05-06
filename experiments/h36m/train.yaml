@@ -12,8 +12,8 @@ DATASET:
   NUM_CAMS: 4
 MODEL:
   NAME: pose3d_alexnet_reg
-  INIT_WEIGHTS: false # set this to true, and PRETRAINED to your model file to use ImageNet pre-trained models
-  PRETRAINED: ''
+  INIT_WEIGHTS: True # set this to true, and PRETRAINED to your model file to use ImageNet pre-trained models
+  PRETRAINED: 'lib/models/pretrained_data/alexnet.pth'
   RESUME: 'checkpoint.pth.tar'
   NUM_JOINTS: 17
 LOSS:
