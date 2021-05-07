@@ -127,12 +127,14 @@ def main():
     ds = eval('dataset.'+config.DATASET.DATASET)
 
     # Data loading code
+    logger.info('=> loading the train dataset')
     train_dataset = ds(
         cfg=config,
         root=config.DATASET.ROOT,
         image_set=config.DATASET.TRAIN_SET,
         is_train=True
     )
+    logger.info('=> loading the valid dataset')
     valid_dataset = ds(
         cfg=config,
         root=config.DATASET.ROOT,

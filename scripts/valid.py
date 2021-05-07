@@ -83,6 +83,7 @@ def main():
     ds = eval('dataset.' + config.DATASET.DATASET)
 
     # Data loading code
+    logger.info('=> loading the valid/test dataset')
     valid_dataset = ds(
         cfg=config,
         root=config.DATASET.ROOT,
