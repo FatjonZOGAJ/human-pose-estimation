@@ -12,9 +12,9 @@ DATASET:
   NUM_CAMS: 4
 MODEL:
   NAME: pose3d_alexnet_reg
-  INIT_WEIGHTS: True # set this to true, and PRETRAINED to your model file to use ImageNet pre-trained models
+  INIT_WEIGHTS: False # set this to true, and PRETRAINED to your model file to use ImageNet pre-trained models
   PRETRAINED: 'lib/models/pretrained_data/alexnet.pth'
-  RESUME: 'checkpoint.pth.tar'
+  RESUME: '' # 'checkpoint.pth.tar'
   NUM_JOINTS: 17
 LOSS:
   FN: 'L1JointRegressionLoss'
@@ -38,3 +38,4 @@ TEST:
   BATCH_SIZE: 32
 DEBUG:
   DEBUG: TRUE # set this to true to visualize results in tensorboard
+CPU: True

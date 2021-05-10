@@ -79,6 +79,8 @@ config.TEST.BATCH_SIZE = 32
 config.DEBUG = edict()
 config.DEBUG.DEBUG = False
 
+config.CPU = False
+
 def _update_dict(k, v):
 	if k == 'MODEL':
             if 'IMAGE_SIZE' in v:

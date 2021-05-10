@@ -95,11 +95,15 @@ def main():
     }
 
     gpus = [int(i) for i in config.GPUS.split(',')]
-    model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
+    if not config.CPU:
+        model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
 
     # define loss function (criterion) and optimizer
     loss_fn = eval('loss.'+config.LOSS.FN)
-    criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM).cuda()
+    if not config.CPU:
+        criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM).cuda()
+    else:
+        criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM)
 
     optimizer = get_optimizer(config, model)
 
