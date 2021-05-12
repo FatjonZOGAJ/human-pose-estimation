@@ -25,7 +25,11 @@ import lib.models as models
 
 import numpy as np
 # You can uncomment this line for reproducibility
-# np.random.seed(10)
+np.random.seed(10)
+
+# enable IDE debugging: set working directory to project root folder
+import sys
+#sys.path.append('../')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train keypoints network')
@@ -37,6 +41,7 @@ def parse_args():
 
     args, rest = parser.parse_known_args()
     # update config
+    # takes default values from config.py and sets them based on the cfg.yaml
     update_config(args.cfg)
 
     # training
@@ -51,8 +56,11 @@ def parse_args():
                         help='num of dataloader workers',
                         type=int,
                         default=8)
-
+    parser.add_argument('--model_init_weights',
+                        help='load pre trained',
+                        type=int)
     args = parser.parse_args()
+    args.model_init_weights = bool(args.model_init_weights)
 
     return args
 
@@ -62,13 +70,16 @@ def reset_config(config, args):
         config.GPUS = args.gpus
     if args.workers:
         config.WORKERS = args.workers
+    if not args.model_init_weights is None:
+        config.MODEL.INIT_WEIGHTS = args.model_init_weights
+
 
 
 def main():
     best_perf = 0.0
 
     args = parse_args()
-    # reset_config(config, args)
+    reset_config(config, args)
 
     logger, final_output_dir = create_logger(
         config, args.cfg, 'train')
@@ -140,6 +151,11 @@ def main():
         is_train=False
     )
 
+    # TODO:All pre-trained models expect input images normalized in the same way, i.e. mini-batches of 3-channel RGB images of shape (3 x H x W), where H and W are expected to be at least 224. The images have to be loaded in to a range of [0, 1] and then normalized using mean = [0.485, 0.456, 0.406] and std = [0.229, 0.224, 0.225]. You can use the following transform to normalize:
+    #
+    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+    #                                  std=[0.229, 0.224, 0.225])
+    # https://github.com/pytorch/examples/blob/42e5b996718797e45c46a25c55b031e6768f8440/imagenet/main.py#L89-L101
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=config.TRAIN.BATCH_SIZE*len(gpus),
