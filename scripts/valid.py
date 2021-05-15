@@ -18,6 +18,8 @@ from lib.utils.utils import create_logger
 
 import lib.dataset as dataset
 import lib.models as models
+from scripts.train import check_train_mode
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train keypoints network')
@@ -59,7 +61,7 @@ def main():
     args = parse_args()
     reset_config(config, args)
 
-    logger, final_output_dir = create_logger(
+    logger, final_output_dir, time_str = create_logger(
         config, args.cfg, 'valid')
 
     logger.info(pprint.pformat(args))
@@ -71,6 +73,8 @@ def main():
         'writer': SummaryWriter(log_dir=tb_log_dir),
         'valid_global_steps': 0,
     }
+
+    check_train_mode(config, logger)
 
     model = models.pose3d_alexnet_reg.get_pose_net(config, is_train=False)
 
@@ -108,8 +112,8 @@ def main():
     )
 
     # evaluate on validation set
-    preds_in_patch_with_score = validate(valid_loader, model)
-    acc = evaluate(0, preds_in_patch_with_score, valid_loader, final_output_dir, config.DEBUG.DEBUG, writer_dict)
+    preds_in_patch_with_score = validate(valid_loader, model, config)
+    acc = evaluate(0, preds_in_patch_with_score, valid_loader, final_output_dir, config, config.DEBUG.DEBUG, writer_dict)
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,17 @@
+GPUS: '0'
+OUTPUT_DIR: 'output'
+LOG_DIR: 'log'
+WORKERS: 0
+PRINT_FREQ: 100
+EXP_NAME: 'demo'
+DATASET:
+  DATASET: h36m
+  ROOT: 'data/h36m/'
+  TEST_SET: test
+MODEL:
+  NAME: pose3d_resnext_reg
+  NUM_JOINTS: 17
+TEST:
+  BATCH_SIZE: 32
+DEBUG:
+  DEBUG: false # set this to true to visualize results in tensorboard

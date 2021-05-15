@@ -9,6 +9,8 @@ from lib.utils.img_utils import trans_coords_from_patch_to_org_3d
 from lib.core.loss import get_result_func
 from lib.utils.utils import AverageMeter
 
+DEBUG_MODE_MAX_ITER = 2
+
 logger = logging.getLogger(__name__)
 
 def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict):
@@ -51,7 +53,8 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % config.PRINT_FREQ == 0 or i == len(train_loader) - 1:
+        if i % config.PRINT_FREQ == 0 or i == len(train_loader) - 1\
+                or config.TRAIN.DEBUG_MODE:
             msg = 'Epoch: [{0}][{1}/{2}]\t' \
                   'Time {batch_time.val:.3f}s ({batch_time.avg:.3f}s)\t' \
                   'Speed {speed:.1f} samples/s\t' \
@@ -67,8 +70,11 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             writer.add_scalar('train_loss', losses.val, global_steps)
             writer_dict['train_global_steps'] = global_steps + 1
 
+        if config.TRAIN.DEBUG_MODE and i == DEBUG_MODE_MAX_ITER:
+            break
 
-def validate(val_loader, model):
+
+def validate(val_loader, model, config):
     print("Validation stage")
     result_func = get_result_func()
 
@@ -90,6 +96,9 @@ def validate(val_loader, model):
 
             preds_in_patch_with_score.append(result_func(256, 256, preds))
             del preds
+            if config.TRAIN.DEBUG_MODE and i == DEBUG_MODE_MAX_ITER:
+                break
+
 
         _p = np.asarray(preds_in_patch_with_score)
 
@@ -109,12 +118,15 @@ def validate(val_loader, model):
         else:
             _p = _p.reshape((_p.shape[0] * _p.shape[1], _p.shape[2], _p.shape[3]))
 
-        preds_in_patch_with_score = _p[0: len(val_loader.dataset)]
+        preds_in_patch_with_score = _p[0:
+                                       len(val_loader.dataset) if not config.TRAIN.DEBUG_MODE
+                                    else DEBUG_MODE_MAX_ITER
+                                    ]
 
         return preds_in_patch_with_score
 
 
-def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, debug=False, writer_dict=None):
+def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, config, debug=False, writer_dict=None):
     print("Evaluation stage")
     # From patch to original image coordinate system
     imdb_list = val_loader.dataset.db
@@ -122,7 +134,10 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, de
 
     preds_in_img_with_score = []
 
-    for n_sample in range(len(val_loader.dataset)):
+    for n_sample in range(
+            len(val_loader.dataset) if not config.TRAIN.DEBUG_MODE
+            else DEBUG_MODE_MAX_ITER
+    ):
         preds_in_img_with_score.append(
             trans_coords_from_patch_to_org_3d(preds_in_patch_with_score[n_sample], imdb_list[n_sample]['center_x'],
                                               imdb_list[n_sample]['center_y'], imdb_list[n_sample]['width'],

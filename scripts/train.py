@@ -62,12 +62,12 @@ def parse_args():
     parser.add_argument('--model_name',
                         help='file to load',
                         type=str)
-    parser.add_argument('--train_test_mode',
+    parser.add_argument('--train_debug_mode',
                         help='train only few iterations to see if it works',
                         type=int)
     args = parser.parse_args()
     args.model_init_weights = bool(args.model_init_weights)
-    args.train_test_mode = bool(args.train_test_mode)
+    args.train_test_mode = bool(args.train_debug_mode)
 
     return args
 
@@ -81,9 +81,16 @@ def reset_config(config, args):
         config.MODEL.INIT_WEIGHTS = args.model_init_weights
     if args.model_name:
         config.MODEL.NAME = args.model_name
-    if not args.train_test_mode is None:
-        config.TRAIN.TEST_MODE = args.train_test_mode
+    if not args.train_debug_mode is None:
+        config.TRAIN.DEBUG_MODE = args.train_debug_mode
 
+
+def check_train_mode(config, logger):
+    if config.TRAIN.DEBUG_MODE:
+        logger.info(f'ATTENTION: Training only for 2 epochs with batch size 2')
+        config.TRAIN.BATCH_SIZE = 2
+        config.TRAIN.END_EPOCH = 2
+        config.TEST.BATCH_SIZE = 2
 
 
 def main():
@@ -92,11 +99,13 @@ def main():
     args = parse_args()
     reset_config(config, args)
 
-    logger, final_output_dir = create_logger(
+    logger, final_output_dir, time_str = create_logger(
         config, args.cfg, 'train')
 
     logger.info(pprint.pformat(args))
     logger.info(pprint.pformat(config))
+
+    check_train_mode(config, logger)
 
     model = models.nets[config.MODEL.NAME].get_pose_net(config, is_train=True)
 
@@ -190,8 +199,8 @@ def main():
         lr_scheduler.step()
 
         # evaluate on validation set
-        preds_in_patch_with_score = validate(valid_loader, model)
-        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.DEBUG.DEBUG, writer_dict)
+        preds_in_patch_with_score = validate(valid_loader, model, config)
+        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config, config.DEBUG.DEBUG, writer_dict)
 
         perf_indicator = 500. - acc if config.DATASET.DATASET == 'h36m' or 'mpii_3dhp' or 'jta' else acc
 

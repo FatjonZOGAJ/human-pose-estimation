@@ -30,7 +30,7 @@ class PoseResNextReg(nn.Module):
     def init_weights(self, pretrained='', download_pretrained=True, arch='resnext101_32x8d'):
         if download_pretrained:
             state_dict = load_state_dict_from_url(model_urls[arch],
-                                                  model_dir='pretrained_data',  # /checkpoints',
+                                                  model_dir='lib/models/pretrained_data',  # /checkpoints',
                                                   file_name='resnext_original.pth',
                                                   progress=True)
         elif os.path.isfile(pretrained):

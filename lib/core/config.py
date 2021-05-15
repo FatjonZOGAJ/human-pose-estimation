@@ -50,7 +50,7 @@ config.DATASET.Z_WEIGHT = 1. # weighting parameter for z axis
 # train
 config.TRAIN = edict()
 
-config.TRAIN.TEST_MODE = False
+config.TRAIN.DEBUG_MODE = False
 
 config.TRAIN.LR_FACTOR = 0.1
 config.TRAIN.LR_STEP = [90, 110]
