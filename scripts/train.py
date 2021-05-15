@@ -62,20 +62,20 @@ def parse_args():
 
     parser.add_argument('--model_init_weights',
                         help='load pre trained',
-                        type=int)
+                        type=int,
+                        default=-1) # -1 so that we do not overwrite config if we do not pass anything
     parser.add_argument('--model_name',
                         help='file to load. Note: Use cfg instead',
                         type=str)
     parser.add_argument('--train_debug_mode',
                         help='train only few iterations to see if it works',
-                        type=int)
+                        type=int,
+                        default=-1)
     parser.add_argument('--model_time_str',
                         help='file to load. Note: Use cfg instead',
                         type=str)
 
     args = parser.parse_args()
-    args.model_init_weights = bool(args.model_init_weights)
-    args.train_test_mode = bool(args.train_debug_mode)
 
     return args
 
@@ -85,11 +85,11 @@ def reset_config(config, args, valid=False):
         config.GPUS = args.gpus
     if args.workers:
         config.WORKERS = args.workers
-    if not args.model_init_weights is None:
+    if args.model_init_weights != -1:
         config.MODEL.INIT_WEIGHTS = args.model_init_weights
     if args.model_name:
         config.MODEL.NAME = args.model_name
-    if not args.train_debug_mode is None:
+    if args.train_debug_mode != -1:
         config.TRAIN.DEBUG_MODE = args.train_debug_mode
     if args.model_time_str:
         config.MODEL.TIME_STR = args.model_time_str
