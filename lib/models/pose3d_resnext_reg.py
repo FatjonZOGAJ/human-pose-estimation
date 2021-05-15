@@ -18,17 +18,19 @@ class PoseResNextReg(nn.Module):
 
     def __init__(self, cfg, **kwargs):
         super(PoseResNextReg, self).__init__()
-        self.model = models.resnext101_32x8d(pretrained=False,  # load manually down below (optionally own pretrained data)
-                                             num_classes = cfg.MODEL.NUM_JOINTS * 3, # num_classes like in adapted pose3d_alexnet_reg.py
+        self.model = models.resnext101_32x8d(pretrained=False,
+                                             # load manually down below (optionally own pretrained data)
+                                             num_classes=cfg.MODEL.NUM_JOINTS * 3,
+                                             # num_classes like in adapted pose3d_alexnet_reg.py
                                              )
 
-    def __getattr__(self, item):
-        return self.model.__getattr__(item)
+    def forward(self, x):
+        return self.model.forward(x)
 
-    def init_weights(self, pretrained='', download_pretrained = True, arch='resnext101_32x8d'):
+    def init_weights(self, pretrained='', download_pretrained=True, arch='resnext101_32x8d'):
         if download_pretrained:
             state_dict = load_state_dict_from_url(model_urls[arch],
-                                                  model_dir='pretrained_data',#/checkpoints',
+                                                  model_dir='pretrained_data',  # /checkpoints',
                                                   file_name='resnext_original.pth',
                                                   progress=True)
         elif os.path.isfile(pretrained):

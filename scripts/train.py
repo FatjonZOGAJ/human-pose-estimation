@@ -59,8 +59,15 @@ def parse_args():
     parser.add_argument('--model_init_weights',
                         help='load pre trained',
                         type=int)
+    parser.add_argument('--model_name',
+                        help='file to load',
+                        type=str)
+    parser.add_argument('--train_test_mode',
+                        help='train only few iterations to see if it works',
+                        type=int)
     args = parser.parse_args()
     args.model_init_weights = bool(args.model_init_weights)
+    args.train_test_mode = bool(args.train_test_mode)
 
     return args
 
@@ -72,6 +79,10 @@ def reset_config(config, args):
         config.WORKERS = args.workers
     if not args.model_init_weights is None:
         config.MODEL.INIT_WEIGHTS = args.model_init_weights
+    if args.model_name:
+        config.MODEL.NAME = args.model_name
+    if not args.train_test_mode is None:
+        config.TRAIN.TEST_MODE = args.train_test_mode
 
 
 
@@ -87,7 +98,7 @@ def main():
     logger.info(pprint.pformat(args))
     logger.info(pprint.pformat(config))
 
-    model = models.pose3d_alexnet_reg.get_pose_net(config, is_train=True)
+    model = models.nets[config.MODEL.NAME].get_pose_net(config, is_train=True)
 
     # copy model file
     this_dir = os.path.dirname(__file__)
@@ -170,7 +181,8 @@ def main():
         num_workers=config.WORKERS,
         pin_memory=True
     )
-
+    # TODO: check if necessary
+    torch.cuda.empty_cache()
     best_model = False
     for epoch in range(config.TRAIN.BEGIN_EPOCH, config.TRAIN.END_EPOCH):
         # train for one epoch

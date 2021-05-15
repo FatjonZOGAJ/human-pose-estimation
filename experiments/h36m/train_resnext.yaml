@@ -20,6 +20,7 @@ MODEL:
 LOSS:
   FN: 'L1JointRegressionLoss'
 TRAIN:
+  TEST_MODE: False
   BATCH_SIZE: 32
   SHUFFLE: true
   BEGIN_EPOCH: 0
