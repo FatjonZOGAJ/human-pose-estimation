@@ -9,7 +9,7 @@ import _init_paths
 
 import torch
 # You can uncomment this line for reproducibility
-# torch.manual_seed(3)
+torch.manual_seed(3)
 import torch.optim
 import torch.utils.data
 from tensorboardX import SummaryWriter
