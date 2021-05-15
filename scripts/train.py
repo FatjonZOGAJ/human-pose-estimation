@@ -32,8 +32,7 @@ import numpy as np
 np.random.seed(10)
 
 # enable IDE debugging: set working directory to project root folder
-import sys
-#sys.path.append('../')
+import sys # sys.path.append('../')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train keypoints network')
@@ -81,7 +80,7 @@ def parse_args():
     return args
 
 
-def reset_config(config, args, logger, valid=False):
+def reset_config(config, args, valid=False):
     if args.gpus:
         config.GPUS = args.gpus
     if args.workers:
@@ -93,9 +92,8 @@ def reset_config(config, args, logger, valid=False):
     if not args.train_debug_mode is None:
         config.TRAIN.DEBUG_MODE = args.train_debug_mode
     if args.model_time_str:
-        config.MODEL.TIMESTR = args.model_time_str
+        config.MODEL.TIME_STR = args.model_time_str
     elif valid and not config.MODEL.TIME_STR:
-        logger.error('ERROR: No MODEL.TIMESTR provided through config or arguments')
         raise ValueError('No MODEL.TIMESTR provided')
 
 
@@ -108,13 +106,12 @@ def check_train_mode(config, logger):
 
 
 def main():
-    best_perf = 0.0
+    best_perf = -10000 # store first created model (primarily for DEBUG_MODE when we only train for 1 iteration)
 
     args = parse_args()
-    logger, final_output_dir, time_str = create_logger(
-        config, args.cfg, 'train')
-    reset_config(config, args, logger)
+    reset_config(config, args)
 
+    logger, final_output_dir, time_str = create_logger(config, args.cfg, 'train')
 
     logger.info(pprint.pformat(args))
     logger.info(pprint.pformat(config))
@@ -168,7 +165,7 @@ def main():
                 model.load_state_dict(checkpoint)
                 logger.info('=> resume from pretrained model {}'.format(config.MODEL.RESUME))
         else:
-            logger.warn(f'WARN: MODEL.RESUME set, but no file found {config.MODEL.RESUME}')
+            logger.warning(f'WARN: MODEL.RESUME set, but no file found {config.MODEL.RESUME}')
 
     # Choose the dataset, either Human3.6M or mpii
     ds = eval('dataset.' + config.DATASET.DATASET)
@@ -214,8 +211,8 @@ def main():
         lr_scheduler.step()
 
         # evaluate on validation set
-        preds_in_patch_with_score = validate(valid_loader, model, config)
-        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config, config.DEBUG.DEBUG,
+        preds_in_patch_with_score = validate(valid_loader, model, config.TRAIN.DEBUG_MODE)
+        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.TRAIN.DEBUG_MODE, config.DEBUG.DEBUG,
                        writer_dict)
 
         perf_indicator = 500. - acc if config.DATASET.DATASET == 'h36m' or 'mpii_3dhp' or 'jta' else acc
