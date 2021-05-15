@@ -11,7 +11,7 @@ DATASET:
   TRAIN_SET: train
   NUM_CAMS: 4
   OCCLUSION: True
-  VOC: 'data/VOC2012' # If you want to use synthetic occlusion, please enter the VOC path
+  VOC: 'VOC2012' # If you want to use synthetic occlusion, please enter the VOC path
 MODEL:
   NAME: pose3d_alexnet_reg
   INIT_WEIGHTS: False # set this to true, and PRETRAINED to your model file to use ImageNet pre-trained models
@@ -39,5 +39,5 @@ TRAIN:
 TEST:
   BATCH_SIZE: 32
 DEBUG:
-  DEBUG: TRUE # set this to true to visualize results in tensorboard
+  DEBUG: False # set this to true to visualize results in tensorboard
 CPU: False
