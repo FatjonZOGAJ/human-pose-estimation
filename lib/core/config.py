@@ -111,7 +111,7 @@ def update_config(config_file):
                 raise ValueError("{} not exist in config.py".format(k))
 
 
-def gen_config(config_file):
+def gen_config(config_file, config):
     cfg = dict(config)
     for k, v in cfg.items():
         if isinstance(v, edict):
@@ -144,4 +144,4 @@ def get_model_name(cfg):
 
 if __name__ == '__main__':
     import sys
-    gen_config(sys.argv[1])
+    gen_config(sys.argv[1], config)

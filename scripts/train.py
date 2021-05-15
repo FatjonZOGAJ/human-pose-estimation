@@ -14,7 +14,7 @@ import torch.optim
 import torch.utils.data
 from tensorboardX import SummaryWriter
 
-from lib.core.config import config
+from lib.core.config import config, gen_config
 from lib.core.config import update_config
 from lib.core.config import get_model_name
 from lib.core.function import train, validate, evaluate
@@ -86,11 +86,11 @@ def reset_config(config, args, valid=False):
     if args.workers:
         config.WORKERS = args.workers
     if args.model_init_weights != -1:
-        config.MODEL.INIT_WEIGHTS = args.model_init_weights
+        config.MODEL.INIT_WEIGHTS = bool(args.model_init_weights)
     if args.model_name:
         config.MODEL.NAME = args.model_name
     if args.train_debug_mode != -1:
-        config.TRAIN.DEBUG_MODE = args.train_debug_mode
+        config.TRAIN.DEBUG_MODE = bool(args.train_debug_mode)
     if args.model_time_str:
         config.MODEL.TIME_STR = args.model_time_str
     elif valid and not config.MODEL.TIME_STR:
@@ -124,8 +124,7 @@ def main():
     this_dir = os.path.dirname(__file__)
 
     # overwrite config with the provided arguments for dumping
-    with open(os.path.join(final_output_dir, args.cfg.split('/')[-1]), 'w') as f:
-        yaml.dump(dict(config), f, default_flow_style=False)
+    gen_config(os.path.join(final_output_dir, args.cfg.split('/')[-1]), config)
     # shutil.copy2(args.cfg, final_output_dir) # copy cfg file without the args parameters
 
     tb_log_dir = os.path.join(final_output_dir, 'logs')
