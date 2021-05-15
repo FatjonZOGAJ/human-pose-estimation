@@ -22,7 +22,7 @@ LOSS:
   FN: 'L1JointRegressionLoss'
 TRAIN:
   DEBUG_MODE: False
-  BATCH_SIZE: 32
+  BATCH_SIZE: 16
   SHUFFLE: true
   BEGIN_EPOCH: 0
   END_EPOCH: 140
@@ -38,6 +38,6 @@ TRAIN:
   MOMENTUM: 0.9
   NESTEROV: false
 TEST:
-  BATCH_SIZE: 32
+  BATCH_SIZE: 16
 DEBUG:
   DEBUG: TRUE # set this to true to visualize results in tensorboard

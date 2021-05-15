@@ -12,6 +12,6 @@ MODEL:
   NAME: pose3d_resnext_reg
   NUM_JOINTS: 17
 TEST:
-  BATCH_SIZE: 32
+  BATCH_SIZE: 16
 DEBUG:
   DEBUG: false # set this to true to visualize results in tensorboard
