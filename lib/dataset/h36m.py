@@ -81,6 +81,7 @@ class H36M(JointDataset):
                                                                  self.patch_width, self.patch_height,
                                                                  self.rect_3d_width, self.rect_3d_height,
                                                                  self.mean, self.std, self.label_func,
+                                                                 occluder=self.occluders,
                                                                  joints=joints,
                                                                  joints_vis=joints_vis,
                                                                  DEBUG=self.cfg.DEBUG.DEBUG)

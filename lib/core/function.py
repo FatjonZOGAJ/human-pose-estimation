@@ -81,10 +81,10 @@ def validate(val_loader, model):
         for i, data in enumerate(val_loader):
             batch_data, batch_label, batch_label_weight, meta = data
 
-            if not config.CPU:
-                batch_data = batch_data.cuda()
-                batch_label = batch_label.cuda()
-                batch_label_weight = batch_label_weight.cuda()
+            # if not config.CPU:
+            batch_data = batch_data.cuda()
+            batch_label = batch_label.cuda()
+            batch_label_weight = batch_label_weight.cuda()
 
             # compute output
             preds = model(batch_data)
