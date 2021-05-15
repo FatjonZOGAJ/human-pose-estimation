@@ -2,6 +2,9 @@ import argparse
 import os
 import pprint
 import shutil
+
+import yaml
+
 import _init_paths
 
 import torch
@@ -24,6 +27,7 @@ import lib.dataset as dataset
 import lib.models as models
 
 import numpy as np
+
 # You can uncomment this line for reproducibility
 np.random.seed(10)
 
@@ -56,15 +60,20 @@ def parse_args():
                         help='num of dataloader workers',
                         type=int,
                         default=8)
+
     parser.add_argument('--model_init_weights',
                         help='load pre trained',
                         type=int)
     parser.add_argument('--model_name',
-                        help='file to load',
+                        help='file to load. Note: Use cfg instead',
                         type=str)
     parser.add_argument('--train_debug_mode',
                         help='train only few iterations to see if it works',
                         type=int)
+    parser.add_argument('--model_time_str',
+                        help='file to load. Note: Use cfg instead',
+                        type=str)
+
     args = parser.parse_args()
     args.model_init_weights = bool(args.model_init_weights)
     args.train_test_mode = bool(args.train_debug_mode)
@@ -72,7 +81,7 @@ def parse_args():
     return args
 
 
-def reset_config(config, args):
+def reset_config(config, args, logger, valid=False):
     if args.gpus:
         config.GPUS = args.gpus
     if args.workers:
@@ -83,11 +92,16 @@ def reset_config(config, args):
         config.MODEL.NAME = args.model_name
     if not args.train_debug_mode is None:
         config.TRAIN.DEBUG_MODE = args.train_debug_mode
+    if args.model_time_str:
+        config.MODEL.TIMESTR = args.model_time_str
+    elif valid and not config.MODEL.TIME_STR:
+        logger.error('ERROR: No MODEL.TIMESTR provided through config or arguments')
+        raise ValueError('No MODEL.TIMESTR provided')
 
 
 def check_train_mode(config, logger):
     if config.TRAIN.DEBUG_MODE:
-        logger.info(f'ATTENTION: Training only for 2 epochs with batch size 2')
+        logger.info(f'WARN: Training only for 2 epochs with batch size 2')
         config.TRAIN.BATCH_SIZE = 2
         config.TRAIN.END_EPOCH = 2
         config.TEST.BATCH_SIZE = 2
@@ -97,10 +111,10 @@ def main():
     best_perf = 0.0
 
     args = parse_args()
-    reset_config(config, args)
-
     logger, final_output_dir, time_str = create_logger(
         config, args.cfg, 'train')
+    reset_config(config, args, logger)
+
 
     logger.info(pprint.pformat(args))
     logger.info(pprint.pformat(config))
@@ -112,10 +126,10 @@ def main():
     # copy model file
     this_dir = os.path.dirname(__file__)
 
-    shutil.copy2(
-        args.cfg,
-        final_output_dir
-    )
+    # overwrite config with the provided arguments for dumping
+    with open(os.path.join(final_output_dir, args.cfg.split('/')[-1]), 'w') as f:
+        yaml.dump(dict(config), f, default_flow_style=False)
+    # shutil.copy2(args.cfg, final_output_dir) # copy cfg file without the args parameters
 
     tb_log_dir = os.path.join(final_output_dir, 'logs')
 
@@ -129,7 +143,7 @@ def main():
     model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
 
     # define loss function (criterion) and optimizer
-    loss_fn = eval('loss.'+config.LOSS.FN)
+    loss_fn = eval('loss.' + config.LOSS.FN)
     criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM).cuda()
 
     optimizer = get_optimizer(config, model)
@@ -153,9 +167,11 @@ def main():
             else:
                 model.load_state_dict(checkpoint)
                 logger.info('=> resume from pretrained model {}'.format(config.MODEL.RESUME))
+        else:
+            logger.warn(f'WARN: MODEL.RESUME set, but no file found {config.MODEL.RESUME}')
 
     # Choose the dataset, either Human3.6M or mpii
-    ds = eval('dataset.'+config.DATASET.DATASET)
+    ds = eval('dataset.' + config.DATASET.DATASET)
 
     # Data loading code
     train_dataset = ds(
@@ -178,20 +194,19 @@ def main():
     # https://github.com/pytorch/examples/blob/42e5b996718797e45c46a25c55b031e6768f8440/imagenet/main.py#L89-L101
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=config.TRAIN.BATCH_SIZE*len(gpus),
+        batch_size=config.TRAIN.BATCH_SIZE * len(gpus),
         shuffle=config.TRAIN.SHUFFLE,
         num_workers=config.WORKERS,
         pin_memory=True
     )
     valid_loader = torch.utils.data.DataLoader(
         valid_dataset,
-        batch_size=config.TEST.BATCH_SIZE*len(gpus),
+        batch_size=config.TEST.BATCH_SIZE * len(gpus),
         shuffle=False,
         num_workers=config.WORKERS,
         pin_memory=True
     )
-    # TODO: check if necessary
-    torch.cuda.empty_cache()
+    torch.cuda.empty_cache()  # TODO: check if necessary
     best_model = False
     for epoch in range(config.TRAIN.BEGIN_EPOCH, config.TRAIN.END_EPOCH):
         # train for one epoch
@@ -200,7 +215,8 @@ def main():
 
         # evaluate on validation set
         preds_in_patch_with_score = validate(valid_loader, model, config)
-        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config, config.DEBUG.DEBUG, writer_dict)
+        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config, config.DEBUG.DEBUG,
+                       writer_dict)
 
         perf_indicator = 500. - acc if config.DATASET.DATASET == 'h36m' or 'mpii_3dhp' or 'jta' else acc
 
@@ -225,6 +241,7 @@ def main():
     logger.info('saving final model state to {}'.format(
         final_model_state_file))
     torch.save(model.module.state_dict(), final_model_state_file)
+
 
 if __name__ == '__main__':
     main()

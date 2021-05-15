@@ -10,7 +10,7 @@ import torch.optim as optim
 from lib.core.config import get_model_name
 
 
-def create_logger(cfg, cfg_name, phase='train'):
+def create_logger(cfg, cfg_name, phase='train', time_str=None):
     root_output_dir = Path(cfg.OUTPUT_DIR)
     # set up logger
     if not root_output_dir.exists():
@@ -23,7 +23,8 @@ def create_logger(cfg, cfg_name, phase='train'):
     model, _ = get_model_name(cfg)
     cfg_name = os.path.basename(cfg_name).split('.')[0]
 
-    time_str = time.strftime('%Y-%m-%d-%H-%M')
+    if time_str is None:
+        time_str = time.strftime('%Y-%m-%d-%H-%M')
     final_output_dir = root_output_dir / dataset / model / cfg.EXP_NAME / time_str  # cfg_name
 
     print('=> creating {}'.format(final_output_dir))

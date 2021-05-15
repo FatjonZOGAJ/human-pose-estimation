@@ -14,7 +14,8 @@ MODEL:
   NAME: pose3d_resnext_reg
   INIT_WEIGHTS: True # set this to true, and PRETRAINED to your model file to use ImageNet pre-trained models
   DOWNLOAD_PRETRAINED: TRUE # true: downloads pretrained model and saves it in pretrained_data/checkpoints; false: use own own manually
-  PRETRAINED: 'lib/models/pretrained_data/resnext_original.pth'
+  PRETRAINED: 'lib/models/pretrained_data/resnext_original.pth' # TODO: unused, work with TIME_STR instead
+  TIME_STR: '' # uses most recent if not set
   RESUME: 'checkpoint.pth.tar'
   NUM_JOINTS: 17
 LOSS:

@@ -19,6 +19,7 @@ config.MODEL.NAME = 'pose3d_alexnet_reg'
 config.MODEL.INIT_WEIGHTS = True
 config.MODEL.DOWNLOAD_PRETRAINED = True
 config.MODEL.PRETRAINED = ''
+config.MODEL.TIME_STR = ''
 config.MODEL.RESUME = ''
 config.MODEL.NUM_JOINTS = 17
 config.MODEL.IMAGE_SIZE = [256, 256]  # width * height, ex: 192 * 256

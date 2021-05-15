@@ -18,10 +18,12 @@ from lib.utils.utils import create_logger
 
 import lib.dataset as dataset
 import lib.models as models
-from scripts.train import check_train_mode
+from scripts.train import check_train_mode, parse_args, reset_config
 
 
-def parse_args():
+def parse_args_not_implemented():
+    raise NotImplementedError('Use train.py/parse_args instead')
+
     parser = argparse.ArgumentParser(description='Train keypoints network')
     # general
     parser.add_argument('--cfg',
@@ -50,7 +52,9 @@ def parse_args():
     return args
 
 
-def reset_config(config, args):
+def reset_config_not_implemented(config, args):
+    raise NotImplementedError('Use train.py/reset_config instead')
+
     if args.gpus:
         config.GPUS = args.gpus
     if args.workers:
@@ -59,10 +63,10 @@ def reset_config(config, args):
 
 def main():
     args = parse_args()
-    reset_config(config, args)
-
     logger, final_output_dir, time_str = create_logger(
-        config, args.cfg, 'valid')
+        config, args.cfg, 'valid', config.MODEL.TIME_STR)
+    reset_config(config, args, logger)
+
 
     logger.info(pprint.pformat(args))
     logger.info(pprint.pformat(config))
