@@ -1,6 +1,9 @@
 import argparse
 import os
 import pprint
+
+import torchvision
+
 import _init_paths
 
 import torch
@@ -15,8 +18,12 @@ from lib.utils.utils import create_logger
 
 import lib.dataset as dataset
 import lib.models as models
+from scripts.train import check_train_mode, parse_args, reset_config
 
-def parse_args():
+
+def parse_args_not_implemented():
+    raise NotImplementedError('Use train.py/parse_args instead')
+
     parser = argparse.ArgumentParser(description='Train keypoints network')
     # general
     parser.add_argument('--cfg',
@@ -45,7 +52,9 @@ def parse_args():
     return args
 
 
-def reset_config(config, args):
+def reset_config_not_implemented(config, args):
+    raise NotImplementedError('Use train.py/reset_config instead')
+
     if args.gpus:
         config.GPUS = args.gpus
     if args.workers:
@@ -56,8 +65,7 @@ def main():
     args = parse_args()
     reset_config(config, args)
 
-    logger, final_output_dir = create_logger(
-        config, args.cfg, 'valid')
+    logger, final_output_dir, time_str = create_logger(config, args.cfg, 'valid', config.MODEL.TIME_STR)
 
     logger.info(pprint.pformat(args))
     logger.info(pprint.pformat(config))
@@ -69,7 +77,9 @@ def main():
         'valid_global_steps': 0,
     }
 
-    model = models.pose3d_alexnet_reg.get_pose_net(config, is_train=False)
+    check_train_mode(config, logger)
+
+    model = models.nets[config.MODEL.NAME].get_pose_net(config, is_train=False)
 
     gpus = [int(i) for i in config.GPUS.split(',')]
     model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
@@ -83,6 +93,13 @@ def main():
     ds = eval('dataset.' + config.DATASET.DATASET)
 
     # Data loading code
+    # TODO:All pre-trained models expect input images normalized in the same way, i.e. mini-batches of 3-channel RGB images of shape (3 x H x W), where H and W are expected to be at least 224. The images have to be loaded in to a range of [0, 1] and then normalized using mean = [0.485, 0.456, 0.406] and std = [0.229, 0.224, 0.225]. You can use the following transform to normalize:
+    #
+    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+    #                                  std=[0.229, 0.224, 0.225])
+    # https://github.com/pytorch/examples/blob/42e5b996718797e45c46a25c55b031e6768f8440/imagenet/main.py#L89-L101
+    normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                                 std=[0.229, 0.224, 0.225])
     valid_dataset = ds(
         cfg=config,
         root=config.DATASET.ROOT,
@@ -97,9 +114,12 @@ def main():
         pin_memory=True
     )
 
+    DEBUG_MODE_BREAK = False    # for prediction, do not break but predict all test samples
     # evaluate on validation set
-    preds_in_patch_with_score = validate(valid_loader, model)
-    acc = evaluate(0, preds_in_patch_with_score, valid_loader, final_output_dir, config.DEBUG.DEBUG, writer_dict)
+    preds_in_patch_with_score = validate(valid_loader, model, DEBUG_MODE_BREAK)
+    acc = evaluate(0, preds_in_patch_with_score, valid_loader, final_output_dir, DEBUG_MODE_BREAK, config.DEBUG.DEBUG,
+                   writer_dict)
+
 
 if __name__ == '__main__':
     main()

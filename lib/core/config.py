@@ -17,7 +17,9 @@ config.EXP_NAME = 'default'
 config.MODEL = edict()
 config.MODEL.NAME = 'pose3d_alexnet_reg'
 config.MODEL.INIT_WEIGHTS = True
+config.MODEL.DOWNLOAD_PRETRAINED = True
 config.MODEL.PRETRAINED = ''
+config.MODEL.TIME_STR = ''
 config.MODEL.RESUME = ''
 config.MODEL.NUM_JOINTS = 17
 config.MODEL.IMAGE_SIZE = [256, 256]  # width * height, ex: 192 * 256
@@ -51,6 +53,8 @@ config.DATASET.Z_WEIGHT = 1. # weighting parameter for z axis
 
 # train
 config.TRAIN = edict()
+
+config.TRAIN.DEBUG_MODE = False
 
 config.TRAIN.LR_FACTOR = 0.1
 config.TRAIN.LR_STEP = [90, 110]
@@ -112,7 +116,7 @@ def update_config(config_file):
                 raise ValueError("{} not exist in config.py".format(k))
 
 
-def gen_config(config_file):
+def gen_config(config_file, config):
     cfg = dict(config)
     for k, v in cfg.items():
         if isinstance(v, edict):
@@ -134,6 +138,8 @@ def get_model_name(cfg):
                 height=cfg.MODEL.IMAGE_SIZE[1],
                 width=cfg.MODEL.IMAGE_SIZE[0],
                 name=name)
+    elif name == 'pose3d_resnext_reg':
+        full_name = name
     else:
         raise ValueError('Unkown model: {}'.format(cfg.MODEL))
 
@@ -143,4 +149,4 @@ def get_model_name(cfg):
 
 if __name__ == '__main__':
     import sys
-    gen_config(sys.argv[1])
+    gen_config(sys.argv[1], config)
