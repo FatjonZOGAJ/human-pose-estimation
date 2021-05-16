@@ -71,7 +71,7 @@ def parse_args():
                         type=int,
                         default=-1)
     parser.add_argument('--model_time_str',
-                        help='file to load. Note: Use cfg instead',
+                        help='Preload a previously trained model. Currently only works for validation.',
                         type=str)
 
     args = parser.parse_args()
