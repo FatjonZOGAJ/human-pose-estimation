@@ -11,7 +11,7 @@ DATASET:
   TRAIN_SET: train
   NUM_CAMS: 4
   OCCLUSION: True
-  VOC: 'data/VOCdevkit/VOC2012' # If you want to use synthetic occlusion, please enter the VOC path
+  VOC: 'VOC2012' # If you want to use synthetic occlusion, please enter the VOC path
 MODEL:
   NAME: pose3d_resnext_reg
   INIT_WEIGHTS: True # set this to true, and PRETRAINED to your model file to use ImageNet pre-trained models

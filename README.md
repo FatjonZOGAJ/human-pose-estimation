@@ -11,7 +11,8 @@ Downloading the VOC dataset needed for occlusion.
 
 `wget http://pjreddie.com/media/files/VOCtrainval_11-May-2012.tar`
 
-`tar -xf VOCtrainval_11-May-2012.tar -C data/`
+`tar --strip-component=1 -xf VOCtrainval_11-May-2012.tar`
+
 
 Set the DATASET.VOC parameter in the train.yaml to the location of VOC2012.
 To use occlusion set the DATASET.OCCLUSION parameter to True in train.yaml
