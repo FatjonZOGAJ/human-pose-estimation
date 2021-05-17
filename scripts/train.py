@@ -73,6 +73,10 @@ def parse_args():
     parser.add_argument('--model_time_str',
                         help='Preload a previously trained model. Currently only works for validation.',
                         type=str)
+    parser.add_argument('--cpu',
+                        help='run on cpu',
+                        type=int,
+                        default=-1)
 
     args = parser.parse_args()
 
@@ -90,6 +94,8 @@ def reset_config(config, args, valid=False):
         config.MODEL.NAME = args.model_name
     if args.train_debug_mode != -1:
         config.TRAIN.DEBUG_MODE = bool(args.train_debug_mode)
+    if args.cpu != -1:
+        config.CPU = bool(args.cpu)
     if args.model_time_str:
         config.MODEL.TIME_STR = args.model_time_str
     elif valid and not config.MODEL.TIME_STR:

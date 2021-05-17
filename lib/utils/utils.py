@@ -24,7 +24,7 @@ def create_logger(cfg, cfg_name, phase='train', time_str=None):
     cfg_name = os.path.basename(cfg_name).split('.')[0]
 
     if time_str is None:
-        time_str = time.strftime('%Y-%m-%d-%H-%M')
+        time_str = time.strftime('%Y-%m-%d-%H-%M-%S')
     final_output_dir = root_output_dir / dataset / model / cfg.EXP_NAME / time_str  # cfg_name
 
     print('=> creating {}'.format(final_output_dir))
