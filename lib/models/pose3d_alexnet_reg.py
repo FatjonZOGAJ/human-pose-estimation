@@ -40,9 +40,17 @@ class PoseAlexNetReg(nn.Module):
 
     def _make_backbone(self):
         self._backbone = CustomResNet50()
-        #self.backbone.load_state_dict(torchvision.models.resnet50(pretrained=True).state_dict())
+        logger.info('=> loading ResNet50 weights for backbone')
+        self._backbone.load_state_dict(torchvision.models.resnet50(pretrained=True).state_dict())
         del self._backbone.avgpool
         del self._backbone.fc
+        logger.info('=> freezing ResNet50 layers')
+        c = 0
+        for child in self._backbone.children():
+            if c < 7:
+                for param in child.parameters():
+                    param.requires_grad = False
+            c += 1
 
     def _make_head(self, num_joints, depth_res):
         layers = []
