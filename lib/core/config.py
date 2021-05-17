@@ -20,9 +20,9 @@ config.MODEL.INIT_WEIGHTS = True
 config.MODEL.PRETRAINED = ''
 config.MODEL.RESUME = ''
 config.MODEL.NUM_JOINTS = 17
-config.MODEL.NUM_DEPTH = 32
+config.MODEL.DEPTH_RES = 64
 config.MODEL.IMAGE_SIZE = [256, 256]  # width * height, ex: 192 * 256
-config.MODEL.EXTRA = {}
+config.MODEL.VOLUME = {}
 
 # Loss function params
 config.LOSS = edict()
@@ -121,7 +121,7 @@ def gen_config(config_file):
 def get_model_name(cfg):
     name = cfg.MODEL.NAME
     full_name = cfg.MODEL.NAME
-    extra = cfg.MODEL.EXTRA
+    volume = cfg.MODEL.VOLUME
 
     if name == 'pose3d_alexnet_reg':
         name = '{model}'.format(

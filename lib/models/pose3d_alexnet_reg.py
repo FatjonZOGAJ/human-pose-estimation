@@ -3,66 +3,112 @@ import logging
 
 import torch
 import torch.nn as nn
-from lib.utils.integral import softmax_integral_tensor
 
-import numpy as np
+import torchvision.models
 
 logger = logging.getLogger(__name__)
+
+
+class CustomResNet50(torchvision.models.ResNet):
+    def __init__(self):
+        super(CustomResNet50, self).__init__(torchvision.models.resnet.Bottleneck, [3, 4, 6, 3])
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        return x
+
 
 class PoseAlexNetReg(nn.Module):
 
     def __init__(self, cfg, **kwargs):
         super(PoseAlexNetReg, self).__init__()
-        self.cfg = cfg
-        #self.c = torch.nn.Parameter(torch.rand(1)-torch.rand(1))
-        #self.register_parameter(name='corr_factor', param=self.c)
+        self.volume_config = cfg.MODEL.VOLUME
+        self.num_joints = cfg.MODEL.NUM_JOINTS
+        self.depth_res = cfg.MODEL.DEPTH_RES
+        self._make_backbone()
+        self._make_head(self.num_joints, self.depth_res)
+        self._softmax = torch.nn.Softmax(dim=2)
+        self._range = torch.nn.Parameter(torch.arange(1, 64 + 1), requires_grad=False)
 
-        self.features = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=11, stride=4, padding=2),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2),
-            nn.Conv2d(64, 192, kernel_size=5, padding=2),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2),
-            nn.Conv2d(192, 384, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(384, 256, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(256, 256, kernel_size=3, padding=1),
-            nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=3, stride=2),
-        )
+    def _make_backbone(self):
+        self._backbone = CustomResNet50()
+        #self.backbone.load_state_dict(torchvision.models.resnet50(pretrained=True).state_dict())
+        del self._backbone.avgpool
+        del self._backbone.fc
 
-        # Results in 32 units, representing a 10 meter range in front of the camera
-        self.conv_1D = nn.Sequential(nn.Conv1d(1, 1, kernel_size=225), nn.ReLU(inplace=True))
-        self.conv_2D = nn.Sequential(nn.Conv2d(256, self.cfg.MODEL.NUM_JOINTS * self.cfg.MODEL.NUM_DEPTH, kernel_size=1), nn.ReLU(inplace=True))
-        self.volume_pipe_1D = self.heat_1D_pipe
-        self.volume_pipe_3D = self.heat_3D_pipe
+    def _make_head(self, num_joints, depth_res):
+        layers = []
+        kernel, padding, output_padding = self.volume_config.LAYER_CONFIG
+        filters = self.volume_config.NUM_DECONV_FILTERS
+        output_size = 2048
+        for i in range(self.volume_config.NUM_DECONV_LAYERS):
+            layers.append(
+                nn.ConvTranspose2d(
+                    in_channels=output_size,
+                    out_channels=filters,
+                    kernel_size=kernel,
+                    stride=2,
+                    padding=padding,
+                    output_padding=output_padding,
+                    bias=self.volume_config.DECONV_WITH_BIAS))
+            layers.append(nn.BatchNorm2d(filters, momentum=self.volume_config.BN_MOMENTUM))
+            layers.append(nn.ReLU(inplace=True))
+            output_size = filters
 
+        self._head = nn.Sequential(*layers, nn.Conv2d(
+            in_channels=filters,
+            out_channels=num_joints * depth_res,
+            kernel_size=self.volume_config.FINAL_CONV_KERNEL,
+            stride=1,
+            padding=0
+        ))
 
     def forward(self, x):
-        x = self.features(x)
-        x_1D = self.volume_pipe_1D(x)
-        x_3D = self.volume_pipe_3D(x)
-        #back_proj = self.back_project(x_1D, x_3D)
-        return torch.reshape(x_3D, [x.shape[0],-1])
+        cnn_features = self._backbone.forward(x)
+        heatmaps = self._head(cnn_features)
+        # Check trainable parameters
+        pred_jnts = self._softmax_integral(heatmaps)
+        return pred_jnts
 
-    # Returns Z*
-    def heat_1D_pipe(self, x: torch.Tensor):
-        x = x.mean([2,3])
-        x = x.unsqueeze(1)
-        x = self.conv_1D(x)
-        return softmax_integral_tensor(x, 1, 1, 1, 1, x.shape[2])
+    # FROM https://github.com/JimmySuen/integral-human-pose/blob/master/pytorch_projects/common_pytorch/common_loss/integral.py
+    def _softmax_integral(self, heatmaps):
+        # global softmax
+        depth, height, width = heatmaps.shape[1:]
+        depth = depth // self.num_joints
+        heatmaps = heatmaps.reshape((heatmaps.shape[0], self.num_joints, -1))
+        heatmaps = self._softmax(heatmaps)
 
-    # Returns x, y, delta Z
-    def heat_3D_pipe(self, x: torch.Tensor):
-        x = self.conv_2D(x)
-        x = torch.reshape(x, [x.shape[0], self.cfg.MODEL.NUM_JOINTS, self.cfg.MODEL.NUM_DEPTH, *x.shape[2:]])
-        hm_d, hm_w, hm_h = x.shape[2:]
-        return softmax_integral_tensor(x, self.cfg.MODEL.NUM_JOINTS, 3, hm_w, hm_h, hm_d)
+        # integrate heatmap into joint location
+        heatmaps = heatmaps.reshape((heatmaps.shape[0], self.num_joints, depth, height, width))
 
-    def back_project(self, x_1D, x_3D):
-        pass
+        x = heatmaps.sum(dim=2)
+        x = x.sum(dim=2)
+        y = heatmaps.sum(dim=2)
+        y = y.sum(dim=3)
+        z = heatmaps.sum(dim=3)
+        z = z.sum(dim=3)
+
+        x = x * self._range
+        y = y * self._range
+        z = z * self._range
+
+        x = x.sum(dim=2, keepdim=True)
+        y = y.sum(dim=2, keepdim=True)
+        z = z.sum(dim=2, keepdim=True)
+
+        x = x / float(width) - 0.5
+        y = y / float(height) - 0.5
+        z = z / float(depth) - 0.5
+        pred_jnts = torch.cat((x, y, z), dim=2)
+        return pred_jnts
 
     def init_weights(self, pretrained=''):
         if os.path.isfile(pretrained):
@@ -78,7 +124,7 @@ class PoseAlexNetReg(nn.Module):
 def get_pose_net(cfg, is_train, **kwargs):
     model = PoseAlexNetReg(cfg, **kwargs)
 
-    if is_train and cfg.MODEL.INIT_WEIGHTS:
-        model.init_weights(cfg.MODEL.PRETRAINED)
+    # if is_train and cfg.MODEL.INIT_WEIGHTS:
+    #    model.init_weights(cfg.MODEL.PRETRAINED)
 
     return model

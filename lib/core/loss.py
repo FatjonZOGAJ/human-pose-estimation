@@ -55,7 +55,6 @@ def get_joint_regression_result(patch_width, patch_height, preds):
 
     coords = preds.detach().cpu().numpy()
     coords = coords.astype(float)
-    coords = coords.reshape((coords.shape[0], coords.shape[1] // 3, 3))
     # project to original image size
     coords[:, :, 0] = (coords[:, :, 0] + 0.5) * patch_width
     coords[:, :, 1] = (coords[:, :, 1] + 0.5) * patch_height
