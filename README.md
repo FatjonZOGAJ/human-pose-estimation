@@ -41,4 +41,4 @@ Make sure to consider default values so that when no argument is passed, the con
 + `bsubs` add jobs
 + `bjobs` list jobs (`-l` for details)
 + `bkill 0` kill all jobs
-+ `bpeek` see output of jobs
++ `bpeek` see output of jobs (`watch "bpeek | tail -n 30"` for continuous output)

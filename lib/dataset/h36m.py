@@ -146,7 +146,7 @@ class H36M(JointDataset):
         return gt_db
 
 
-    def evaluate(self, preds, save_path=None, debug=False, writer_dict=None):
+    def evaluate(self, preds, save_path=None, debug=False, writer_dict=None, time_str=''):
         preds = preds[:, :, 0:3]
 
         gt_poses_glob = []
@@ -329,6 +329,7 @@ class H36M(JointDataset):
 
             for idx in range(len(joint_names)):
                 print(joint_names[idx], per_joint_error[idx])
+            print("Average Joint Error", np.mean(per_joint_error))
 
             name_value = [
                 ('hm36_17j      :', np.asarray(dist).mean()),
@@ -341,11 +342,11 @@ class H36M(JointDataset):
             name_value = []
 
         if save_path is not None:
-            pred_save_path = os.path.join(save_path, '{}_pred.csv'.format(self.image_set))
+            pred_save_path = os.path.join(save_path, '{}_pred_{}.csv'.format(self.image_set, time_str))
             pred_to_save = np.stack(pred_to_save, axis=0)
             np.savetxt(pred_save_path, pred_to_save, delimiter=',', header=header_pred, fmt=fmt_pred, comments='')
             if has_gt:
-                gt_save_path = os.path.join(save_path, '{}_gt.csv'.format(self.image_set))
+                gt_save_path = os.path.join(save_path, '{}_gt_{}.csv'.format(self.image_set, time_str))
                 gt_to_save = np.stack(gt_to_save, axis=0)
                 np.savetxt(gt_save_path, gt_to_save, delimiter=',', header=header_gt, fmt=fmt_gt, comments='')
 

@@ -128,7 +128,8 @@ def validate(val_loader, model, DEBUG_MODE_BREAK):
         return preds_in_patch_with_score
 
 
-def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DEBUG_MODE_BREAK, debug=False, writer_dict=None):
+def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DEBUG_MODE_BREAK, debug=False, writer_dict=None,
+             time_str=''):
     print("Evaluation stage")
     # From patch to original image coordinate system
     imdb_list = val_loader.dataset.db
@@ -150,12 +151,13 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DE
 
     # Evaluate
     if 'joints_3d' in imdb.db[0].keys():
-        name_value, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug, writer_dict=writer_dict)
+        name_value, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug, writer_dict=writer_dict, time_str=time_str)
         for name, value in name_value:
             logger.info('Epoch[%d] Validation-%s %f', epoch, name, value)
+        logger.info('Epoch[%d] Validation-%s %f', epoch, 'Average', np.mean([nv[1] for nv in name_value]))
     else:
         logger.info('Test set is used, saving results to %s', final_output_path)
-        _, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug, writer_dict=writer_dict)
+        _, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug, writer_dict=writer_dict, time_str=time_str)
         perf = 0.0
 
     return perf
