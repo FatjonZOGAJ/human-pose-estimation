@@ -199,3 +199,4 @@ venv.bak/
 /models
 /log
 /VOC2012/
+/lib/models/pretrained_data/resnext_original.pth

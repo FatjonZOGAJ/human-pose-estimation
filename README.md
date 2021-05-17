@@ -36,3 +36,9 @@ Ensure that these overwrite the parameters in the config using `train.py.reset_c
 Make sure to consider default values so that when no argument is passed, the config file does not get overwritten.
 
 `bash vim_last_log.sh` opens the last log file automatically to not have to enter it manually.
+
+### Leonhard commands
++ `bsubs` add jobs
++ `bjobs` list jobs (`-l` for details)
++ `bkill 0` kill all jobs
++ `bpeek` see output of jobs
