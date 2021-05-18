@@ -3,6 +3,7 @@ import numpy as np
 from torch.utils.data import Dataset
 
 from lib.core.loss import get_label_func
+from lib.utils.augmentation import load_occluders
 
 H36M_NAMES = ['']*17
 H36M_NAMES[0]  = 'Hip'
@@ -67,6 +68,8 @@ class JointDataset(Dataset):
         self.num_cams = cfg.DATASET.NUM_CAMS
 
         self.label_func = get_label_func()
+
+        self.occluders = load_occluders(cfg.DATASET.VOC) if cfg.DATASET.OCCLUSION and is_train else None
 
         self.parent_ids = None
         self.db_length = 0

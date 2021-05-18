@@ -10,6 +10,8 @@ DATASET:
   TEST_SET: val
   TRAIN_SET: train
   NUM_CAMS: 4
+  OCCLUSION: True
+  VOC: 'VOC2012' # If you want to use synthetic occlusion, please enter the VOC path
 MODEL:
   NAME: pose3d_resnet_vol
   INIT_WEIGHTS: True # set this to true to use ImageNet pre-trained models
@@ -47,4 +49,5 @@ TRAIN:
 TEST:
   BATCH_SIZE: 32
 DEBUG:
-  DEBUG: FALSE # set this to true to visualize results in tensorboard
+  DEBUG: False # set this to true to visualize results in tensorboard
+CPU: False

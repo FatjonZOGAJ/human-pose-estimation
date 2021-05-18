@@ -37,6 +37,9 @@ config.DATASET.DATASET = 'h36m'
 config.DATASET.TRAIN_SET = 'train'
 config.DATASET.TEST_SET = 'valid'
 config.DATASET.HYBRID_JOINTS_TYPE = ''
+config.DATASET.OCCLUSION = False  # Assign True if you want to use occlusion augmentation proposed by Sarandi et al.
+# in https://arxiv.org/abs/1808.09316
+config.DATASET.VOC = '/media/muhammed/Other/RESEARCH/datasets/VOCdevkit/VOC2012'  # path to PASCAL VOC2012 dataset
 
 # H36M related params
 config.DATASET.TRAIN_FRAME = 32
@@ -79,6 +82,8 @@ config.TEST.BATCH_SIZE = 32
 # debug
 config.DEBUG = edict()
 config.DEBUG.DEBUG = False
+
+config.CPU = False
 
 def _update_dict(k, v):
 	if k == 'MODEL':

@@ -2,6 +2,7 @@ import cv2
 import torch
 
 from lib.utils.transforms import get_affine_transform
+from lib.utils.augmentation import occlude_with_objects
 from lib.utils.prep_h36m import from_worldjt_to_imagejt
 import random
 import numpy as np
@@ -86,7 +87,7 @@ def trans_coords_from_patch_to_org_3d(coords_in_patch, c_x, c_y, bb_width, bb_he
 def get_single_patch_sample(img_path, center_x, center_y, width, height,
                             patch_width, patch_height,
                             rect_3d_width, rect_3d_height, mean, std,
-                            label_func, joints=None, joints_vis=None,
+                            label_func, occluder=None, joints=None, joints_vis=None,
                             DEBUG=False):
     # 1. load image
     cvimg = cv2.imread(
@@ -102,6 +103,9 @@ def get_single_patch_sample(img_path, center_x, center_y, width, height,
 
     image = img_patch_cv.copy()
     image = image[:, :, ::-1]
+
+    if occluder:
+        image = occlude_with_objects(image, occluder)
 
     img_patch_cv = image.copy()
     img_patch = convert_cvimg_to_tensor(image)
