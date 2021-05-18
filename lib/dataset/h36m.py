@@ -80,7 +80,7 @@ class H36M(JointDataset):
                                                                  the_db['height'], self.flip_pairs,
                                                                  self.patch_width, self.patch_height,
                                                                  self.rect_3d_width, self.rect_3d_height,
-                                                                 self.mean, self.std, self.is_train, self.label_func,
+                                                                 self.mean, self.std, self.cfg.DATASET.AUGMENT, self.label_func,
                                                                  occluder=self.occluders,
                                                                  joints=joints,
                                                                  joints_vis=joints_vis,
