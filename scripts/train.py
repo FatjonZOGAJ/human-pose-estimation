@@ -24,6 +24,8 @@ import lib.dataset as dataset
 import lib.models as models
 
 import numpy as np
+
+
 # You can uncomment this line for reproducibility
 # np.random.seed(10)
 
@@ -100,7 +102,7 @@ def main():
         model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
 
     # define loss function (criterion) and optimizer
-    loss_fn = eval('loss.'+config.LOSS.FN)
+    loss_fn = eval('loss.' + config.LOSS.FN)
     if not config.CPU:
         criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM).cuda()
     else:
@@ -119,17 +121,22 @@ def main():
             checkpoint = torch.load(ckpt_file)
             if 'epoch' in checkpoint.keys():
                 config.TRAIN.BEGIN_EPOCH = checkpoint['epoch']
+                config.TRAIN.END_EPOCH = config.TRAIN.BEGIN_EPOCH + config.TRAIN.END_EPOCH
                 best_perf = checkpoint['perf']
                 model.load_state_dict(checkpoint['state_dict'])
                 optimizer.load_state_dict(checkpoint['optimizer'])
                 lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+                if 'train_step' in checkpoint:
+                    writer_dict['train_global_steps']= checkpoint['train_step']
+                if 'valid_step' in checkpoint:
+                    writer_dict['valid_global_steps'] = checkpoint['valid_step']
                 logger.info('=> resume from pretrained model {}'.format(config.MODEL.RESUME))
             else:
                 model.load_state_dict(checkpoint)
                 logger.info('=> resume from pretrained model {}'.format(config.MODEL.RESUME))
 
     # Choose the dataset, either Human3.6M or mpii
-    ds = eval('dataset.'+config.DATASET.DATASET)
+    ds = eval('dataset.' + config.DATASET.DATASET)
 
     # Data loading code
     logger.info('=> loading the train dataset')
@@ -149,14 +156,14 @@ def main():
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=config.TRAIN.BATCH_SIZE*len(gpus),
+        batch_size=config.TRAIN.BATCH_SIZE * len(gpus),
         shuffle=config.TRAIN.SHUFFLE,
         num_workers=config.WORKERS,
         pin_memory=True
     )
     valid_loader = torch.utils.data.DataLoader(
         valid_dataset,
-        batch_size=config.TEST.BATCH_SIZE*len(gpus),
+        batch_size=config.TEST.BATCH_SIZE * len(gpus),
         shuffle=False,
         num_workers=config.WORKERS,
         pin_memory=True
@@ -170,7 +177,8 @@ def main():
 
         # evaluate on validation set
         preds_in_patch_with_score = validate(valid_loader, model)
-        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.DEBUG.DEBUG, writer_dict)
+        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.DEBUG.DEBUG,
+                       writer_dict)
 
         perf_indicator = 500. - acc if config.DATASET.DATASET == 'h36m' or 'mpii_3dhp' or 'jta' else acc
 
@@ -182,6 +190,8 @@ def main():
 
         logger.info('=> saving checkpoint to {}'.format(final_output_dir))
         save_checkpoint({
+            'train_step': writer_dict['train_global_steps'],
+            'valid_step': writer_dict['valid_global_steps'],
             'epoch': epoch + 1,
             'model': get_model_name(config),
             'state_dict': model.state_dict(),
@@ -195,6 +205,7 @@ def main():
     logger.info('saving final model state to {}'.format(
         final_model_state_file))
     torch.save(model.module.state_dict(), final_model_state_file)
+
 
 if __name__ == '__main__':
     main()
