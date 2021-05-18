@@ -123,15 +123,11 @@ def get_model_name(cfg):
     full_name = cfg.MODEL.NAME
     volume = cfg.MODEL.VOLUME
 
-    if name == 'pose3d_alexnet_reg':
-        name = '{model}'.format(
-                model=name)
-        full_name = '{height}x{width}_{name}'.format(
-                height=cfg.MODEL.IMAGE_SIZE[1],
-                width=cfg.MODEL.IMAGE_SIZE[0],
-                name=name)
-    else:
-        raise ValueError('Unkown model: {}'.format(cfg.MODEL))
+    name = '{model}'.format(model=name)
+    full_name = '{height}x{width}_{name}'.format(
+                     height=cfg.MODEL.IMAGE_SIZE[1],
+                     width=cfg.MODEL.IMAGE_SIZE[0],
+                     name=name)
 
     print(name, full_name)
     return name, full_name

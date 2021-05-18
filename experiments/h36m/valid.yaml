@@ -9,8 +9,19 @@ DATASET:
   ROOT: 'data/h36m/'
   TEST_SET: val
 MODEL:
-  NAME: pose3d_alexnet_reg
+  NAME: pose3d_resnet_vol
   NUM_JOINTS: 17
+  DEPTH_RES: 64
+    VOLUME:
+      FINAL_CONV_KERNEL: 1
+      DECONV_WITH_BIAS: false
+      NUM_DECONV_LAYERS: 3
+      NUM_DECONV_FILTERS: 256
+      LAYER_CONFIG:
+        - 4
+        - 1
+        - 0
+      BN_MOMENTUM: 0.1
 TEST:
   BATCH_SIZE: 32
 DEBUG:

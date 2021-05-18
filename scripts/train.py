@@ -76,7 +76,8 @@ def main():
     logger.info(pprint.pformat(args))
     logger.info(pprint.pformat(config))
 
-    model = models.pose3d_alexnet_reg.get_pose_net(config, is_train=True)
+    model = getattr(models, "%s" % config.MODEL.NAME)
+    model = model.get_pose_net(config, is_pretrain=True and config.MODEL.INIT_WEIGHTS)
 
     # copy model file
     this_dir = os.path.dirname(__file__)

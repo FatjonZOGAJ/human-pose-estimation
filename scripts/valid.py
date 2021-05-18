@@ -69,7 +69,8 @@ def main():
         'valid_global_steps': 0,
     }
 
-    model = models.pose3d_alexnet_reg.get_pose_net(config, is_train=False)
+    model = getattr(models, "%s" % config.MODEL.NAME)
+    model = model.get_pose_net(config, is_pretrain=False)
 
     gpus = [int(i) for i in config.GPUS.split(',')]
     model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
