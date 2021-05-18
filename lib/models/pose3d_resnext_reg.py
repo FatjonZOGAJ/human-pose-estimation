@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # for now use Classification specific regular ResNext as it's closest to AlexNet that was in use
 class PoseResNextReg(nn.Module):
 
-    def __init__(self, cfg, n_frozen_layers=9, **kwargs):
+    def __init__(self, cfg, n_frozen_layers=7, **kwargs):
         super(PoseResNextReg, self).__init__()
         self.n_frozen_layers = n_frozen_layers
         self.model = models.resnext101_32x8d(pretrained=False,
