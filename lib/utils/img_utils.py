@@ -158,6 +158,7 @@ def get_single_patch_sample(img_path, center_x, center_y, width, height, flip_pa
 
     # apply normalization
     for n_c in range(img_channels):
+        img_patch[n_c, :, :] = np.clip(img_patch[n_c, :, :] * color_scale[n_c], 0, 255)
         if mean is not None and std is not None:
             img_patch[n_c, :, :] = (img_patch[n_c, :, :] - mean[n_c]) / std[n_c]
 
