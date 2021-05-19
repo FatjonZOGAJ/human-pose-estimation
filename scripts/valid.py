@@ -38,7 +38,7 @@ def main():
 
     check_train_mode(config, logger)
 
-    model = models.nets[config.MODEL.NAME].get_pose_net(config, is_train=False)
+    model = models.nets[config.MODEL.NAME].get_pose_net(config, False)
 
     gpus = [int(i) for i in config.GPUS.split(',')]
     model = torch.nn.DataParallel(model, device_ids=gpus).cuda()

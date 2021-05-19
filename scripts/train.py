@@ -118,14 +118,14 @@ def main():
     args = parse_args()
     reset_config(config, args)
 
-    logger, final_output_dir, time_str = create_logger(config, args.cfg, 'train')
+    logger, final_output_dir, time_str = create_logger(config, args.cfg, 'train', config.MODEL.TIME_STR)
 
     logger.info(pprint.pformat(args))
     logger.info(pprint.pformat(config))
 
     check_train_mode(config, logger)
 
-    model = models.nets[config.MODEL.NAME].get_pose_net(config, is_train=True)
+    model = models.nets[config.MODEL.NAME].get_pose_net(config, True and config.MODEL.INIT_WEIGHTS)
 
     # copy model file
     this_dir = os.path.dirname(__file__)
