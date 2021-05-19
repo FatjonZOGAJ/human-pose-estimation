@@ -27,6 +27,8 @@ import lib.dataset as dataset
 import lib.models as models
 
 import numpy as np
+
+
 # You can uncomment this line for reproducibility
 np.random.seed(10)
 
@@ -130,7 +132,6 @@ def main():
 
     # overwrite config with the provided arguments for dumping
     gen_config(os.path.join(final_output_dir, args.cfg.split('/')[-1]), config)
-    # shutil.copy2(args.cfg, final_output_dir) # copy cfg file without the args parameters
 
     tb_log_dir = os.path.join(final_output_dir, 'logs')
 
@@ -145,7 +146,7 @@ def main():
         model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
 
     # define loss function (criterion) and optimizer
-    loss_fn = eval('loss.'+config.LOSS.FN)
+    loss_fn = eval('loss.' + config.LOSS.FN)
     if not config.CPU:
         criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM).cuda()
     else:
@@ -164,10 +165,15 @@ def main():
             checkpoint = torch.load(ckpt_file)
             if 'epoch' in checkpoint.keys():
                 config.TRAIN.BEGIN_EPOCH = checkpoint['epoch']
+                config.TRAIN.END_EPOCH = config.TRAIN.BEGIN_EPOCH + config.TRAIN.END_EPOCH
                 best_perf = checkpoint['perf']
                 model.load_state_dict(checkpoint['state_dict'])
                 optimizer.load_state_dict(checkpoint['optimizer'])
                 lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+                if 'train_step' in checkpoint:
+                    writer_dict['train_global_steps']= checkpoint['train_step']
+                if 'valid_step' in checkpoint:
+                    writer_dict['valid_global_steps'] = checkpoint['valid_step']
                 logger.info('=> resume from pretrained model {}'.format(config.MODEL.RESUME))
             else:
                 model.load_state_dict(checkpoint)
@@ -179,12 +185,14 @@ def main():
     ds = eval('dataset.' + config.DATASET.DATASET)
 
     # Data loading code
+    logger.info('=> loading the train dataset')
     train_dataset = ds(
         cfg=config,
         root=config.DATASET.ROOT,
         image_set=config.DATASET.TRAIN_SET,
         is_train=True
     )
+    logger.info('=> loading the valid dataset')
     valid_dataset = ds(
         cfg=config,
         root=config.DATASET.ROOT,
@@ -206,7 +214,9 @@ def main():
         num_workers=config.WORKERS,
         pin_memory=True
     )
-    torch.cuda.empty_cache()  # TODO: check if necessary
+
+    #torch.cuda.empty_cache()  # TODO: check if necessary
+
     best_model = False
     for epoch in range(config.TRAIN.BEGIN_EPOCH, config.TRAIN.END_EPOCH):
         # train for one epoch
@@ -228,6 +238,8 @@ def main():
 
         logger.info('=> saving checkpoint to {}'.format(final_output_dir))
         save_checkpoint({
+            'train_step': writer_dict['train_global_steps'],
+            'valid_step': writer_dict['valid_global_steps'],
             'epoch': epoch + 1,
             'model': get_model_name(config),
             'state_dict': model.state_dict(),

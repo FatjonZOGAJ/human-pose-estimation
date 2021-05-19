@@ -22,8 +22,9 @@ config.MODEL.PRETRAINED = ''
 config.MODEL.TIME_STR = ''
 config.MODEL.RESUME = ''
 config.MODEL.NUM_JOINTS = 17
+config.MODEL.DEPTH_RES = 64
 config.MODEL.IMAGE_SIZE = [256, 256]  # width * height, ex: 192 * 256
-config.MODEL.EXTRA = {}
+config.MODEL.VOLUME = {}
 
 # Loss function params
 config.LOSS = edict()
@@ -129,19 +130,13 @@ def gen_config(config_file, config):
 def get_model_name(cfg):
     name = cfg.MODEL.NAME
     full_name = cfg.MODEL.NAME
-    extra = cfg.MODEL.EXTRA
+    volume = cfg.MODEL.VOLUME
 
-    if name == 'pose3d_alexnet_reg':
-        name = '{model}'.format(
-                model=name)
-        full_name = '{height}x{width}_{name}'.format(
-                height=cfg.MODEL.IMAGE_SIZE[1],
-                width=cfg.MODEL.IMAGE_SIZE[0],
-                name=name)
-    elif name == 'pose3d_resnext_reg':
-        full_name = name
-    else:
-        raise ValueError('Unkown model: {}'.format(cfg.MODEL))
+    name = '{model}'.format(model=name)
+    full_name = '{height}x{width}_{name}'.format(
+                     height=cfg.MODEL.IMAGE_SIZE[1],
+                     width=cfg.MODEL.IMAGE_SIZE[0],
+                     name=name)
 
     print(name, full_name)
     return name, full_name

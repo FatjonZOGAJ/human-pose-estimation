@@ -6,6 +6,7 @@ import os
 import logging
 import numpy as np
 import copy
+import re
 
 from lib.utils.prep_h36m import CamBackProj #, compute_similarity_transform
 from lib.dataset.JointDataset import JointDataset, H36M_NAMES
@@ -46,6 +47,9 @@ class H36M(JointDataset):
         self.num_joints = 17
 
         self.db = self._get_db()
+        image_names = [self.db[i].get("image") for i in range(self.db_length)]
+        image_names = [re.search('/\w\d\d?/', image_names[i]) for i in range(0,self.db_length)]
+        logger.info(f'=> set contains the following subjects: {sorted(set([image_names[i][0] for i in range(0, self.db_length)]))}')
 
         logger.info('=> load {} samples'.format(self.db_length))
 

@@ -20,47 +20,6 @@ import lib.dataset as dataset
 import lib.models as models
 from scripts.train import check_train_mode, parse_args, reset_config
 
-
-def parse_args_not_implemented():
-    raise NotImplementedError('Use train.py/parse_args instead')
-
-    parser = argparse.ArgumentParser(description='Train keypoints network')
-    # general
-    parser.add_argument('--cfg',
-                        help='experiment configure file name',
-                        required=True,
-                        type=str)
-
-    args, rest = parser.parse_known_args()
-    # update config
-    update_config(args.cfg)
-
-    # training
-    parser.add_argument('--frequent',
-                        help='frequency of logging',
-                        default=config.PRINT_FREQ,
-                        type=int)
-    parser.add_argument('--gpus',
-                        help='gpus',
-                        type=str)
-    parser.add_argument('--workers',
-                        help='num of dataloader workers',
-                        type=int)
-
-    args = parser.parse_args()
-
-    return args
-
-
-def reset_config_not_implemented(config, args):
-    raise NotImplementedError('Use train.py/reset_config instead')
-
-    if args.gpus:
-        config.GPUS = args.gpus
-    if args.workers:
-        config.WORKERS = args.workers
-
-
 def main():
     args = parse_args()
     reset_config(config, args)
@@ -93,6 +52,7 @@ def main():
     ds = eval('dataset.' + config.DATASET.DATASET)
 
     # Data loading code
+    logger.info('=> loading the valid/test dataset')
     valid_dataset = ds(
         cfg=config,
         root=config.DATASET.ROOT,

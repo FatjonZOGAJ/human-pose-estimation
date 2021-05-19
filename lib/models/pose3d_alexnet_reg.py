@@ -3,10 +3,10 @@ import logging
 
 import torch
 import torch.nn as nn
-
-import numpy as np
+import torchvision
 
 logger = logging.getLogger(__name__)
+
 
 class PoseAlexNetReg(nn.Module):
 
@@ -56,10 +56,12 @@ class PoseAlexNetReg(nn.Module):
             raise ValueError('imagenet pretrained model does not exist')
 
 
-def get_pose_net(cfg, is_train, **kwargs):
+def get_pose_net(cfg, is_pretrain, **kwargs):
     model = PoseAlexNetReg(cfg, **kwargs)
-
-    if is_train and cfg.MODEL.INIT_WEIGHTS:
-        model.init_weights(cfg.MODEL.PRETRAINED)
+    if is_pretrain:
+        logger.info('=> loading AlexNet weights')
+        model.load_state_dict(dict(filter(lambda x: 'classifier' not in x[0],
+                                          torchvision.models.alexnet(pretrained=True).state_dict().items())),
+                              strict=False)
 
     return model
