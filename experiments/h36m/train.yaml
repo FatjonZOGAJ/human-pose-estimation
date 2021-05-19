@@ -12,6 +12,7 @@ DATASET:
   NUM_CAMS: 4
   OCCLUSION: True
   VOC: 'VOC2012' # If you want to use synthetic occlusion, please enter the VOC path
+  AUGMENT: True
 MODEL:
   NAME: pose3d_resnet_vol
   INIT_WEIGHTS: True # set this to true to use ImageNet pre-trained models

@@ -51,6 +51,7 @@ config.DATASET.DEPTH_RANGE = 2000 # width, height of the area around the subject
 
 # training data augmentation
 config.DATASET.Z_WEIGHT = 1. # weighting parameter for z axis
+config.DATASET.AUGMENT = False
 
 # train
 config.TRAIN = edict()
