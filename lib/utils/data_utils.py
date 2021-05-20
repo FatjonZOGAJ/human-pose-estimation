@@ -122,7 +122,7 @@ def load_data( bpath, subjects, actions, dim=3 ):
 
 def load_stacked_hourglass(data_dir, subjects, actions):
     """
-    Load 2d detections from disk, and put it in an easy-to-acess dictionary.
+    Load 2d detections from disk, and put it in an easy-to-access dictionary.
 
     Args
     data_dir: string. Directory where to load the data from,
@@ -165,7 +165,7 @@ def load_stacked_hourglass(data_dir, subjects, actions):
                 if action == "Sitting" and seqname.startswith( "SittingDown" ):
                     continue
 
-                # This rule makes sure that WalkDog and WalkTogeter are not loaded when
+                # This rule makes sure that WalkDog and WalkTogether are not loaded when
                 # Walking is requested.
                 if seqname.startswith( action ):
                     if verbose:
@@ -451,7 +451,7 @@ def create_2d_data( actions, data_dir, rcams ):
     return train_set, test_set, data_mean, data_std, dim_to_ignore, dim_to_use
 
 
-def read_3d_data( actions, data_dir, camera_frame, rcams, predict_14=False ):
+def read_3d_data(actions, data_dir, camera_frame, rcams, predict_14=False ):
     """
     Loads 3d poses, zero-centres and normalizes them
 

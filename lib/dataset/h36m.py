@@ -6,6 +6,7 @@ import os
 import logging
 import numpy as np
 import copy
+import re
 
 from lib.utils.prep_h36m import CamBackProj #, compute_similarity_transform
 from lib.dataset.JointDataset import JointDataset, H36M_NAMES
@@ -46,6 +47,9 @@ class H36M(JointDataset):
         self.num_joints = 17
 
         self.db = self._get_db()
+        image_names = [self.db[i].get("image") for i in range(self.db_length)]
+        image_names = [re.search('/\w\d\d?/', image_names[i]) for i in range(0,self.db_length)]
+        logger.info(f'=> set contains the following subjects: {sorted(set([image_names[i][0] for i in range(0, self.db_length)]))}')
 
         logger.info('=> load {} samples'.format(self.db_length))
 
@@ -75,12 +79,12 @@ class H36M(JointDataset):
         else:
             joints = joints_vis = None
 
-        img_patch, label, label_weight = get_single_patch_sample(image_file, the_db['center_x'],
+        img_patch, label, label_weight, scale, rot = get_single_patch_sample(image_file, the_db['center_x'],
                                                                  the_db['center_y'], the_db['width'],
-                                                                 the_db['height'],
+                                                                 the_db['height'], self.flip_pairs,
                                                                  self.patch_width, self.patch_height,
                                                                  self.rect_3d_width, self.rect_3d_height,
-                                                                 self.mean, self.std, self.label_func,
+                                                                 self.mean, self.std, self.cfg.DATASET.AUGMENT, self.label_func,
                                                                  occluder=self.occluders,
                                                                  joints=joints,
                                                                  joints_vis=joints_vis,
@@ -92,6 +96,8 @@ class H36M(JointDataset):
             'center_y': the_db['center_y'],
             'width'   : the_db['width'],
             'height'  : the_db['height'],
+            'scale': float(scale),
+            'rot': float(rot),
             'R'       : cam.R if cam is not None else np.zeros((3, 3), dtype=np.float64),
             'T'       : cam.T if cam is not None else np.zeros((3, 1), dtype=np.float64),
             'f'       : cam.f if cam is not None else np.zeros((2, 1), dtype=np.float64),
