@@ -202,3 +202,9 @@ venv.bak/
 /lib/models/pretrained_data/resnext_original.pth
 /lib/models/pretrained_data/alexnet.pth
 /predictions/
+/lsf/
+/VOC2012/
+/lib/models/pretrained_data/resnext_original.pth
+/lib/models/pretrained_data/alexnet.pth
+/predictions/
+/lib/models/pretrained_data/resnext101_32x8d_original.pth

@@ -154,7 +154,7 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DE
         name_value, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug, writer_dict=writer_dict, time_str=time_str)
         for name, value in name_value:
             logger.info('Epoch[%d] Validation-%s %f', epoch, name, value)
-        logger.info('Epoch[%d] Validation-%s %f', epoch, 'Average', np.mean([nv[1] for nv in name_value]))
+        logger.info('Epoch[%d] Validation-Dim-%s %f', epoch, 'Average', np.mean([nv[1] for nv in name_value]))
     else:
         logger.info('Test set is used, saving results to %s', final_output_path)
         _, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug, writer_dict=writer_dict, time_str=time_str)
