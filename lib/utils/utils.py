@@ -43,11 +43,11 @@ def create_logger(cfg, cfg_name, phase='train', time_str=None):
     return logger, str(final_output_dir), time_str
 
 
-def get_optimizer(cfg, model, is_disc=False):
+def get_optimizer(cfg, model, dae, is_disc=False):
     optimizer = None
     if cfg.TRAIN.OPTIMIZER == 'sgd':
         optimizer = optim.SGD(
-            model.parameters(),
+            list(model.parameters()) + list(dae.parameters()),
             lr=cfg.TRAIN.LR,
             momentum=cfg.TRAIN.MOMENTUM,
             weight_decay=cfg.TRAIN.WD,
@@ -55,7 +55,7 @@ def get_optimizer(cfg, model, is_disc=False):
         )
     elif cfg.TRAIN.OPTIMIZER == 'adam':
         optimizer = optim.Adam(
-            model.parameters(),
+            list(model.parameters()) + list(dae.parameters()),
             lr=cfg.TRAIN.LR,
             betas=(
                 cfg.TRAIN.BETA1,
@@ -72,6 +72,11 @@ def save_checkpoint(states, is_best, output_dir,
     if is_best and 'state_dict' in states:
         torch.save(states['state_dict'],
                    os.path.join(output_dir, 'model_best.pth.tar'))
+
+    if is_best and 'dae_state_dict' in states:
+        torch.save(states['dae_state_dict'],
+                   os.path.join(output_dir, 'dae_best.pth.tar'))
+
 
 def calc_total_skeleton_length(joints, parent_ids):
     '''
@@ -201,8 +206,10 @@ def compute_similarity_transform(X, Y, compute_optimal_scale=False):
 
     return d, Z, T, b, c
 
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
+
     def __init__(self):
         self.reset()
 

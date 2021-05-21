@@ -13,13 +13,21 @@ DEBUG_MODE_MAX_ITER = 2
 
 logger = logging.getLogger(__name__)
 
-def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict):
+
+def train(config, train_loader, model, dae, criterion, optimizer, epoch, writer_dict):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
 
     # switch to train mode
-    model.train()
+    logger.info('=> entering train mode for dae')
+    dae.train()
+    if not config.MODEL.FREEZE:
+        logger.info('=> entering train mode for model')
+        model.train()
+    else:
+        logger.info('=> entering eval mode for model')
+        model.eval()
     end = time.time()
 
     for i, data in enumerate(train_loader):
@@ -37,7 +45,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
 
         batch_size = batch_data.size(0)
         # compute output
-        preds = model(batch_data)
+        preds = dae(model(batch_data))
 
         loss = criterion(preds, batch_label, batch_label_weight)
         del batch_data, batch_label, batch_label_weight, preds
@@ -54,16 +62,16 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % config.PRINT_FREQ == 0 or i == len(train_loader) - 1\
+        if i % config.PRINT_FREQ == 0 or i == len(train_loader) - 1 \
                 or config.TRAIN.DEBUG_MODE:
             msg = 'Epoch: [{0}][{1}/{2}]\t' \
                   'Time {batch_time.val:.3f}s ({batch_time.avg:.3f}s)\t' \
                   'Speed {speed:.1f} samples/s\t' \
                   'Data {data_time.val:.3f}s ({data_time.avg:.3f}s)\t' \
                   'Loss {loss.val:.5f} ({loss.avg:.5f})'.format(
-                      epoch, i, len(train_loader), batch_time=batch_time,
-                      speed=batch_size/batch_time.val,
-                      data_time=data_time, loss=losses)
+                epoch, i, len(train_loader), batch_time=batch_time,
+                speed=batch_size / batch_time.val,
+                data_time=data_time, loss=losses)
             logger.info(msg)
 
             writer = writer_dict['writer']
@@ -75,12 +83,13 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             break
 
 
-def validate(val_loader, model, DEBUG_MODE_BREAK):
+def validate(val_loader, model, dae, DEBUG_MODE_BREAK):
     print("Validation stage")
     result_func = get_result_func()
 
     # switch to evaluate mode
     model.eval()
+    dae.eval()
 
     preds_in_patch_with_score = []
     with torch.no_grad():
@@ -93,14 +102,13 @@ def validate(val_loader, model, DEBUG_MODE_BREAK):
             batch_label_weight = batch_label_weight.cuda()
 
             # compute output
-            preds = model(batch_data)
+            preds = dae(model(batch_data))
             del batch_data, batch_label, batch_label_weight
 
             preds_in_patch_with_score.append(result_func(256, 256, preds))
             del preds
             if DEBUG_MODE_BREAK and i == DEBUG_MODE_MAX_ITER:
                 break
-
 
         _p = np.asarray(preds_in_patch_with_score)
 
@@ -122,13 +130,14 @@ def validate(val_loader, model, DEBUG_MODE_BREAK):
 
         preds_in_patch_with_score = _p[0:
                                        len(val_loader.dataset) if not DEBUG_MODE_BREAK
-                                    else DEBUG_MODE_MAX_ITER
+                                       else DEBUG_MODE_MAX_ITER
                                     ]
 
         return preds_in_patch_with_score
 
 
-def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DEBUG_MODE_BREAK, debug=False, writer_dict=None,
+def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DEBUG_MODE_BREAK, debug=False,
+             writer_dict=None,
              time_str=''):
     print("Evaluation stage")
     # From patch to original image coordinate system
@@ -151,13 +160,15 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DE
 
     # Evaluate
     if 'joints_3d' in imdb.db[0].keys():
-        name_value, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug, writer_dict=writer_dict, time_str=time_str)
+        name_value, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug,
+                                         writer_dict=writer_dict, time_str=time_str)
         for name, value in name_value:
             logger.info('Epoch[%d] Validation-%s %f', epoch, name, value)
         logger.info('Epoch[%d] Validation-%s %f', epoch, 'Average', np.mean([nv[1] for nv in name_value]))
     else:
         logger.info('Test set is used, saving results to %s', final_output_path)
-        _, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug, writer_dict=writer_dict, time_str=time_str)
+        _, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug, writer_dict=writer_dict,
+                                time_str=time_str)
         perf = 0.0
 
     return perf

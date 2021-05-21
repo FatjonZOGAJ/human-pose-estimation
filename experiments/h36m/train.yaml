@@ -20,6 +20,7 @@ MODEL:
   TIME_STR: '' # uses most recent if not set
   NUM_JOINTS: 17
   DEPTH_RES: 64
+  FREEZE: True # either a specific number or -1 to freeze all
   VOLUME:
     FINAL_CONV_KERNEL: 1
     DECONV_WITH_BIAS: false
@@ -30,6 +31,7 @@ MODEL:
       - 1
       - 0
     BN_MOMENTUM: 0.1
+    DAE: True
 LOSS:
   FN: 'L1JointRegressionLoss'
 TRAIN:
@@ -48,6 +50,7 @@ TRAIN:
   GAMMA2: 0.0
   MOMENTUM: 0.9
   NESTEROV: false
+  DEBUG_MODE: False
 TEST:
   BATCH_SIZE: 32
 DEBUG:

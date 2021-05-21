@@ -21,10 +21,12 @@ config.MODEL.DOWNLOAD_PRETRAINED = True
 config.MODEL.PRETRAINED = ''
 config.MODEL.TIME_STR = ''
 config.MODEL.RESUME = ''
+config.MODEL.FREEZE = True
 config.MODEL.NUM_JOINTS = 17
 config.MODEL.DEPTH_RES = 64
 config.MODEL.IMAGE_SIZE = [256, 256]  # width * height, ex: 192 * 256
 config.MODEL.VOLUME = {}
+config.MODEL.DAE = True
 
 # Loss function params
 config.LOSS = edict()

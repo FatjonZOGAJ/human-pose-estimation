@@ -8,6 +8,7 @@ import yaml
 import _init_paths
 
 import torch
+
 # You can uncomment this line for reproducibility
 torch.manual_seed(3)
 import torch.optim
@@ -21,6 +22,7 @@ from lib.core.function import train, validate, evaluate
 from lib.utils.utils import get_optimizer
 from lib.utils.utils import save_checkpoint
 from lib.utils.utils import create_logger
+from lib.utils.dae import DAE
 
 import lib.core.loss as loss
 import lib.dataset as dataset
@@ -28,12 +30,12 @@ import lib.models as models
 
 import numpy as np
 
-
 # You can uncomment this line for reproducibility
 np.random.seed(10)
 
 # enable IDE debugging: set working directory to project root folder
-import sys # sys.path.append('../')
+import sys  # sys.path.append('../')
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train keypoints network')
@@ -64,7 +66,7 @@ def parse_args():
     parser.add_argument('--model_init_weights',
                         help='load pre trained',
                         type=int,
-                        default=-1) # -1 so that we do not overwrite config if we do not pass anything
+                        default=-1)  # -1 so that we do not overwrite config if we do not pass anything
     parser.add_argument('--model_name',
                         help='file to load. Note: Use cfg instead',
                         type=str)
@@ -113,7 +115,7 @@ def check_train_mode(config, logger):
 
 
 def main():
-    best_perf = -10000 # store first created model (primarily for DEBUG_MODE when we only train for 1 iteration)
+    best_perf = -10000  # store first created model (primarily for DEBUG_MODE when we only train for 1 iteration)
 
     args = parse_args()
     reset_config(config, args)
@@ -126,6 +128,7 @@ def main():
     check_train_mode(config, logger)
 
     model = models.nets[config.MODEL.NAME].get_pose_net(config, True and config.MODEL.INIT_WEIGHTS)
+    dae = DAE(config) if config.MODEL.DAE else torch.nn.Identity()
 
     # copy model file
     this_dir = os.path.dirname(__file__)
@@ -144,6 +147,7 @@ def main():
     gpus = [int(i) for i in config.GPUS.split(',')]
     if not config.CPU:
         model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
+        dae = torch.nn.DataParallel(dae, device_ids=gpus).cuda()
 
     # define loss function (criterion) and optimizer
     loss_fn = eval('loss.' + config.LOSS.FN)
@@ -152,7 +156,7 @@ def main():
     else:
         criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM)
 
-    optimizer = get_optimizer(config, model)
+    optimizer = get_optimizer(config, model, dae)
 
     lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(
         optimizer, config.TRAIN.LR_STEP, config.TRAIN.LR_FACTOR
@@ -168,10 +172,10 @@ def main():
                 config.TRAIN.END_EPOCH = config.TRAIN.BEGIN_EPOCH + config.TRAIN.END_EPOCH
                 best_perf = checkpoint['perf']
                 model.load_state_dict(checkpoint['state_dict'])
-                optimizer.load_state_dict(checkpoint['optimizer'])
+                #optimizer.load_state_dict(checkpoint['optimizer'])
                 lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
                 if 'train_step' in checkpoint:
-                    writer_dict['train_global_steps']= checkpoint['train_step']
+                    writer_dict['train_global_steps'] = checkpoint['train_step']
                 if 'valid_step' in checkpoint:
                     writer_dict['valid_global_steps'] = checkpoint['valid_step']
                 logger.info('=> resume from pretrained model {}'.format(config.MODEL.RESUME))
@@ -215,17 +219,18 @@ def main():
         pin_memory=True
     )
 
-    #torch.cuda.empty_cache()  # TODO: check if necessary
+    # torch.cuda.empty_cache()  # TODO: check if necessary
 
     best_model = False
     for epoch in range(config.TRAIN.BEGIN_EPOCH, config.TRAIN.END_EPOCH):
         # train for one epoch
-        train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
+        train(config, train_loader, model, dae, criterion, optimizer, epoch, writer_dict)
         lr_scheduler.step()
 
         # evaluate on validation set
-        preds_in_patch_with_score = validate(valid_loader, model, config.TRAIN.DEBUG_MODE)
-        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.TRAIN.DEBUG_MODE, config.DEBUG.DEBUG,
+        preds_in_patch_with_score = validate(valid_loader, model, dae, config.TRAIN.DEBUG_MODE)
+        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.TRAIN.DEBUG_MODE,
+                       config.DEBUG.DEBUG,
                        writer_dict)
 
         perf_indicator = 500. - acc if config.DATASET.DATASET == 'h36m' or 'mpii_3dhp' or 'jta' else acc
@@ -243,11 +248,13 @@ def main():
             'epoch': epoch + 1,
             'model': get_model_name(config),
             'state_dict': model.state_dict(),
+            'dae_state_dict': dae.state_dict(),
             'perf': perf_indicator,
             'optimizer': optimizer.state_dict(),
             'lr_scheduler': lr_scheduler.state_dict(),
         }, best_model, final_output_dir)
 
+    # DAE is missing
     final_model_state_file = os.path.join(final_output_dir,
                                           'final_state.pth.tar')
     logger.info('saving final model state to {}'.format(
