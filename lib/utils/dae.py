@@ -8,20 +8,20 @@ class DAE(nn.Module):
         self.encoder = nn.Sequential(
             nn.Dropout(0.3),
             nn.Linear(cfg.MODEL.NUM_JOINTS * 3, 256),
-            nn.ReLU(True),
-            nn.Linear(256, 128),
-            nn.ReLU(True),
-            nn.Linear(128, 64),
-            nn.ReLU(True)
+            nn.Tanh(),
+            nn.Linear(256, 512),
+            nn.Tanh(),
+            nn.Linear(512, 1024),
+            nn.Tanh()
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(64, 128),
-            nn.ReLU(True),
-            nn.Linear(128, 256),
-            nn.ReLU(True),
+            nn.Linear(1024, 512),
+            nn.Tanh(),
+            nn.Linear(512, 256),
+            nn.Tanh(),
             nn.Linear(256, cfg.MODEL.NUM_JOINTS * 3),
-            nn.Sigmoid(),
+            nn.Tanh()
         )
 
     def forward(self, x):
