@@ -44,7 +44,7 @@ def gen_trans_from_patch_cv(c_x, c_y, src_width, src_height, dst_width, dst_heig
     src_h = src_height.item() * scale
     src_center = np.zeros(2)
     src_center[0] = c_x
-    src_center[1] = c_y # np.array([c_x, c_y], dtype=np.float32)
+    src_center[1] = c_y  # np.array([c_x, c_y], dtype=np.float32)
     # augment rotation
     rot_rad = np.pi * rot / 180
     src_downdir = rotate_2d(np.array([0, src_h * 0.5], dtype=np.float32), rot_rad)
@@ -127,7 +127,7 @@ def get_single_patch_sample(img_path, center_x, center_y, width, height, flip_pa
                             patch_width, patch_height,
                             rect_3d_width, rect_3d_height, mean, std,
                             do_augment, label_func, occluder=None, joints=None, joints_vis=None,
-                            DEBUG=False):
+                            DEBUG=False, is_train=True):
     # 1. load image
     cvimg = cv2.imread(
         img_path, cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION)
@@ -160,7 +160,7 @@ def get_single_patch_sample(img_path, center_x, center_y, width, height, flip_pa
     for n_c in range(img_channels):
         img_patch[n_c, :, :] = np.clip(img_patch[n_c, :, :] * color_scale[n_c], 0, 255)
         if mean is not None and std is not None:
-            img_patch[n_c, :, :] = (img_patch[n_c, :, :] - mean[n_c]) / std[n_c]
+            img_patch[n_c, :, :] = (img_patch[n_c, :, :] - mean[n_c]) / std[n_c] / 255  # TODO: check if this is worse
 
     # 4. (Only for train/val) generate joint ground truth
     if do_flip:
