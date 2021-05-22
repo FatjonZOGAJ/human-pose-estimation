@@ -160,7 +160,7 @@ def get_single_patch_sample(img_path, center_x, center_y, width, height, flip_pa
     for n_c in range(img_channels):
         img_patch[n_c, :, :] = np.clip(img_patch[n_c, :, :] * color_scale[n_c], 0, 255)
         if mean is not None and std is not None:
-            img_patch[n_c, :, :] = (img_patch[n_c, :, :] - mean[n_c]) / std[n_c] / 255  # TODO: check if this is worse
+            img_patch[n_c, :, :] = (img_patch[n_c, :, :] - mean[n_c]) / std[n_c] #/ 255  # TODO: check if this is worse: was worse for submission 26 vs 25
 
     # 4. (Only for train/val) generate joint ground truth
     if do_flip:

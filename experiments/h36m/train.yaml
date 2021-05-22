@@ -12,7 +12,7 @@ DATASET:
   NUM_CAMS: 4
   OCCLUSION: True
   VOC: 'VOC2012' # If you want to use synthetic occlusion, please enter the VOC path
-  AUGMENT: False
+  AUGMENT: True
 MODEL:
   NAME: pose3d_vol
   BACKBONE: resnext101_32x8d
