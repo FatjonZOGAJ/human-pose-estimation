@@ -36,6 +36,7 @@ class PoseResNetVol(nn.Module):
         self._make_head(self.num_joints, self.depth_res)
         self._softmax = torch.nn.Softmax(dim=2)
         self._range = torch.nn.Parameter(torch.arange(1, 64 + 1), requires_grad=False)
+        self.dropout = nn.Dropout()  # TODO: try with Dropout2D
 
     def _make_backbone(self, is_pretrain):
         self._backbone = CustomResNet50()
@@ -81,7 +82,9 @@ class PoseResNetVol(nn.Module):
 
     def forward(self, x):
         cnn_features = self._backbone.forward(x)
+        cnn_features = self.dropout(cnn_features)
         heatmaps = self._head(cnn_features)
+        heatmaps = self.dropout(heatmaps)
         # Check trainable parameters
         pred_jnts = self._softmax_integral(heatmaps)
         return pred_jnts
