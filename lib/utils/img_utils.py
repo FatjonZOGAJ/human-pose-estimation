@@ -138,7 +138,7 @@ def get_single_patch_sample(img_path, center_x, center_y, width, height, flip_pa
     img_height, img_width, img_channels = cvimg.shape
 
     # 2. get augmentation params
-    if do_augment:
+    if do_augment and is_train:
         scale, rot, do_flip, color_scale = do_augmentation(get_default_augment_config())
     else:
         scale, rot, do_flip, color_scale = 1.0, 0, False, [1.0, 1.0, 1.0]
