@@ -16,7 +16,7 @@ DATASET:
 MODEL:
   NAME: pose3d_resnet_vol
   INIT_WEIGHTS: True # set this to true to use ImageNet pre-trained models
-  RESUME: 'checkpoint.pth.tar'
+  RESUME: ''
   TIME_STR: '' # uses most recent if not set
   NUM_JOINTS: 17
   DEPTH_RES: 64
