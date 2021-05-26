@@ -7,27 +7,27 @@ class DAE(nn.Module):
         super(DAE, self).__init__()
         self.encoder = nn.Sequential(
             nn.Dropout(0.3),
-            nn.Linear(cfg.MODEL.NUM_JOINTS * 3, 256),
-            nn.Tanh(),
-            nn.Linear(256, 512),
-            nn.Tanh(),
-            nn.Linear(512, 1024),
-            nn.Tanh()
+            nn.Linear(cfg.MODEL.NUM_JOINTS * 3, 64),
+            nn.ReLU(True),
+            nn.Linear(64, 128),
+            nn.ReLU(True),
+            nn.Linear(128, 256),
+            nn.ReLU(True),
         )
 
         self.decoder = nn.Sequential(
-            nn.Linear(1024, 512),
-            nn.Tanh(),
-            nn.Linear(512, 256),
-            nn.Tanh(),
-            nn.Linear(256, cfg.MODEL.NUM_JOINTS * 3),
-            nn.Tanh()
+            nn.Linear(256, 128),
+            nn.ReLU(True),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, cfg.MODEL.NUM_JOINTS * 3),
         )
 
     def forward(self, x):
         batch, joints, dims = x.shape
         x = x.reshape([batch, joints * dims])
         x = self.encoder(x)
+
         x = self.decoder(x)
         x = x.reshape([batch, joints, dims])
 

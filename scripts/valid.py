@@ -69,7 +69,7 @@ def main():
 
     DEBUG_MODE_BREAK = False    # for prediction, do not break but predict all test samples
     # evaluate on validation set
-    preds_in_patch_with_score = validate(valid_loader, model, DEBUG_MODE_BREAK)
+    preds_in_patch_with_score = validate(valid_loader, model,torch.nn.Identity(), DEBUG_MODE_BREAK)
     acc = evaluate(0, preds_in_patch_with_score, valid_loader, final_output_dir, DEBUG_MODE_BREAK, config.DEBUG.DEBUG,
                    writer_dict, time_str)
 

@@ -45,7 +45,9 @@ def train(config, train_loader, model, dae, criterion, optimizer, epoch, writer_
 
         batch_size = batch_data.size(0)
         # compute output
-        preds = dae(model(batch_data))
+        with torch.no_grad():
+            preds = model(batch_data)
+        preds = dae(preds)
 
         loss = criterion(preds, batch_label, batch_label_weight)
         del batch_data, batch_label, batch_label_weight, preds

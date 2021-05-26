@@ -172,6 +172,8 @@ def main():
                 config.TRAIN.END_EPOCH = config.TRAIN.BEGIN_EPOCH + config.TRAIN.END_EPOCH
                 best_perf = checkpoint['perf']
                 model.load_state_dict(checkpoint['state_dict'])
+                #if config.MODEL.DAE and 'dae_state_dict' in checkpoint.keys():
+                   # dae.load_state_dict(checkpoint['dae_state_dict'])
                 #optimizer.load_state_dict(checkpoint['optimizer'])
                 lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
                 if 'train_step' in checkpoint:
