@@ -24,7 +24,7 @@ def main():
     args = parse_args()
     reset_config(config, args)
 
-    logger, final_output_dir, time_str = create_logger(config, args.cfg, 'valid', config.MODEL.TIME_STR)
+    logger, final_output_dir, time_str = create_logger(config, args.cfg, config.MODEL.TIME_STR, 'valid')
 
     logger.info(pprint.pformat(args))
     logger.info(pprint.pformat(config))

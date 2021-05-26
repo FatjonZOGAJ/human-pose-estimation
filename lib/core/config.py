@@ -16,6 +16,7 @@ config.EXP_NAME = 'default'
 # common params for NETWORK
 config.MODEL = edict()
 config.MODEL.NAME = 'pose3d_alexnet_reg'
+config.MODEL.BACKBONE = 'resnext101_32x8d'
 config.MODEL.INIT_WEIGHTS = True
 config.MODEL.DOWNLOAD_PRETRAINED = True
 config.MODEL.PRETRAINED = ''

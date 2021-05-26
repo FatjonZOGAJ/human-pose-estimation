@@ -10,6 +10,7 @@ DATASET:
   TEST_SET: test
 MODEL:
   NAME: pose3d_resnext_reg
+  TIME_STR: ''
   NUM_JOINTS: 17
 TEST:
   BATCH_SIZE: 16

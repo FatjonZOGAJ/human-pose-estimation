@@ -9,7 +9,9 @@ DATASET:
   ROOT: 'data/h36m/'
   TEST_SET: test
 MODEL:
-  NAME: pose3d_resnet_vol
+  NAME: pose3d_vol
+  BACKBONE: resnext101_32x8d
+  TIME_STR: ''
   NUM_JOINTS: 17
   DEPTH_RES: 64
   VOLUME:

@@ -79,6 +79,13 @@ def parse_args():
                         help='run on cpu',
                         type=int,
                         default=-1)
+    parser.add_argument('--model_backbone',
+                        help='Preload a previously trained model. Currently only works for validation.',
+                        type=str)
+    parser.add_argument('--dataset_augment',
+                        help='flip, rotate, scale etc',
+                        type=int,
+                        default=-1)
 
     args = parser.parse_args()
 
@@ -102,6 +109,10 @@ def reset_config(config, args, valid=False):
         config.MODEL.TIME_STR = args.model_time_str
     elif valid and not config.MODEL.TIME_STR:
         raise ValueError('No MODEL.TIMESTR provided')
+    if args.model_backbone:
+        config.MODEL.BACKBONE = args.model_backbone
+    if args.dataset_augment != -1:
+        config.DATASET.AUGMENT = bool(args.dataset_augment)
 
 
 def check_train_mode(config, logger):
@@ -118,7 +129,7 @@ def main():
     args = parse_args()
     reset_config(config, args)
 
-    logger, final_output_dir, time_str = create_logger(config, args.cfg, 'train', config.MODEL.TIME_STR)
+    logger, final_output_dir, time_str = create_logger(config, args.cfg, config.MODEL.TIME_STR, 'train')
 
     logger.info(pprint.pformat(args))
     logger.info(pprint.pformat(config))
