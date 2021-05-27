@@ -19,10 +19,6 @@ MODEL:
       DECONV_WITH_BIAS: false
       NUM_DECONV_LAYERS: 3
       NUM_DECONV_FILTERS: 256
-      LAYER_CONFIG:
-        - 4
-        - 1
-        - 0
       BN_MOMENTUM: 0.1
 TEST:
   BATCH_SIZE: 32

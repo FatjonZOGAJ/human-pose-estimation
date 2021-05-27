@@ -18,7 +18,7 @@ MODEL:
   BACKBONE: resnext101_32x8d
   INIT_WEIGHTS: True # set this to true to use ImageNet pre-trained models
   RESUME: 'checkpoint.pth.tar'
-  TIME_STR: ''
+  TIME_STR: '2021-05-27-13-27-35'
   NUM_JOINTS: 17
   DEPTH_RES: 64
   VOLUME:
@@ -26,10 +26,6 @@ MODEL:
     DECONV_WITH_BIAS: false
     NUM_DECONV_LAYERS: 3
     NUM_DECONV_FILTERS: 256
-    LAYER_CONFIG:
-      - 4
-      - 1
-      - 0
     BN_MOMENTUM: 0.1
 LOSS:
   FN: 'L1JointRegressionLoss'

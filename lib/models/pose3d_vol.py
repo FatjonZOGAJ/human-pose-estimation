@@ -6,11 +6,9 @@ import torch.nn as nn
 
 import torchvision.models
 from torch.hub import load_state_dict_from_url
-from torchvision import models
 from torchvision.models.resnet import model_urls, BasicBlock, Bottleneck
 
 logger = logging.getLogger(__name__)
-
 
 block_layers = {"18": [BasicBlock, [2, 2, 2, 2]],
                 "34": [BasicBlock, [3, 4, 6, 3]],
@@ -20,14 +18,10 @@ block_layers = {"18": [BasicBlock, [2, 2, 2, 2]],
                 }
 
 
-class CustomResNet(torchvision.models.ResNet, nn.Module):
-    def __init__(self, model_backbone, pretrained, num_classes=1000, **kwargs):
-        super(CustomResNet, self).__init__(**self.get_model(model_backbone), num_classes=num_classes, **kwargs)
-
-    # hacky workaround to get parameters in resnet.py and still overwrite ResNet
-    def get_model(self, model_backbone):
+class CustomResNet(torchvision.models.ResNet):
+    def __init__(self, model_backbone):
         kwargs = {}
-        size = [s for s in re.findall(r'\d+', model_backbone)][0]       # first number
+        size = [s for s in re.findall(r'\d+', model_backbone)][0]  # first number
         b_l = block_layers[size]
         kwargs['block'] = b_l[0]
         kwargs['layers'] = b_l[1]
@@ -39,8 +33,7 @@ class CustomResNet(torchvision.models.ResNet, nn.Module):
                 kwargs['width_per_group'] = 8
         if model_backbone.startswith('wide_resnet'):
             kwargs['width_per_group'] = 64 * 2
-
-        return kwargs
+        super(CustomResNet, self).__init__(**kwargs)
 
     def forward(self, x):
         x = self.conv1(x)
@@ -57,42 +50,39 @@ class CustomResNet(torchvision.models.ResNet, nn.Module):
 
 class PoseResNetVol(nn.Module):
 
-    def __init__(self, cfg, is_pretrain, n_frozen_layers=7, **kwargs):
+    def __init__(self, cfg, is_pretrain, n_frozen_layers=7):
         super(PoseResNetVol, self).__init__()
         self.volume_config = cfg.MODEL.VOLUME
         self.num_joints = cfg.MODEL.NUM_JOINTS
         self.depth_res = cfg.MODEL.DEPTH_RES
         self.n_frozen_layers = n_frozen_layers
-        self._make_backbone(is_pretrain, cfg.MODEL.BACKBONE, cfg.MODEL.NUM_JOINTS)
+        self._make_backbone(is_pretrain, cfg.MODEL.BACKBONE)
         self._make_head(self.num_joints, self.depth_res)
         self._softmax = torch.nn.Softmax(dim=2)
         self._range = torch.nn.Parameter(torch.arange(1, 64 + 1), requires_grad=False)
 
-    def _make_backbone(self, is_pretrain, model_backbone, num_joints):
-        self._backbone = CustomResNet(
-            model_backbone,
-            pretrained=False,  # load manually down below (optionally own pretrained data)
-            # TODO check if it makes sense to preload a model with 17 joints as classes when it's trained for 1000
-            #num_classes=num_joints * 3,  # num_classes like in adapted pose3d_alexnet_reg.py
-        )
-        if is_pretrain:
-            logger.info(f'=> loading {model_backbone} weights')
-        state_dict = load_state_dict_from_url(model_urls[model_backbone],
-                                              model_dir='lib/models/pretrained_data',  # /checkpoints',
-                                              file_name=f'{model_backbone}_original.pth',
-                                              progress=True)
-        self._backbone.load_state_dict(state_dict)
+    def _make_backbone(self, is_pretrain, model_backbone):
+        self._backbone = CustomResNet(model_backbone)
         # delete head of backbone, because we create our own
         del self._backbone.avgpool
         del self._backbone.fc
-        logger.info(f'=> freezing {model_backbone} first {self.n_frozen_layers} layers')
-        for i, child in enumerate(list(self._backbone.children())[:self.n_frozen_layers]):
-            for param in child.parameters():
-                param.requires_grad = False
+
+        if is_pretrain:
+            logger.info(f'=> loading {model_backbone} weights')
+            state_dict = load_state_dict_from_url(model_urls[model_backbone],
+                                                  model_dir='lib/models/pretrained_data',  # /checkpoints',
+                                                  file_name=f'{model_backbone}_original.pth',
+                                                  progress=True)
+            self._backbone.load_state_dict(state_dict, strict=False)
+
+            logger.info(f'=> freezing {model_backbone} first {self.n_frozen_layers} layers')
+            for i, child in enumerate(list(self._backbone.children())[:self.n_frozen_layers]):
+                for param in child.parameters():
+                    param.requires_grad = False
 
     def _make_head(self, num_joints, depth_res):
         layers = []
-        kernel, padding, output_padding = self.volume_config.LAYER_CONFIG
+        kernel, padding, output_padding = [4, 1, 0]
         filters = self.volume_config.NUM_DECONV_FILTERS
         output_size = 2048
         for i in range(self.volume_config.NUM_DECONV_LAYERS):
@@ -120,7 +110,6 @@ class PoseResNetVol(nn.Module):
     def forward(self, x):
         cnn_features = self._backbone.forward(x)
         heatmaps = self._head(cnn_features)
-        # Check trainable parameters
         pred_jnts = self._softmax_integral(heatmaps)
         return pred_jnts
 
