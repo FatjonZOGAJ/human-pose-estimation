@@ -20,7 +20,7 @@ MODEL:
   RESUME: 'checkpoint.pth.tar'
   TIME_STR: '2021-05-27-13-27-35'
   NUM_JOINTS: 17
-  DEPTH_RES: 64
+  DEPTH_RES: 1
   VOLUME:
     FINAL_CONV_KERNEL: 1
     DECONV_WITH_BIAS: false

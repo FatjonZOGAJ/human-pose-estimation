@@ -126,24 +126,26 @@ class PoseResNetVol(nn.Module):
 
         x = heatmaps.sum(dim=2)
         x = x.sum(dim=2)
+        x = x * self._range
+        x = x.sum(dim=2, keepdim=True)
+        x = x / float(width) - 0.5
+
         y = heatmaps.sum(dim=2)
         y = y.sum(dim=3)
-        z = heatmaps.sum(dim=3)
-        z = z.sum(dim=3)
-
-        x = x * self._range
         y = y * self._range
-        z = z * self._range
-
-        x = x.sum(dim=2, keepdim=True)
         y = y.sum(dim=2, keepdim=True)
-        z = z.sum(dim=2, keepdim=True)
-
-        x = x / float(width) - 0.5
         y = y / float(height) - 0.5
-        z = z / float(depth) - 0.5
-        pred_jnts = torch.cat((x, y, z), dim=2)
-        return pred_jnts
+
+        if self.depth_res != 1:
+            z = heatmaps.sum(dim=3)
+            z = z.sum(dim=3)
+            z = z * self._range
+            z = z.sum(dim=2, keepdim=True)
+            z = z / float(depth) - 0.5
+        else:
+            z = torch.zeros(x.shape, requires_grad=False).to(x.device)
+
+        return torch.cat((x, y, z), dim=2)
 
 
 def get_pose_net(cfg, is_pretrain, **kwargs):

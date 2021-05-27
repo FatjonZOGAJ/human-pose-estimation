@@ -45,6 +45,7 @@ MPII_NAMES[15] = 'LWrist'
 logger = logging.getLogger(__name__)
 
 H36M_TO_MPII_PERM = np.array([H36M_NAMES.index(h) for h in MPII_NAMES if h != '' and h in H36M_NAMES])
+MPII_TO_H36M_PERM = np.array([MPII_NAMES.index(h) for h in H36M_NAMES if h != '' and h in MPII_NAMES])
 
 
 class JointDataset(Dataset):

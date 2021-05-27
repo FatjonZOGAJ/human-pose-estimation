@@ -4,8 +4,8 @@ import numpy as np
 import torch.nn as nn
 import math
 
-def weighted_l1_loss(input, target, weights, size_average, norm=False):
 
+def weighted_l1_loss(input, target, weights, size_average, norm=False):
     if norm:
         input = input / torch.norm(input, 1)
         target = target / torch.norm(target, 1)
@@ -18,10 +18,12 @@ def weighted_l1_loss(input, target, weights, size_average, norm=False):
     else:
         return out.sum()
 
+
 def _assert_no_grad(tensor):
     assert not tensor.requires_grad, \
         "nn criterions don't compute the gradient w.r.t. targets - please " \
         "mark these tensors as not requiring gradients"
+
 
 class L1JointRegressionLoss(nn.Module):
     def __init__(self, num_joints, size_average=True, reduce=True, norm=False):
@@ -33,6 +35,9 @@ class L1JointRegressionLoss(nn.Module):
 
     def forward(self, preds, *args):
         gt_joints = args[0]
+        gt_joints = gt_joints.reshape((preds.shape[0], self.num_joints, 3))
+        gt_joints[:, :, 2] = 0
+        gt_joints = gt_joints.reshape((preds.shape[0], self.num_joints * 3))
         gt_joints_vis = args[1]
 
         pred_jts = preds.reshape((preds.shape[0], self.num_joints * 3))
@@ -40,6 +45,7 @@ class L1JointRegressionLoss(nn.Module):
         _assert_no_grad(gt_joints)
         _assert_no_grad(gt_joints_vis)
         return weighted_l1_loss(pred_jts, gt_joints, gt_joints_vis, self.size_average, self.norm)
+
 
 def generate_joint_location_label(patch_width, patch_height, joints, joints_vis):
     joints[:, 0] = joints[:, 0] / patch_width - 0.5
@@ -49,6 +55,7 @@ def generate_joint_location_label(patch_width, patch_height, joints, joints_vis)
     joints = joints.reshape((-1))
     joints_vis = joints_vis.reshape((-1))
     return joints, joints_vis
+
 
 def get_joint_regression_result(patch_width, patch_height, preds):
     num_joints = preds.shape[1] // 3
@@ -66,8 +73,10 @@ def get_joint_regression_result(patch_width, patch_height, preds):
 
     return coords
 
+
 def get_label_func():
     return generate_joint_location_label
+
 
 def get_result_func():
     return get_joint_regression_result
