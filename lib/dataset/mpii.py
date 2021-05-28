@@ -47,10 +47,10 @@ class MPII(JointDataset):
         }
 
         label = label.reshape([16, 3])[MPII_TO_H36M_PERM]
-        label = np.insert(label, 8, [0, 0, 0])
+        label = np.insert(label, 7, [0, 0, 0], axis=0)
         label = label.flatten()
         label_weight = label_weight.reshape([16, 3])[MPII_TO_H36M_PERM]
-        label_weight = np.insert(label_weight, 8, [0, 0, 0])
+        label_weight = np.insert(label_weight, 7, [0, 0, 0], axis=0)
         label_weight = label_weight.flatten()
 
         return img_patch.astype(np.float32), label.astype(np.float32), \
