@@ -75,7 +75,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             break
 
 
-def validate(val_loader, model, DEBUG_MODE_BREAK):
+def validate(val_loader, model, DEBUG_MODE_BREAK, config=None):
     print("Validation stage")
     result_func = get_result_func()
 
@@ -87,10 +87,10 @@ def validate(val_loader, model, DEBUG_MODE_BREAK):
         for i, data in enumerate(val_loader):
             batch_data, batch_label, batch_label_weight, meta = data
 
-            # if not config.CPU:
-            batch_data = batch_data.cuda()
-            batch_label = batch_label.cuda()
-            batch_label_weight = batch_label_weight.cuda()
+            if config is not None and not config.CPU:
+                batch_data = batch_data.cuda()
+                batch_label = batch_label.cuda()
+                batch_label_weight = batch_label_weight.cuda()
 
             # compute output
             preds = model(batch_data)
