@@ -8,6 +8,7 @@ import yaml
 import _init_paths
 
 import torch
+
 # You can uncomment this line for reproducibility
 torch.manual_seed(3)
 import torch.optim
@@ -25,15 +26,16 @@ from lib.utils.utils import create_logger
 import lib.core.loss as loss
 import lib.dataset as dataset
 import lib.models as models
+from torch.utils.data import ConcatDataset
 
 import numpy as np
-
 
 # You can uncomment this line for reproducibility
 np.random.seed(10)
 
 # enable IDE debugging: set working directory to project root folder
-import sys # sys.path.append('../')
+import sys  # sys.path.append('../')
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train keypoints network')
@@ -64,7 +66,7 @@ def parse_args():
     parser.add_argument('--model_init_weights',
                         help='load pre trained',
                         type=int,
-                        default=-1) # -1 so that we do not overwrite config if we do not pass anything
+                        default=-1)  # -1 so that we do not overwrite config if we do not pass anything
     parser.add_argument('--model_name',
                         help='file to load. Note: Use cfg instead',
                         type=str)
@@ -124,7 +126,7 @@ def check_train_mode(config, logger):
 
 
 def main():
-    best_perf = -10000 # store first created model (primarily for DEBUG_MODE when we only train for 1 iteration)
+    best_perf = -10000  # store first created model (primarily for DEBUG_MODE when we only train for 1 iteration)
 
     args = parse_args()
     reset_config(config, args)
@@ -182,7 +184,7 @@ def main():
                 optimizer.load_state_dict(checkpoint['optimizer'])
                 lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
                 if 'train_step' in checkpoint:
-                    writer_dict['train_global_steps']= checkpoint['train_step']
+                    writer_dict['train_global_steps'] = checkpoint['train_step']
                 if 'valid_step' in checkpoint:
                     writer_dict['valid_global_steps'] = checkpoint['valid_step']
                 logger.info('=> resume from pretrained model {}'.format(config.MODEL.RESUME))
@@ -192,24 +194,21 @@ def main():
         else:
             logger.warning(f'WARN: MODEL.RESUME set, but no file found {config.MODEL.RESUME}')
 
-    # Choose the dataset, either Human3.6M or mpii
-    ds = eval('dataset.' + config.DATASET.DATASET)
+    if config.DATASET.DATASET == 'both':
+        train_dataset1, valid_dataset = get_datasets(logger, eval('dataset.h36m'), 'h36m')
+        train_dataset2, valid_dataset_mpii = get_datasets(logger, eval('dataset.mpii'), 'mpii')
+        train_dataset = ConcatDataset([train_dataset1, train_dataset2, valid_dataset_mpii])
+        valid_loader_mpii = torch.utils.data.DataLoader(
+            valid_dataset,
+            batch_size=config.TEST.BATCH_SIZE * len(gpus),
+            shuffle=False,
+            num_workers=config.WORKERS,
+            pin_memory=True
+        )
 
-    # Data loading code
-    logger.info('=> loading the train dataset')
-    train_dataset = ds(
-        cfg=config,
-        root=config.DATASET.ROOT,
-        image_set=config.DATASET.TRAIN_SET,
-        is_train=True
-    )
-    logger.info('=> loading the valid dataset')
-    valid_dataset = ds(
-        cfg=config,
-        root=config.DATASET.ROOT,
-        image_set=config.DATASET.TEST_SET,
-        is_train=False
-    )
+    else:
+        train_dataset, valid_dataset = get_datasets(logger, eval('dataset.' + config.DATASET.DATASET),
+                                                    config.DATASET.DATASET)
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -226,8 +225,6 @@ def main():
         pin_memory=True
     )
 
-    #torch.cuda.empty_cache()  # TODO: check if necessary
-
     best_model = False
     for epoch in range(config.TRAIN.BEGIN_EPOCH, config.TRAIN.END_EPOCH):
         # train for one epoch
@@ -236,9 +233,9 @@ def main():
 
         # evaluate on validation set
         preds_in_patch_with_score = validate(valid_loader, model, config.TRAIN.DEBUG_MODE)
-        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.TRAIN.DEBUG_MODE, config.DEBUG.DEBUG,
+        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.TRAIN.DEBUG_MODE,
+                       config.DEBUG.DEBUG,
                        writer_dict)
-
         perf_indicator = 500. - acc if config.DATASET.DATASET == 'h36m' or 'mpii_3dhp' or 'jta' else acc
 
         if perf_indicator > best_perf:
@@ -264,6 +261,25 @@ def main():
     logger.info('saving final model state to {}'.format(
         final_model_state_file))
     torch.save(model.module.state_dict(), final_model_state_file)
+
+
+def get_datasets(logger, ds, name):
+    # Data loading code
+    logger.info('=> loading the train dataset')
+    train_dataset = ds(
+        cfg=config,
+        root=f'data/{name}',
+        image_set=config.DATASET.TRAIN_SET,
+        is_train=True
+    )
+    logger.info('=> loading the valid dataset')
+    valid_dataset = ds(
+        cfg=config,
+        root=f'data/{name}',
+        image_set=config.DATASET.TEST_SET,
+        is_train=False
+    )
+    return train_dataset, valid_dataset
 
 
 if __name__ == '__main__':
