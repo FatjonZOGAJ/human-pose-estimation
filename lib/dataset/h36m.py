@@ -1,3 +1,4 @@
+import cv2
 import torch
 import pickle as pkl
 import json
@@ -83,13 +84,10 @@ class H36M(JointDataset):
                                                                              the_db['center_y'], the_db['width'],
                                                                              the_db['height'], self.flip_pairs,
                                                                              self.patch_width, self.patch_height,
-                                                                             self.rect_3d_width, self.rect_3d_height,
-                                                                             self.mean, self.std,
+                                                                             self.rect_3d_width, self.mean, self.std,
                                                                              self.cfg.DATASET.AUGMENT, self.label_func,
-                                                                             occluder=self.occluders,
-                                                                             joints=joints,
+                                                                             occluder=self.occluders, joints=joints,
                                                                              joints_vis=joints_vis,
-                                                                             DEBUG=self.cfg.DEBUG.DEBUG,
                                                                              is_train=self.is_train)
 
         meta = {
@@ -190,11 +188,9 @@ class H36M(JointDataset):
 
             if 'joints_3d' in gt.keys() and 'joints_3d_vis' in gt.keys():
                 gt_2d_kpt = gt['joints_3d'].copy()
-                gt_vis = gt['joints_3d_vis'].copy()
                 has_gt = True
             else:
                 gt_2d_kpt = np.zeros((17, 3))
-                gt_vis = np.zeros((17, 3))
                 has_gt = False
 
             # get camera depth from root joint
@@ -202,7 +198,6 @@ class H36M(JointDataset):
 
             pre_2d_kpt[:, 2] = pre_2d_kpt[:, 2] + gt_3d_root[0, 2]
             gt_2d_kpt[:, 2] = gt_2d_kpt[:, 2] + gt_3d_root[0, 2]
-
             joint_num = pre_2d_kpt.shape[0]
 
             # back project
@@ -278,10 +273,8 @@ class H36M(JointDataset):
                 m = 2  # 1 for MPII joints, 2 for H36M joints
 
                 img = cv2.imread(self.root + gts[n_sample]['image'])
-
                 fig = plt.figure(figsize=(19.2, 10.8))
                 canvas = FigureCanvas(fig)
-
                 lc = (255, 0, 0), '#ff0000'
                 rc = (0, 0, 255), '#0000ff'
                 ax = fig.add_subplot(131)
@@ -356,3 +349,39 @@ class H36M(JointDataset):
                 np.savetxt(gt_save_path, gt_to_save, delimiter=',', header=header_gt, fmt=fmt_gt, comments='')
 
         return name_value, np.asarray(dist).mean()
+
+    def plot_2d_images_with_coords(self, img, pre_2d_kpt, gt_2d_kpt):
+        from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+        import matplotlib.pyplot as plt
+        from lib.utils.vis import drawskeleton
+        img = img.permute([1, 2, 0]).numpy()
+        for i in range(0, 3):
+            img[:, :, i] = (img[:, :, i] * self.std[i]) + self.mean[i]
+        img = cv2.UMat(np.int8(img))
+
+        gt_3d_root = np.reshape(gt_2d_kpt[:, 0:3][0], (1, 3))
+        pre_2d_kpt = pre_2d_kpt[:, 0:3]
+        gt_2d_kpt = gt_2d_kpt[:, 0:3]
+
+        pre_2d_kpt[:, 2] = pre_2d_kpt[:, 2] + gt_3d_root[0, 2]
+        gt_2d_kpt[:, 2] = gt_2d_kpt[:, 2] + gt_3d_root[0, 2]
+
+        # Scaling to resized image -> 1002x1000 to 256x256
+        gt_2d_kpt[:, 1] = gt_2d_kpt[:, 1] * (256 / 514)
+        gt_2d_kpt[:, 0] = gt_2d_kpt[:, 0] * (256 / 1000)
+        pre_2d_kpt[:, 1] = pre_2d_kpt[:, 1] * (256 / 514)
+        pre_2d_kpt[:, 0] = pre_2d_kpt[:, 0] * (256 / 1000)
+
+        m = 2  # 1 for MPII joints, 2 for H36M joints
+
+        fig = plt.figure(figsize=(19.2, 10.8))
+        canvas = FigureCanvas(fig)
+        lc = (255, 0, 0), '#ff0000'
+        rc = (0, 0, 255), '#0000ff'
+        ax = fig.add_subplot(111)
+        drawskeleton(img, pre_2d_kpt, thickness=1, lcolor=lc[0], rcolor=rc[0], mpii=m)
+        drawskeleton(img, gt_2d_kpt, thickness=1, lcolor=(0, 255, 0), rcolor=(0, 255, 0), mpii=m)
+        ax.imshow(img.get()[:, :, ::-1])
+        ax.set_title('Predictions in 2D')
+        canvas.draw()
+        plt.show()
