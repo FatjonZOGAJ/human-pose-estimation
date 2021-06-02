@@ -72,14 +72,12 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             writer_dict['train_global_steps'] = global_steps + 1
 
         if config.TRAIN.DEBUG_MODE and i == 0:
-            imdb_list = train_loader.dataset.db
+            # Scale to transformed image size i.e. 256x256
             preds_in_patch_with_score = [get_joint_regression_result(256, 256, preds[0].cpu().reshape([1, 17, 3]))]
-            preds_in_patch_with_score = dirty_solution_for_partial_batches(preds_in_patch_with_score)
-            preds = get_preds_in_patch_with_score(imdb_list, 0, preds_in_patch_with_score)
+            preds = dirty_solution_for_partial_batches(preds_in_patch_with_score)[0]
 
             gt_in_patch_with_score = [get_joint_regression_result(256, 256, batch_label[0].cpu().reshape([1, 17, 3]))]
-            gt_in_patch_with_score = dirty_solution_for_partial_batches(gt_in_patch_with_score)
-            gt = get_preds_in_patch_with_score(imdb_list, 0, gt_in_patch_with_score)
+            gt = dirty_solution_for_partial_batches(gt_in_patch_with_score)[0]
 
             train_loader.dataset.plot_2d_images_with_coords(batch_data[0].cpu(), preds, gt)
 
@@ -108,6 +106,7 @@ def validate(val_loader, model, DEBUG_MODE_BREAK):
             preds = model(batch_data)
             del batch_data, batch_label, batch_label_weight
 
+            # Scale to transformed image size i.e. 256x256
             preds_in_patch_with_score.append(result_func(256, 256, preds))
             del preds
             if DEBUG_MODE_BREAK and i == DEBUG_MODE_MAX_ITER:
@@ -146,6 +145,7 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DE
              writer_dict=None,
              time_str=''):
     print("Evaluation stage")
+
     # From patch to original image coordinate system
     imdb_list = val_loader.dataset.db
     imdb = val_loader.dataset
@@ -156,6 +156,7 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DE
             len(val_loader.dataset) if not DEBUG_MODE_BREAK
             else DEBUG_MODE_MAX_ITER
     ):
+        # Scale to original image size i.e. 1000x1002
         preds_in_img_with_score.append(
             get_preds_in_patch_with_score(imdb_list, n_sample, preds_in_patch_with_score))
 
