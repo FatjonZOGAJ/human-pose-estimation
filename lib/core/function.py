@@ -74,17 +74,12 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
         if config.TRAIN.DEBUG_MODE and i == 0:
             imdb_list = train_loader.dataset.db
             preds_in_patch_with_score = [get_joint_regression_result(256, 256, preds[0].cpu().reshape([1, 17, 3]))]
-            preds_in_patch_with_score = dirty_solution_for_partial_batches(preds_in_patch_with_score)[0]
-            preds = trans_coords_from_patch_to_org_3d(preds_in_patch_with_score, imdb_list[0]['center_x'],
-                                                      imdb_list[0]['center_y'], imdb_list[0]['width'],
-                                                      imdb_list[0]['height'], 256, 256,
-                                                      2000, 2000)
+            preds_in_patch_with_score = dirty_solution_for_partial_batches(preds_in_patch_with_score)
+            preds = get_preds_in_patch_with_score(imdb_list, 0, preds_in_patch_with_score)
+
             gt_in_patch_with_score = [get_joint_regression_result(256, 256, batch_label[0].cpu().reshape([1, 17, 3]))]
-            gt_in_patch_with_score = dirty_solution_for_partial_batches(gt_in_patch_with_score)[0]
-            gt = trans_coords_from_patch_to_org_3d(gt_in_patch_with_score, imdb_list[0]['center_x'],
-                                                   imdb_list[0]['center_y'], imdb_list[0]['width'],
-                                                   imdb_list[0]['height'], 256, 256,
-                                                   2000, 2000)
+            gt_in_patch_with_score = dirty_solution_for_partial_batches(gt_in_patch_with_score)
+            gt = get_preds_in_patch_with_score(imdb_list, 0, gt_in_patch_with_score)
 
             train_loader.dataset.plot_2d_images_with_coords(batch_data[0].cpu(), preds, gt)
 
@@ -162,10 +157,7 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DE
             else DEBUG_MODE_MAX_ITER
     ):
         preds_in_img_with_score.append(
-            trans_coords_from_patch_to_org_3d(preds_in_patch_with_score[n_sample], imdb_list[n_sample]['center_x'],
-                                              imdb_list[n_sample]['center_y'], imdb_list[n_sample]['width'],
-                                              imdb_list[n_sample]['height'], 256, 256,
-                                              2000, 2000))
+            get_preds_in_patch_with_score(imdb_list, n_sample, preds_in_patch_with_score))
 
     preds_in_img_with_score = np.asarray(preds_in_img_with_score)
 
@@ -183,3 +175,10 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DE
         perf = 0.0
 
     return perf
+
+
+def get_preds_in_patch_with_score(imdb_list, n_sample, preds_in_patch_with_score):
+    return trans_coords_from_patch_to_org_3d(preds_in_patch_with_score[n_sample], imdb_list[n_sample]['center_x'],
+                                             imdb_list[n_sample]['center_y'], imdb_list[n_sample]['width'],
+                                             imdb_list[n_sample]['height'], 256, 256,
+                                             2000, 2000)

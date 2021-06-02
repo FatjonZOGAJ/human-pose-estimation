@@ -357,20 +357,17 @@ class H36M(JointDataset):
         img = img.permute([1, 2, 0]).numpy()
         for i in range(0, 3):
             img[:, :, i] = (img[:, :, i] * self.std[i]) + self.mean[i]
-        img = cv2.UMat(np.int8(img))
+        # img = cv2.UMat(np.int8(img))
+        img = cv2.UMat(np.int8(np.ones([1000, 1000, 3])))
 
-        gt_3d_root = np.reshape(gt_2d_kpt[:, 0:3][0], (1, 3))
-        pre_2d_kpt = pre_2d_kpt[:, 0:3]
-        gt_2d_kpt = gt_2d_kpt[:, 0:3]
-
-        pre_2d_kpt[:, 2] = pre_2d_kpt[:, 2] + gt_3d_root[0, 2]
-        gt_2d_kpt[:, 2] = gt_2d_kpt[:, 2] + gt_3d_root[0, 2]
+        pre_2d_kpt = pre_2d_kpt[:, 0:2]
+        gt_2d_kpt = gt_2d_kpt[:, 0:2]
 
         # Scaling to resized image -> 1002x1000 to 256x256
-        gt_2d_kpt[:, 1] = gt_2d_kpt[:, 1] * (256 / 514)
-        gt_2d_kpt[:, 0] = gt_2d_kpt[:, 0] * (256 / 1000)
-        pre_2d_kpt[:, 1] = pre_2d_kpt[:, 1] * (256 / 514)
-        pre_2d_kpt[:, 0] = pre_2d_kpt[:, 0] * (256 / 1000)
+        # gt_2d_kpt[:, 1] = gt_2d_kpt[:, 1] * (256 / 1002)
+        # gt_2d_kpt[:, 0] = gt_2d_kpt[:, 0] * (256 / 1000)
+        # pre_2d_kpt[:, 1] = pre_2d_kpt[:, 1] * (256 / 1002)
+        # pre_2d_kpt[:, 0] = pre_2d_kpt[:, 0] * (256 / 1000)
 
         m = 2  # 1 for MPII joints, 2 for H36M joints
 
@@ -379,8 +376,8 @@ class H36M(JointDataset):
         lc = (255, 0, 0), '#ff0000'
         rc = (0, 0, 255), '#0000ff'
         ax = fig.add_subplot(111)
-        drawskeleton(img, pre_2d_kpt, thickness=1, lcolor=lc[0], rcolor=rc[0], mpii=m)
-        drawskeleton(img, gt_2d_kpt, thickness=1, lcolor=(0, 255, 0), rcolor=(0, 255, 0), mpii=m)
+        drawskeleton(img, pre_2d_kpt, thickness=3, lcolor=lc[0], rcolor=rc[0], mpii=m)
+        drawskeleton(img, gt_2d_kpt, thickness=3, lcolor=(0, 255, 0), rcolor=(0, 255, 0), mpii=m)
         ax.imshow(img.get()[:, :, ::-1])
         ax.set_title('Predictions in 2D')
         canvas.draw()
