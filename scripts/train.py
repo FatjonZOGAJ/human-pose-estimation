@@ -226,8 +226,6 @@ def main():
         pin_memory=True
     )
 
-    #torch.cuda.empty_cache()  # TODO: check if necessary
-
     best_model = False
     for epoch in range(config.TRAIN.BEGIN_EPOCH, config.TRAIN.END_EPOCH):
         # train for one epoch
