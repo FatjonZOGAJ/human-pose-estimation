@@ -2,8 +2,8 @@ import torch
 import lib.models as models
 
 from lib.models.sem_gcn import SemGCN
-from lib.utils.graph_utils import adj_mx_from_skeleton
-from lib.utils.skeleton import h36m_skeleton, joints_group
+from lib.utils.sem_gcn_utils.graph_utils import adj_mx_from_skeleton
+from lib.utils.sem_gcn_utils.skeleton import h36m_skeleton, joints_group
 
 
 class GraphModel(torch.nn.Module):

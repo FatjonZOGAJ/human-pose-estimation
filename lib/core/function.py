@@ -14,6 +14,7 @@ DEBUG_MODE_MAX_ITER = 2
 
 logger = logging.getLogger(__name__)
 
+
 def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict):
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -31,14 +32,16 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
 
         optimizer.zero_grad()
 
-        if not config.CPU:
+        if config is not None and not config.CPU:
             batch_data = batch_data.cuda()
             batch_label = batch_label.cuda()
             batch_label_weight = batch_label_weight.cuda()
 
         batch_size = batch_data.size(0)
+        if model.use_2d_gt:
+            batch_label = batch_label[:, :-3]  # TODO: hack to see if it runs through at all: randomly drop one joint
         # compute output
-        preds = model(batch_data)
+        preds = model(batch_data if not model.use_2d_gt else batch_label)
 
         loss = criterion(preds, batch_label, batch_label_weight)
         del batch_data, batch_label, batch_label_weight, preds
@@ -102,8 +105,8 @@ def validate(val_loader, model, DEBUG_MODE_BREAK, config=None):
 
             if config is not None and not config.CPU:
                 batch_data = batch_data.cuda()
-                #batch_label = batch_label.cuda()
-                #batch_label_weight = batch_label_weight.cuda()
+                # batch_label = batch_label.cuda()
+                # batch_label_weight = batch_label_weight.cuda()
 
             # compute output
             preds = model(batch_data)

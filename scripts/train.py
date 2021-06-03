@@ -123,6 +123,7 @@ def check_train_mode(config, logger):
         config.TRAIN.BATCH_SIZE = 2
         config.TRAIN.END_EPOCH = 2
         config.TEST.BATCH_SIZE = 2
+        config.WORKERS = 0  # fix PyCharm Bug
 
 
 def main():
@@ -138,7 +139,7 @@ def main():
 
     check_train_mode(config, logger)
 
-    model = models.nets[config.MODEL.NAME].get_pose_net(config, True and config.MODEL.INIT_WEIGHTS)
+    model = models.nets[config.MODEL.NAME].get_pose_net(config, is_pretrain=True and config.MODEL.INIT_WEIGHTS)
 
     # copy model file
     this_dir = os.path.dirname(__file__)

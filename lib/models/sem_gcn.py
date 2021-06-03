@@ -3,8 +3,8 @@ from __future__ import absolute_import
 from functools import reduce
 
 import torch.nn as nn
-from sem_graph_conv import SemGraphConv
-from graph_non_local import GraphNonLocal
+from lib.models.sem_graph_conv import SemGraphConv
+from lib.models.graph_non_local import GraphNonLocal
 
 
 class _GraphConv(nn.Module):
