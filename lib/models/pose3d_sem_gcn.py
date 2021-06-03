@@ -3,6 +3,7 @@ import torch
 
 from lib.models.sem_gcn import SemGCN
 from lib.utils.sem_gcn_utils.graph_utils import adj_mx_from_skeleton
+from lib.utils.sem_gcn_utils.h36m_dataset import Human36mDataset
 from lib.utils.sem_gcn_utils.skeleton import h36m_skeleton, joints_group
 
 
@@ -24,7 +25,8 @@ class PoseGCNRegressor(torch.nn.Module, GroundTruthTrainable):
         self.input_joint_dim = input_joint_dim
         super(PoseGCNRegressor, self).__init__()
         GroundTruthTrainable.__init__(self, use_2d_gt=use_2d_gt)
-        adj = adj_mx_from_skeleton(h36m_skeleton)
+        dataset = Human36mDataset(None)
+        adj = adj_mx_from_skeleton(dataset.skeleton)
         # TODO change dropout and num_layers later
         self.model_pos = SemGCN(adj, cfg.MODEL.SEM_GCN.HID_DIM, num_layers=cfg.MODEL.SEM_GCN.NUM_LAYERS, p_dropout=None, nodes_group=joints_group)
 

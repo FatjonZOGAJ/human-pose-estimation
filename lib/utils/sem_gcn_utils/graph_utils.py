@@ -43,3 +43,10 @@ def adj_mx_from_skeleton(skeleton):
     num_joints = skeleton.num_joints()
     edges = list(filter(lambda x: x[1] >= 0, zip(list(range(0, num_joints)), skeleton.parents())))
     return adj_mx_from_edges(num_joints, edges, sparse=False)
+
+# copied from camera.py SemGCN
+def normalize_screen_coordinates(X, w, h):
+    assert X.shape[-1] == 2
+
+    # Normalize so that [0, w] is mapped to [-1, 1], while preserving the aspect ratio
+    return X / w * 2 - [1, h / w]
