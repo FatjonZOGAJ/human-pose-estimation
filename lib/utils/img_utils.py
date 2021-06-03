@@ -125,9 +125,9 @@ def trans_coords_from_patch_to_org_3d(coords_in_patch, c_x, c_y, bb_width, bb_he
 
 def get_single_patch_sample(img_path, center_x, center_y, width, height, flip_pairs,
                             patch_width, patch_height,
-                            rect_3d_width, rect_3d_height, mean, std,
+                            rect_3d_width, mean, std,
                             do_augment, label_func, occluder=None, joints=None, joints_vis=None,
-                            DEBUG=False, is_train=True):
+                            is_train=True):
     # 1. load image
     cvimg = cv2.imread(
         img_path, cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION)
@@ -150,26 +150,26 @@ def get_single_patch_sample(img_path, center_x, center_y, width, height, flip_pa
     image = img_patch_cv.copy()
     image = image[:, :, ::-1]
 
-    if occluder:
+    if occluder and is_train:
         image = occlude_with_objects(image, occluder)
 
-    img_patch_cv = image.copy()
     img_patch = convert_cvimg_to_tensor(image)
 
     # apply normalization
     for n_c in range(img_channels):
         img_patch[n_c, :, :] = np.clip(img_patch[n_c, :, :] * color_scale[n_c], 0, 255)
         if mean is not None and std is not None:
-            img_patch[n_c, :, :] = (img_patch[n_c, :, :] - mean[n_c]) / std[n_c] #/ 255  # TODO: check if this is worse: was worse for submission 26 vs 25
+            img_patch[n_c, :, :] = (img_patch[n_c, :, :] - mean[n_c]) / std[n_c]
 
     # 4. (Only for train/val) generate joint ground truth
     if do_flip:
         joints, joints_vis = fliplr_joints(joints, joints_vis, img_width, flip_pairs)
 
+    # apply translation to joint coordinates
     if joints is not None and joints_vis is not None:
         for n_jt in range(len(joints)):
             joints[n_jt, 0:2] = trans_point2d(joints[n_jt, 0:2], trans)
-            joints[n_jt, 2] = joints[n_jt, 2] / rect_3d_width * scale * patch_width
+            joints[n_jt, 2] = joints[n_jt, 2] / (rect_3d_width * scale) * patch_width
 
         # 5. get label of some type according to certain need
         label, label_weight = label_func(patch_width, patch_height, joints, joints_vis)

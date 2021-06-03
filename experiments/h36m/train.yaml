@@ -12,13 +12,13 @@ DATASET:
   NUM_CAMS: 4
   OCCLUSION: True
   VOC: 'VOC2012' # If you want to use synthetic occlusion, please enter the VOC path
-  AUGMENT: False
+  AUGMENT: True
 MODEL:
   NAME: pose3d_vol
   BACKBONE: resnext101_32x8d
   INIT_WEIGHTS: True # set this to true to use ImageNet pre-trained models
-  RESUME: 'checkpoint.pth.tar'
-  TIME_STR: '2021-05-27-13-27-35'
+  RESUME: ''
+  TIME_STR: ''
   NUM_JOINTS: 17
   DEPTH_RES: 1
   VOLUME:
@@ -48,5 +48,5 @@ TRAIN:
 TEST:
   BATCH_SIZE: 32
 DEBUG:
-  DEBUG: False # set this to true to visualize results in tensorboard
+  DEBUG: True # set this to true to visualize results in tensorboard
 CPU: False
