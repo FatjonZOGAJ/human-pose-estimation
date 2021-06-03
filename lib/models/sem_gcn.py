@@ -1,10 +1,10 @@
 from __future__ import absolute_import
 
-import functools  # https://stackoverflow.com/questions/13638898/how-to-use-filter-map-and-reduce-in-python-3
+from functools import reduce
 
 import torch.nn as nn
-from lib.models.sem_graph_conv import SemGraphConv
-from lib.models.graph_non_local import GraphNonLocal
+from sem_graph_conv import SemGraphConv
+from graph_non_local import GraphNonLocal
 
 
 class _GraphConv(nn.Module):
@@ -48,13 +48,13 @@ class _GraphNonLocal(nn.Module):
     def __init__(self, hid_dim, grouped_order, restored_order, group_size):
         super(_GraphNonLocal, self).__init__()
 
-        self.non_local = GraphNonLocal(hid_dim, sub_sample=group_size)
+        self.nonLocal = GraphNonLocal(hid_dim, sub_sample=group_size)
         self.grouped_order = grouped_order
         self.restored_order = restored_order
 
     def forward(self, x):
         out = x[:, self.grouped_order, :]
-        out = self.non_local(out.transpose(1, 2)).transpose(1, 2)
+        out = self.nonLocal(out.transpose(1, 2)).transpose(1, 2)
         out = out[:, self.restored_order, :]
         return out
 
@@ -73,7 +73,7 @@ class SemGCN(nn.Module):
             group_size = len(nodes_group[0])
             assert group_size > 1
 
-            grouped_order = list(functools.reduce(lambda x, y: x + y, nodes_group))
+            grouped_order = list(reduce(lambda x, y: x + y, nodes_group))
             restored_order = [0] * len(grouped_order)
             for i in range(len(restored_order)):
                 for j in range(len(grouped_order)):

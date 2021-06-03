@@ -20,7 +20,7 @@ MODEL:
   RESUME: ''
   TIME_STR: ''
   NUM_JOINTS: 17
-  DEPTH_RES: 1
+  DEPTH_RES: 64 # 64 for 3d loss calculation, 1 for 2d
   VOLUME:
     FINAL_CONV_KERNEL: 1
     DECONV_WITH_BIAS: false
@@ -38,8 +38,8 @@ TRAIN:
   LR: 0.0001
   LR_FACTOR: 0.1
   LR_STEP:
-  - 90
-  - 120
+    - 90
+    - 120
   WD: 0.0001
   GAMMA1: 0.99
   GAMMA2: 0.0
@@ -48,5 +48,5 @@ TRAIN:
 TEST:
   BATCH_SIZE: 32
 DEBUG:
-  DEBUG: True # set this to true to visualize results in tensorboard
+  DEBUG: False # set this to true to visualize results in tensorboard
 CPU: False
