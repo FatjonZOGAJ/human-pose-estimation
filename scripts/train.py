@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import pprint
 import shutil
@@ -8,6 +9,7 @@ import yaml
 import _init_paths
 
 import torch
+
 # You can uncomment this line for reproducibility
 torch.manual_seed(3)
 import torch.optim
@@ -28,12 +30,12 @@ import lib.models as models
 
 import numpy as np
 
-
 # You can uncomment this line for reproducibility
 np.random.seed(10)
 
 # enable IDE debugging: set working directory to project root folder
-import sys # sys.path.append('../')
+import sys  # sys.path.append('../')
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train keypoints network')
@@ -64,7 +66,7 @@ def parse_args():
     parser.add_argument('--model_init_weights',
                         help='load pre trained',
                         type=int,
-                        default=-1) # -1 so that we do not overwrite config if we do not pass anything
+                        default=-1)  # -1 so that we do not overwrite config if we do not pass anything
     parser.add_argument('--model_name',
                         help='file to load. Note: Use cfg instead',
                         type=str)
@@ -124,7 +126,7 @@ def check_train_mode(config, logger):
 
 
 def main():
-    best_perf = -10000 # store first created model (primarily for DEBUG_MODE when we only train for 1 iteration)
+    best_perf = -10000  # store first created model (primarily for DEBUG_MODE when we only train for 1 iteration)
 
     args = parse_args()
     reset_config(config, args)
@@ -158,10 +160,17 @@ def main():
 
     # define loss function (criterion) and optimizer
     loss_fn = eval('loss.' + config.LOSS.FN)
-    if not config.CPU:
-        criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM).cuda()
+    is_2d = config.MODEL.DEPTH_RES == 1
+    if is_2d:
+        logging.info('=> model is trained on 2D ground truth')
     else:
-        criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM)
+        logging.info('=> model is trained on 3D ground truth')
+    if not config.CPU:
+        criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM,
+                            is_2d=is_2d).cuda()
+    else:
+        criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM,
+                            is_2d=is_2d)
 
     optimizer = get_optimizer(config, model)
 
@@ -182,7 +191,7 @@ def main():
                 optimizer.load_state_dict(checkpoint['optimizer'])
                 lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
                 if 'train_step' in checkpoint:
-                    writer_dict['train_global_steps']= checkpoint['train_step']
+                    writer_dict['train_global_steps'] = checkpoint['train_step']
                 if 'valid_step' in checkpoint:
                     writer_dict['valid_global_steps'] = checkpoint['valid_step']
                 logger.info('=> resume from pretrained model {}'.format(config.MODEL.RESUME))
@@ -234,7 +243,8 @@ def main():
 
         # evaluate on validation set
         preds_in_patch_with_score = validate(valid_loader, model, config.TRAIN.DEBUG_MODE)
-        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.TRAIN.DEBUG_MODE, config.DEBUG.DEBUG,
+        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.TRAIN.DEBUG_MODE,
+                       config.DEBUG.DEBUG,
                        writer_dict)
 
         perf_indicator = 500. - acc if config.DATASET.DATASET == 'h36m' or 'mpii_3dhp' or 'jta' else acc
