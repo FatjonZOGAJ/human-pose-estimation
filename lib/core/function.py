@@ -38,11 +38,11 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             batch_label_weight = batch_label_weight.cuda()
 
         batch_size = batch_data.size(0)
-        if model.use_2d_gt:
+        if model.module.use_2d_gt:
             batch_label = batch_label[:, :-3]  # TODO: hack to see if it runs through at all: randomly drop one joint
             batch_label_weight = batch_label_weight[:, :-3]  # TODO: hack to see if it runs through at all: randomly drop one joint
         # compute output
-        preds = model(batch_data if not model.use_2d_gt else batch_label)
+        preds = model(batch_data if not model.module.use_2d_gt else batch_label)
 
         loss = criterion(preds, batch_label, batch_label_weight)
         #del batch_data, batch_label, batch_label_weight, preds
@@ -109,11 +109,11 @@ def validate(val_loader, model, DEBUG_MODE_BREAK, config=None):
                 # batch_label = batch_label.cuda()
                 # batch_label_weight = batch_label_weight.cuda()
 
-            if model.use_2d_gt:
+            if model.module.use_2d_gt:
                 batch_label = batch_label[:, :-3]  # TODO: hack to see if it runs through at all: randomly drop one joint
                 batch_label_weight = batch_label_weight[:, :-3]  # TODO: hack to see if it runs through at all: randomly drop one joint
             # compute output
-            preds = model(batch_data if not model.use_2d_gt else batch_label)
+            preds = model(batch_data if not model.module.use_2d_gt else batch_label)
             del batch_data, batch_label, batch_label_weight
 
             # Scale to transformed image size i.e. 256x256
