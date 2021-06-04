@@ -39,13 +39,15 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
 
         batch_size = batch_data.size(0)
         if model.module.use_2d_gt:
-            batch_label = batch_label[:, :-3]  # TODO: hack to see if it runs through at all: randomly drop one joint
-            batch_label_weight = batch_label_weight[:, :-3]  # TODO: hack to see if it runs through at all: randomly drop one joint
+            batch_label = batch_label[:, [*range(0, 26), *range(29,
+                                                                51)]]  # TODO: hack to see if it runs through at all: randomly drop one joint
+            batch_label_weight = batch_label_weight[:, [*range(0, 26), *range(29,
+                                                                              51)]]  # TODO: hack to see if it runs through at all: randomly drop one joint
         # compute output
         preds = model(batch_data if not model.module.use_2d_gt else batch_label)
 
         loss = criterion(preds, batch_label, batch_label_weight)
-        #del batch_data, batch_label, batch_label_weight, preds
+        # del batch_data, batch_label, batch_label_weight, preds
 
         # compute gradient and do update step
         optimizer.zero_grad()
@@ -76,7 +78,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             writer.add_scalar('train_loss', losses.val, global_steps)
             writer_dict['train_global_steps'] = global_steps + 1
 
-        if config.TRAIN.DEBUG_MODE and i == 0 and False:    # TODO: does not work when training from scratch
+        if config.TRAIN.DEBUG_MODE and i == 0 and False:  # TODO: does not work when training from scratch
             # Scale to transformed image size i.e. 256x256
             preds_in_patch_with_score = [get_joint_regression_result(256, 256, preds[0].cpu().reshape([1, 17, 3]))]
             preds = dirty_solution_for_partial_batches(preds_in_patch_with_score)[0]
@@ -110,8 +112,10 @@ def validate(val_loader, model, DEBUG_MODE_BREAK, config=None):
                 # batch_label_weight = batch_label_weight.cuda()
 
             if model.module.use_2d_gt:
-                batch_label = batch_label[:, :-3]  # TODO: hack to see if it runs through at all: randomly drop one joint
-                batch_label_weight = batch_label_weight[:, :-3]  # TODO: hack to see if it runs through at all: randomly drop one joint
+                batch_label = batch_label[:, [*range(0, 26), *range(29,
+                                                                    51)]]  # TODO: hack to see if it runs through at all: randomly drop one joint
+                batch_label_weight = batch_label_weight[:, [*range(0, 26), *range(29,
+                                                                                  51)]]  # TODO: hack to see if it runs through at all: randomly drop one joint
             # compute output
             preds = model(batch_data if not model.module.use_2d_gt else batch_label)
             del batch_data, batch_label, batch_label_weight

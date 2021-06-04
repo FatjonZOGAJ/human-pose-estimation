@@ -13,6 +13,16 @@ h36m_skeleton = Skeleton(parents=[-1, 0, 1, 2, 3, 4, 0, 6, 7, 8, 9, 0, 11, 12, 1
 
 h36m_skeleton_joints_group = [[2, 3], [5, 6], [1, 4], [0, 7], [8, 9], [14, 15], [11, 12], [10, 13]]
 
+#h36m_skeleton = Skeleton(parents=[-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, 9, 8, 11, 12, 8, 14, 15],
+#                         joints_left=[4, 5, 6, 11, 12, 13],
+#                         joints_right=[1, 2, 3, 14, 15, 16])
+#
+#
+#h36m_skeleton_joints_group = [[0], [1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15],
+#                              [16]]
+
+
+
 # Joints in H3.6M -- data has 32 joints, but only 17 that move; these are the indices.
 H36M_NAMES = [''] * 32
 H36M_NAMES[0] = 'Hip'
@@ -304,3 +314,5 @@ class Human36mDataset(MocapDataset):
             raise (ValueError, "Undefined action: {}".format(action))
 
         return [action]
+
+
