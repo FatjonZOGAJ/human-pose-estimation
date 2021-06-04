@@ -3,8 +3,7 @@ import torch
 
 from lib.models.sem_gcn import SemGCN
 from lib.utils.sem_gcn_utils.graph_utils import adj_mx_from_skeleton
-from lib.utils.sem_gcn_utils.h36m_dataset import Human36mDataset, H36M_NAMES, h36m_skeleton_joints_group
-from lib.utils.sem_gcn_utils.skeleton import h36m_skeleton, joints_group
+from lib.utils.sem_gcn_utils.h36m_dataset import Human36mDataset, h36m_skeleton, H36M_NAMES, h36m_skeleton_joints_group
 
 
 class PoseGCNRegressor(torch.nn.Module):
@@ -31,7 +30,7 @@ class PoseGCNRegressor(torch.nn.Module):
         adj = adj_mx_from_skeleton(self.skeleton)
         # TODO change dropout and num_layers later
         self.model_pos = SemGCN(adj, cfg.MODEL.SEM_GCN.HID_DIM, num_layers=cfg.MODEL.SEM_GCN.NUM_LAYERS, p_dropout=None,
-                                nodes_group=joints_group)
+                                nodes_group=h36m_skeleton_joints_group)
 
     def forward(self, x):
         if self.use_2d_gt:

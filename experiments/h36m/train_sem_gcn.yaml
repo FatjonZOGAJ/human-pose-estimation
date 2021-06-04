@@ -34,12 +34,12 @@ MODEL:
 LOSS:
   FN: 'L1JointRegressionLoss'
 TRAIN:
-  BATCH_SIZE: 16
+  BATCH_SIZE: 64
   SHUFFLE: true
   BEGIN_EPOCH: 0
   END_EPOCH: 140
   OPTIMIZER: adam
-  LR: 0.0001
+  LR: 0.001
   LR_FACTOR: 0.1
   LR_STEP:
     - 90

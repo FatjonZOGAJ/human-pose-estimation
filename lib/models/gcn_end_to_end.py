@@ -3,7 +3,7 @@ import lib.models as models
 
 from lib.models.sem_gcn import SemGCN
 from lib.utils.sem_gcn_utils.graph_utils import adj_mx_from_skeleton
-from lib.utils.sem_gcn_utils.skeleton import h36m_skeleton, joints_group
+from lib.utils.sem_gcn_utils.h36m_dataset import h36m_skeleton, h36m_skeleton_joints_group
 
 
 class GraphModel(torch.nn.Module):
@@ -17,7 +17,7 @@ class GraphModel(torch.nn.Module):
 
         adj = adj_mx_from_skeleton(h36m_skeleton)
         self. model_pos = SemGCN(adj, cfg.hid_dim, num_layers=4, p_dropout=None,  # TODO change dropout and num_layers later
-                           nodes_group=joints_group)
+                           nodes_group=h36m_skeleton_joints_group)
 
     def forward(self, x):
         x = self.model_2d(x)  # predict 2d joints
