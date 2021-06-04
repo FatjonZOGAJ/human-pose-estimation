@@ -20,19 +20,31 @@ logger = logging.getLogger(__name__)
 H36M_NAMES
 header_pred = 'Id,'
 header_gt = 'Id,'
-for idx, name in enumerate(H36M_NAMES):
-    header_pred += name + '_x,'
-    header_pred += name + '_y,'
-    header_pred += name + '_z'
 
-    if idx < len(H36M_NAMES) - 1:
-        header_pred += ','
 
-    header_gt += name + '_x_gt,'
-    header_gt += name + '_y_gt,'
-    header_gt += name + '_z_gt,'
+def create_headers(skip_joint='', z_dim=True):
+    global header_pred
+    global header_gt
+    header_pred = 'Id,'
+    header_gt = 'Id,'
+    for idx, name in enumerate(H36M_NAMES):
+        if name == skip_joint: continue
+        header_pred += name + '_x,'
+        header_pred += name + '_y,'
+        if z_dim:
+            header_pred += name + '_z'
 
-header_gt += 'Split'
+        if idx < len(H36M_NAMES) - 1:
+            header_pred += ','
+
+        header_gt += name + '_x_gt,'
+        header_gt += name + '_y_gt,'
+        if z_dim:
+            header_gt += name + '_z_gt,'
+    header_gt += 'Split'
+
+
+create_headers()
 
 fmt_pred = ['%d'] + ['%.4f'] * 51
 fmt_gt = ['%d'] + ['%.4f'] * 51 + ['%d']
@@ -46,7 +58,11 @@ class H36M(JointDataset):
 
         self.flip_pairs = np.array([[1, 4], [2, 5], [3, 6], [14, 11], [15, 12], [16, 13]], dtype=np.int)
 
-        self.num_joints = 17
+        self.num_joints = cfg.MODEL.NUM_JOINTS
+        global fmt_pred
+        fmt_pred = ['%d'] + ['%.4f'] * self.num_joints * 3
+        global fmt_gt
+        fmt_gt = ['%d'] + ['%.4f'] * self.num_joints * 3 + ['%d']
         self.is_train = is_train
 
         self.db = self._get_db()
@@ -325,7 +341,7 @@ class H36M(JointDataset):
             per_joint_error = np.array(dist_per_joint).mean(axis=0).tolist()
             joint_names = H36M_NAMES
 
-            for idx in range(len(joint_names)):
+            for idx in range(len(per_joint_error)):
                 print(joint_names[idx], per_joint_error[idx])
             print("Average Joint Error", np.mean(per_joint_error))
 
@@ -342,6 +358,9 @@ class H36M(JointDataset):
         if save_path is not None:
             pred_save_path = os.path.join(save_path, '{}_pred_{}.csv'.format(self.image_set, time_str))
             pred_to_save = np.stack(pred_to_save, axis=0)
+            if self.num_joints == 16:
+                create_headers(skip_joint='Neck/Nose', z_dim=False)
+
             np.savetxt(pred_save_path, pred_to_save, delimiter=',', header=header_pred, fmt=fmt_pred, comments='')
             if has_gt:
                 gt_save_path = os.path.join(save_path, '{}_gt_{}.csv'.format(self.image_set, time_str))
