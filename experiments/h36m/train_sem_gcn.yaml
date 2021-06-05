@@ -19,7 +19,7 @@ MODEL:
   INIT_WEIGHTS: True # set this to true to use ImageNet pre-trained models
   RESUME: ''
   TIME_STR: ''
-  NUM_JOINTS: 16 # TODO implement for 17
+  NUM_JOINTS: 17
   DEPTH_RES: 64 # 64 for 3d loss calculation, 1 for 2d
   VOLUME:
     FINAL_CONV_KERNEL: 1
@@ -37,7 +37,7 @@ TRAIN:
   BATCH_SIZE: 16
   SHUFFLE: true
   BEGIN_EPOCH: 0
-  END_EPOCH: 140
+  END_EPOCH: 400
   OPTIMIZER: adam
   LR: 0.0001
   LR_FACTOR: 0.1

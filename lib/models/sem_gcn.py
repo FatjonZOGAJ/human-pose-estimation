@@ -77,9 +77,12 @@ class SemGCN(nn.Module):
             restored_order = [0] * len(grouped_order)
             for i in range(len(restored_order)):
                 for j in range(len(grouped_order)):
-                    if grouped_order[j] == i:
+                    if grouped_order[j] == i:           # restored_order[0] = idx of 0 where it appears in grouped_order
                         restored_order[i] = j
                         break
+            # Add 17th joint by itself
+            grouped_order.append(16)
+            restored_order.append(16)
 
             _gconv_input.append(_GraphNonLocal(hid_dim, grouped_order, restored_order, group_size))
             for i in range(num_layers):

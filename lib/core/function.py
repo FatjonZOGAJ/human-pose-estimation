@@ -14,7 +14,6 @@ DEBUG_MODE_MAX_ITER = 2
 
 logger = logging.getLogger(__name__)
 
-
 def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict):
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -38,11 +37,12 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             batch_label_weight = batch_label_weight.cuda()
 
         batch_size = batch_data.size(0)
-        if model.module.use_2d_gt:
-            batch_label = batch_label[:, [*range(0, 26), *range(29,
-                                                                51)]]  # TODO: hack to see if it runs through at all: randomly drop one joint
-            batch_label_weight = batch_label_weight[:, [*range(0, 26), *range(29,
-                                                                              51)]]  # TODO: hack to see if it runs through at all: randomly drop one joint
+        if model.module.drop_joint_idx != -1:
+            # should be 27, reason why it performs better when dropping the last joint is that RWrist has highest error
+            batch_label = batch_label[:, [*range(0, model.module.drop_joint_idx), *range(model.module.drop_joint_idx+3,
+                                                                51)]]
+            batch_label_weight = batch_label_weight[:, [*range(0, model.module.drop_joint_idx), *range(model.module.drop_joint_idx+3,
+                                                                              51)]]
         # compute output
         preds = model(batch_data if not model.module.use_2d_gt else batch_label)
 
@@ -111,11 +111,11 @@ def validate(val_loader, model, DEBUG_MODE_BREAK, config=None):
                 # batch_label = batch_label.cuda()
                 # batch_label_weight = batch_label_weight.cuda()
 
-            if model.module.use_2d_gt:
-                batch_label = batch_label[:, [*range(0, 26), *range(29,
-                                                                    51)]]  # TODO: hack to see if it runs through at all: randomly drop one joint
-                batch_label_weight = batch_label_weight[:, [*range(0, 26), *range(29,
-                                                                                  51)]]  # TODO: hack to see if it runs through at all: randomly drop one joint
+            if model.module.drop_joint_idx != -1:
+                batch_label = batch_label[:, [*range(0, model.module.drop_joint_idx), *range(model.module.drop_joint_idx+3,
+                                                                                51)]]
+                batch_label_weight = batch_label_weight[:, [*range(0, model.module.drop_joint_idx), *range(model.module.drop_joint_idx+3,
+                                                                                          51)]]
             # compute output
             preds = model(batch_data if not model.module.use_2d_gt else batch_label)
             del batch_data, batch_label, batch_label_weight

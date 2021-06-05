@@ -3,12 +3,13 @@ import torch
 
 from lib.models.sem_gcn import SemGCN
 from lib.utils.sem_gcn_utils.graph_utils import adj_mx_from_skeleton
-from lib.utils.sem_gcn_utils.h36m_dataset import Human36mDataset, h36m_skeleton, H36M_NAMES, h36m_skeleton_joints_group
+from lib.utils.sem_gcn_utils.h36m_dataset import h36m_skeleton, H36M_NAMES, h36m_skeleton_joints_group
 
-
+# drop_joint_idx corresponds to H36M_NAMES indices starting with 0 (aka [0, 16])
 class PoseGCNRegressor(torch.nn.Module):
-    def __init__(self, cfg, use_2d_gt=True, input_joint_dim=2, remove_static_joints=True, **kwargs):
+    def __init__(self, cfg, use_2d_gt=True, input_joint_dim=2, remove_static_joints=True, drop_joint_idx=-1, **kwargs):
         self.input_joint_dim = input_joint_dim
+        self.drop_joint_idx = drop_joint_idx * 3
         self.use_2d_gt = use_2d_gt
         super(PoseGCNRegressor, self).__init__()
         self.skeleton = h36m_skeleton
@@ -16,8 +17,7 @@ class PoseGCNRegressor(torch.nn.Module):
             # Bring the skeleton to 16 joints instead of the original 32
             joints = []
             for i, x in enumerate(H36M_NAMES):
-                # TODO: do not remove Neck/Nose and instead use 17 inputs and outputs
-                if x == '' or x == 'Neck/Nose':  # Remove 'Nose' to make SH and H36M 2D poses have the same dimension
+                if x == '':# or x == 'Neck/Nose':  # Remove 'Nose' to make SH and H36M 2D poses have the same dimension
                     joints.append(i)
             self.skeleton.remove_joints(joints)  # adapted from h36m_dataset and mocap_dataset
 
