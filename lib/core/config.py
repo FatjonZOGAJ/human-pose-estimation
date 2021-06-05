@@ -28,6 +28,9 @@ config.MODEL.IMAGE_SIZE = [256, 256]  # width * height, ex: 192 * 256
 config.MODEL.VOLUME = {}
 
 config.MODEL.SEM_GCN = {}
+config.MODEL.CKPT_2D = ''
+config.MODEL.CKPT_3D = ''
+
 
 # Loss function params
 config.LOSS = edict()

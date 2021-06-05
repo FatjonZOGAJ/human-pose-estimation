@@ -8,14 +8,17 @@ from lib.utils.sem_gcn_utils.h36m_dataset import h36m_skeleton, H36M_NAMES, h36m
 
 # drop_joint_idx corresponds to H36M_NAMES indices starting with 0 (aka [0, 16])
 class PoseGCNRegressor(torch.nn.Module):
-    def __init__(self, cfg, use_2d_gt=True, input_joint_dim=2, remove_static_joints=True, drop_joint_idx=-1, **kwargs):
+    def __init__(self, cfg, use_gt_as_input=True, use_2d_input=True, input_joint_dim=2, remove_static_joints=True,
+                 drop_joint_idx=-1, **kwargs):
+        super(PoseGCNRegressor, self).__init__()
         self.input_joint_dim = input_joint_dim
         self.drop_joint_idx = drop_joint_idx * 3
-        self.use_2d_gt = use_2d_gt
-        super(PoseGCNRegressor, self).__init__()
+        self.use_gt_as_input = use_gt_as_input
+        self.use_2d_input = use_2d_input
+
         self.skeleton = h36m_skeleton
         if remove_static_joints:
-            # Bring the skeleton to 16 joints instead of the original 32
+            # Bring the skeleton to 17 joints instead of the original 32
             joints = []
             for i, x in enumerate(H36M_NAMES):
                 if x == '':  # or x == 'Neck/Nose':  # Remove 'Nose' to make SH and H36M 2D poses have the same dimension
@@ -34,9 +37,12 @@ class PoseGCNRegressor(torch.nn.Module):
                                 p_dropout=cfg.MODEL.SEM_GCN.DROPOUT, nodes_group=h36m_skeleton_joints_group)
 
     def forward(self, x):
-        if self.use_2d_gt:
-            # Drop third dimension z and input is label
-            x = x[:, np.mod(np.arange(x.shape[1]), 3) != 2]
+        # Drop third dimension z
+        if self.use_2d_input:
+            if len(x.shape) == 3:
+                x = x[:, :, :-1]  # (batch_size, 17, 2)
+            else:
+                x = x[:, np.mod(np.arange(x.shape[1]), 3) != 2]
         x = x.reshape(x.shape[0], -1, self.input_joint_dim)  # -1 takes care of 16 and 17 joints case
         x = self.model_pos(x)
         return x

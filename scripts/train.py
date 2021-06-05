@@ -123,6 +123,7 @@ def check_train_mode(config, logger):
         config.TRAIN.BATCH_SIZE = 2
         config.TRAIN.END_EPOCH = 2
         config.TEST.BATCH_SIZE = 2
+        config.WORKERS = 0
 
 
 def main():
