@@ -78,7 +78,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             writer.add_scalar('train_loss', losses.val, global_steps)
             writer_dict['train_global_steps'] = global_steps + 1
 
-        if config.TRAIN.DEBUG_MODE and i == 0 and False:  # TODO: does not work when training from scratch
+        if config.TRAIN.DEBUG_MODE:
             # Scale to transformed image size i.e. 256x256
             preds_in_patch_with_score = [get_joint_regression_result(256, 256, preds[0].cpu().reshape([1, 17, 3]))]
             preds = dirty_solution_for_partial_batches(preds_in_patch_with_score)[0]
@@ -182,7 +182,6 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DE
                                          writer_dict=writer_dict, time_str=time_str)
         for name, value in name_value:
             logger.info('Epoch[%d] Validation-%s %f', epoch, name, value)
-        logger.info('Epoch[%d] Validation-Dim-%s %f', epoch, 'Average', np.mean([nv[1] for nv in name_value]))
     else:
         logger.info('Test set is used, saving results to %s', final_output_path)
         _, perf = imdb.evaluate(preds_in_img_with_score.copy(), final_output_path, debug=debug, writer_dict=writer_dict,

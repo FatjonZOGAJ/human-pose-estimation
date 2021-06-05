@@ -61,6 +61,7 @@ class PoseResNetVol(nn.Module):
         self._softmax = torch.nn.Softmax(dim=2)
         self._range = torch.nn.Parameter(torch.arange(1, 64 + 1), requires_grad=False)
         self.use_2d_gt = False
+        self.drop_joint_idx = -1
 
     def _make_backbone(self, is_pretrain, model_backbone):
         self._backbone = CustomResNet(model_backbone)

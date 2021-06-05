@@ -30,11 +30,12 @@ MODEL:
   SEM_GCN:
     HID_DIM: 128
     NUM_LAYERS: 4
+    DROPOUT: 0.0
 
 LOSS:
   FN: 'L1JointRegressionLoss'
 TRAIN:
-  BATCH_SIZE: 16
+  BATCH_SIZE: 64
   SHUFFLE: true
   BEGIN_EPOCH: 0
   END_EPOCH: 400
