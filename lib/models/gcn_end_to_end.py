@@ -12,13 +12,16 @@ class GraphModel(torch.nn.Module):
         super(GraphModel, self).__init__()
         self.use_gt_as_input = False
         self.drop_joint_idx = -1
+        self.freeze_backbone_completely = cfg.MODEL.FREEZE_BACKBONE_COMPLETELY
         self.model_2d = models.nets['pose3d_vol'].get_pose_net(cfg, True and cfg.MODEL.INIT_WEIGHTS)
         checkpoint = torch.load(cfg.MODEL.CKPT_2D)
         # drop 'module.' in key names as we load parts separately
         checkpoint = {k[7:]: v
                       for k, v in checkpoint.items()}
         self.model_2d.load_state_dict(checkpoint)
-        GraphModel.freeze_model(self.model_2d)
+        # Last Layer of ResNext is not frozen as it was trained that way
+        if self.freeze_backbone_completely:
+            GraphModel.freeze_model(self.model_2d)
 
         self.model_pos = PoseGCNRegressor(cfg, use_gt_as_input=False, use_2d_input=True,
                                           input_joint_dim=cfg.MODEL.SEM_GCN.INPUT_JOINT_DIM)

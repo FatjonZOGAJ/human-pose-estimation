@@ -30,6 +30,7 @@ config.MODEL.VOLUME = {}
 config.MODEL.SEM_GCN = {}
 config.MODEL.CKPT_2D = ''
 config.MODEL.CKPT_3D = ''
+config.MODEL.FREEZE_BACKBONE_COMPLETELY = True
 
 
 # Loss function params

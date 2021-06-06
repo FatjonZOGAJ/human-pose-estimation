@@ -23,6 +23,7 @@ MODEL:
   TIME_STR: ''
   NUM_JOINTS: 17
   DEPTH_RES: 64 # 64 for 3d loss calculation, 1 for 2d
+  FREEZE_BACKBONE_COMPLETELY: False
   VOLUME:
     FINAL_CONV_KERNEL: 1
     DECONV_WITH_BIAS: false
