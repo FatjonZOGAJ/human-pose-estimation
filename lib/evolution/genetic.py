@@ -2,9 +2,10 @@
 Utility functions for genetic evolution.
 """
 from lib.evolution.anglelimits import \
-    to_local, to_global, get_skeleton, to_spherical, \
-    nt_parent_indices, nt_child_indices, \
-    is_valid_local, is_valid
+    to_spherical, \
+    nt_parent_indices, nt_child_indices, to_local, to_global, get_skeleton  #, \
+    # is_valid_local, is_valid, \
+
 
 import matplotlib.pyplot as plt
 import os
@@ -16,7 +17,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from tqdm import tqdm
 from scipy.spatial.transform import Rotation as R
 
-root = "../resources/constraints"
+root = "resources/constraints"
 # Joints in H3.6M -- data has 32 joints, but only 17 that move
 H36M_NAMES = [''] * 32
 H36M_NAMES[0] = 'Hip'  # 0
@@ -253,11 +254,12 @@ def exploration(father, mother, opt, post_processing=True):
     son_pose, daughter_pose = None, None
     if opt.C:
         # apply joint angle constraint as the fitness function
-        valid_vec_fa = is_valid_local(bones_father)
-        valid_vec_mo = is_valid_local(bones_mother)
-    if not opt.C or valid_vec_fa.sum() >= opt.Th:
+        # valid_vec_fa = is_valid_local(bones_father)
+        # valid_vec_mo = is_valid_local(bones_mother)
+        pass
+    if not opt.C:  #or valid_vec_fa.sum() >= opt.Th:
         son_pose = modify_pose(father, bones_father, mother_bone_length, ro=True)
-    if not opt.C or valid_vec_mo.sum() >= opt.Th:
+    if not opt.C:  #or valid_vec_mo.sum() >= opt.Th:
         daughter_pose = modify_pose(mother, bones_mother, father_bone_length, ro=True)
     if opt.M:
         # global mutation: rotate the whole 3D skeleton
@@ -269,29 +271,7 @@ def exploration(father, mother, opt, post_processing=True):
         # move the poses to the ground plane
         set_z(son_pose, np.random.normal(loc=20.0, scale=3.0))
         set_z(daughter_pose, np.random.normal(loc=20.0, scale=3.0))
-    if opt.DE:
-        valid_vec_fa = is_valid_local(bones_father)
-        valid_vec_mo = is_valid_local(bones_mother)
-        # re_order: order back to x, y, z
-        son_pose = modify_pose(father, bones_father, mother_bone_length, ro=True)
-        daughter_pose = modify_pose(mother, bones_mother, father_bone_length, ro=True)
-    #        valid_vec_son = is_valid(son_pose)
-    #        valid_vec_dau = is_valid(daughter_pose)
-    if opt.DE and opt.V:
-        plt.figure()
-        ax1 = plt.subplot(1, 4, 1, projection='3d')
-        plt.title('father')
-        show3Dpose(re_order(father), ax1, add_labels=False, plot_dot=True)
-        ax2 = plt.subplot(1, 4, 2, projection='3d')
-        plt.title('mother')
-        show3Dpose(re_order(mother), ax2, add_labels=False, plot_dot=True)
-        ax3 = plt.subplot(1, 4, 3, projection='3d')
-        plt.title('son: ' + str(valid_vec_fa.sum()))
-        show3Dpose(son_pose, ax3, add_labels=False, plot_dot=True)
-        ax4 = plt.subplot(1, 4, 4, projection='3d')
-        plt.title('daughter: ' + str(valid_vec_mo.sum()))
-        show3Dpose(daughter_pose, ax4, add_labels=False, plot_dot=True)
-        plt.tight_layout()
+
     return son_pose, daughter_pose
 
 
@@ -580,10 +560,7 @@ def one_iteration(population, opt, model_file=None):
     offsprings = np.concatenate(offsprings, axis=0)
     logging.info('{:d} out of {:d} poses survived.'.format(len(offsprings),
                                                            len(father_indices) * 2))
-    # select the synthetic data actively
-    if opt.A:
-        # TODO: remove this option
-        pass
+
     if opt.Mer:
         # merge the offsprings with the parents
         population = np.vstack([population, offsprings])
@@ -629,9 +606,6 @@ def evolution(initial_population, opt, model_file=None):
     """
     Dataset evolution.
     """
-    logging.basicConfig(level=logging.INFO,
-                        format="[%(asctime)s]: %(message)s"
-                        )
     population = initial_population
     # save_results(initial_population, opt, 0)
     initial_num = len(initial_population)
@@ -640,14 +614,10 @@ def evolution(initial_population, opt, model_file=None):
     # save_results(population, opt, gen_idx)
     # if not enough
     if opt.E and len(population) < initial_num * opt.T:
-        logging.info('Running extra generations to synthesize enough data...')
         while len(population) < initial_num * opt.T:
             gen_idx += 1
-            logging.info('Generation {:d}...'.format(gen_idx))
             population = one_iteration(population, opt, model_file=model_file)
             if opt.I:
                 save_results(population.copy(), opt, gen_idx)
-                logging.info('Generation {:d} saved.'.format(gen_idx))
     # save_results(population, opt, gen_idx)
-    logging.info('Final population saved.')
     return population

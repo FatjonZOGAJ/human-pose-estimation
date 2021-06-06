@@ -9,23 +9,24 @@ from mpl_toolkits.mplot3d import Axes3D
 # Load the joint angle constraints
 # These files are directly converted from .mat to .npy
 # The MATLAB implementation of the CVPR 15 paper has detailed documentation.
-root = "../resources/constraints"
-logging.info("Loading files from " + root)
-model_path = os.path.join(root, "jointAngleModel_v2.npy")
-joint_angle_limits = np.load(model_path, allow_pickle=True).item()
-angle_spread = joint_angle_limits['angleSprd']
-# separation plane for conditional joint angle
-sepPlane = joint_angle_limits['sepPlane']
-E2 = joint_angle_limits['E2']
-bounds = joint_angle_limits['bounds']
-# static pose and parameters used in coordinate transformation
+
+root = "resources/constraints"
+# logging.info("Loading files from " + root)
+# model_path = os.path.join(root, "jointAngleModel_v2.npy")
+# joint_angle_limits = np.load(model_path, allow_pickle=True).item()
+# angle_spread = joint_angle_limits['angleSprd']
+# # separation plane for conditional joint angle
+# sepPlane = joint_angle_limits['sepPlane']
+# E2 = joint_angle_limits['E2']
+# bounds = joint_angle_limits['bounds']
+# # static pose and parameters used in coordinate transformation
 static_pose_path = os.path.join(root, "staticPose.npy")
 static_pose = np.load(static_pose_path, allow_pickle=True).item()
 di = static_pose['di']
 a = static_pose['a'].reshape(3)
-# load the pre-computed conditinal distribution
-con_dis_path = os.path.join(root, "conditional_dis.npy")
-con_dis = np.load(con_dis_path, allow_pickle=True).item()
+# # load the pre-computed conditinal distribution
+# con_dis_path = os.path.join(root, "conditional_dis.npy")
+# con_dis = np.load(con_dis_path, allow_pickle=True).item()
 # =============================================================================#
 # joint names of the CVPR 15 paper
 PRIOR_NAMES = ['back-bone',
@@ -78,8 +79,6 @@ phi_edges = np.arange(0.5, 62, 1)  # phi values: 1 to 61
 # color map used for visualization
 cmap = plt.cm.RdYlBu
 # indices used for computing bone vectors for non-torso bones
-# nt_parent_indices = [13, 17, 18, 25, 26, 6, 7, 1, 2, 13]
-# nt_child_indices = [15, 18, 19, 26, 27, 7, 8, 2, 3, 14]
 nt_parent_indices = [8, 11, 12, 14, 15, 4, 5, 1, 2]
 nt_child_indices = [10, 12, 13, 15, 16, 5, 6, 2, 3]
 # map from bone index to the parent's di index
@@ -101,74 +100,74 @@ bone_name = {
 
 
 # =============================================================================#
-def is_valid_local(skeleton_local, return_ang=False):
-    """
-    Check if the limbs represented in local coordinate system are valid or not.
-    """
-    valid_vec = np.ones((num_of_bones), dtype=np.bool)
-    angles = to_spherical(skeleton_local)
-    angles[:, 1:] *= 180 / np.pi
-    # convert to valid range and discretize
-    # theta: -180~180 degrees discretized into 120 bins
-    # phi: -90~90 degrees discretized into 60 bins
-    angles[:, 1] = np.floor((angles[:, 1] + 180) / 3 + 1)
-    angles[:, 2] = np.floor((angles[:, 2] + 90) / 3 + 1)
-    # go through each bone and check the angle-limits
-    for angle_idx in range(len(angles)):
-        angle = angles[angle_idx]
-        record_idx = record_indices[angle_idx]
-        theta, phi = int(angle[1]), int(angle[2])
-        if angle_idx in [0, 1, 3, 5, 7]:  # TODO: where this comes from??
-            test_value = angle_spread[0, record_idx][theta - 1, phi - 1]
-            if test_value == 0:
-                valid_vec[angle_idx] == False
-        else:
-            angle_parent = angles[angle_idx - 1]
-            theta_p, phi_p = int(angle_parent[1]), int(angle_parent[2])
-            vector = normalize(sepPlane[0, record_idx][theta_p - 1, phi_p - 1])
-            for value in vector:
-                if np.isnan(value):
-                    valid_vec[angle_idx] = False
-                    continue
-            if np.dot(np.hstack([skeleton_local[angle_idx], 1]), vector) > 0:
-                valid_vec[angle_idx] = False
-            else:
-                e1 = vector[:-1]
-                e2 = E2[0, record_idx][theta_p - 1, phi_p - 1]
-                T = gram_schmidt_columns(np.hstack([e1.reshape(3, 1),
-                                                    e2.reshape(3, 1),
-                                                    np.cross(e1, e2).reshape(3, 1)]))
-                bnd = bounds[0, record_idx][theta_p - 1, phi_p - 1]
-                u = (T[:, 1:]).T @ skeleton_local[angle_idx]
-                if u[0] < bnd[0] or u[0] > bnd[1] or u[1] < bnd[2] or u[1] > bnd[3]:
-                    valid_vec[angle_idx] = False
-    if return_ang:
-        return valid_vec, angles
-    else:
-        return valid_vec
+# def is_valid_local(skeleton_local, return_ang=False):
+#     """
+#     Check if the limbs represented in local coordinate system are valid or not.
+#     """
+#     valid_vec = np.ones((num_of_bones), dtype=np.bool)
+#     angles = to_spherical(skeleton_local)
+#     angles[:, 1:] *= 180 / np.pi
+#     # convert to valid range and discretize
+#     # theta: -180~180 degrees discretized into 120 bins
+#     # phi: -90~90 degrees discretized into 60 bins
+#     angles[:, 1] = np.floor((angles[:, 1] + 180) / 3 + 1)
+#     angles[:, 2] = np.floor((angles[:, 2] + 90) / 3 + 1)
+#     # go through each bone and check the angle-limits
+#     for angle_idx in range(len(angles)):
+#         angle = angles[angle_idx]
+#         record_idx = record_indices[angle_idx]
+#         theta, phi = int(angle[1]), int(angle[2])
+#         if angle_idx in [0, 1, 3, 5, 7]:  # TODO: where this comes from??
+#             test_value = angle_spread[0, record_idx][theta - 1, phi - 1]
+#             if test_value == 0:
+#                 valid_vec[angle_idx] == False
+#         else:
+#             angle_parent = angles[angle_idx - 1]
+#             theta_p, phi_p = int(angle_parent[1]), int(angle_parent[2])
+#             vector = normalize(sepPlane[0, record_idx][theta_p - 1, phi_p - 1])
+#             for value in vector:
+#                 if np.isnan(value):
+#                     valid_vec[angle_idx] = False
+#                     continue
+#             if np.dot(np.hstack([skeleton_local[angle_idx], 1]), vector) > 0:
+#                 valid_vec[angle_idx] = False
+#             else:
+#                 e1 = vector[:-1]
+#                 e2 = E2[0, record_idx][theta_p - 1, phi_p - 1]
+#                 T = gram_schmidt_columns(np.hstack([e1.reshape(3, 1),
+#                                                     e2.reshape(3, 1),
+#                                                     np.cross(e1, e2).reshape(3, 1)]))
+#                 bnd = bounds[0, record_idx][theta_p - 1, phi_p - 1]
+#                 u = (T[:, 1:]).T @ skeleton_local[angle_idx]
+#                 if u[0] < bnd[0] or u[0] > bnd[1] or u[1] < bnd[2] or u[1] > bnd[3]:
+#                     valid_vec[angle_idx] = False
+#     if return_ang:
+#         return valid_vec, angles
+#     else:
+#         return valid_vec
 
 
-def is_valid(skeleton, return_ang=False, camera=False):
-    """
-    args:
-        skeleton: input skeleton of shape [num_joints, 3] use the annotation
-        of Human 3.6M dataset
-    return:
-        valid_vec: boolean vector specifying the validity for each bone.
-        return 0 for invalid bones.
-        camera: relative orientation of camera and human
-    """
-
-    skeleton = skeleton.reshape(17, -1)  # TODO: check this
-    # the ordering of coordinate used by the Prior was x,z and y
-    skeleton = skeleton[:, [0, 2, 1]]
-    # convert bone vectors into local coordinate
-    skeleton_local = to_local(skeleton)
-    ret = is_valid_local(skeleton_local, return_ang=return_ang)
-    if return_ang:
-        return ret[0], ret[1]
-    else:
-        return ret
+# def is_valid(skeleton, return_ang=False, camera=False):
+#     """
+#     args:
+#         skeleton: input skeleton of shape [num_joints, 3] use the annotation
+#         of Human 3.6M dataset
+#     return:
+#         valid_vec: boolean vector specifying the validity for each bone.
+#         return 0 for invalid bones.
+#         camera: relative orientation of camera and human
+#     """
+#
+#     skeleton = skeleton.reshape(17, -1)  # TODO: check this
+#     # the ordering of coordinate used by the Prior was x,z and y
+#     skeleton = skeleton[:, [0, 2, 1]]
+#     # convert bone vectors into local coordinate
+#     skeleton_local = to_local(skeleton)
+#     ret = is_valid_local(skeleton_local, return_ang=return_ang)
+#     if return_ang:
+#         return ret[0], ret[1]
+#     else:
+#         return ret
 
 
 def normalize(vector):
@@ -428,22 +427,22 @@ def to_global(skeleton, bones_local, cache=False):
     return return_value
 
 
-def test_global_local_conversion():
-    """
-    test for global and lobal coordinate conversion
-    """
-    path = 'Your3DSkeleton.npy'
-    index = 0
-    pose = np.load(path, allow_pickle=True)[index]
-    pose = pose.reshape(32, -1)
-    global_bones = pose[nt_parent_indices, :] - pose[nt_child_indices, :]
-    for bone_idx in range(len(global_bones)):
-        global_bones[bone_idx] = normalize(global_bones[bone_idx])
-    local_c = to_local(pose)
-    global_c = to_global(pose, local_c)['bg']
-    maximum_error = np.max(np.abs(global_bones - global_c))
-    print('maximum error', maximum_error)
-    return maximum_error
+# def test_global_local_conversion():
+#     """
+#     test for global and lobal coordinate conversion
+#     """
+#     path = 'Your3DSkeleton.npy'
+#     index = 0
+#     pose = np.load(path, allow_pickle=True)[index]
+#     pose = pose.reshape(32, -1)
+#     global_bones = pose[nt_parent_indices, :] - pose[nt_child_indices, :]
+#     for bone_idx in range(len(global_bones)):
+#         global_bones[bone_idx] = normalize(global_bones[bone_idx])
+#     local_c = to_local(pose)
+#     global_c = to_global(pose, local_c)['bg']
+#     maximum_error = np.max(np.abs(global_bones - global_c))
+#     print('maximum error', maximum_error)
+#     return maximum_error
 
 
 def show3Dpose(channels, ax, lcolor="#3498db", rcolor="#e74c3c", add_labels=True,
@@ -639,64 +638,64 @@ def plot_relative_poses(skeletons, cameras=None):
     return vector_list
 
 
-def plot_distribution(H_temp,
-                      angle_idx,
-                      dataset_name,
-                      gamma,
-                      save_path='../viz'
-                      ):
-    """
-    Visualize distribution of limb orientation.
-    """
-    # angles: [n_samples, 2] in theta and phi order
-    # plot the distribution of local joint angles and overlay valid regions
-    plt.ioff()
-    if not os.path.exists(save_path):
-        os.makedirs(save_path)
-    H = H_temp.copy()
-    # normalize
-    H = (H - H.min()) / (H.max() - H.min())
-    # perform "gamma correction"
-    H = np.power(H, gamma)
-    # normalize again
-    H = (H - H.min()) / (H.max() - H.min())
-    H_return = H.copy().reshape(121, 61)
-    # map to color
-    H = cmap(H).reshape((121, 61, 4))
-    H = [np.expand_dims(H[:, :, i].T, axis=2) for i in range(4)]
-    H = np.concatenate(H, axis=2)
-    if angle_idx in [0, 1, 3, 5, 7]:
-        record_idx = record_indices[angle_idx]
-        mask_temp = angle_spread[0, record_idx]
-        mask = np.zeros((61, 121, 4))
-        mask[:, :, 3] = mask_temp.T
-        mask[:, :, 1] = mask_temp.T
-        f = plt.figure(figsize=(5, 6))
-        ax = plt.subplot(211)
-        ax.imshow(H, extent=[-180, 180, -90, 90], interpolation='bilinear', alpha=1)
-        decorate_axis(ax, 'Distribution of ' + dataset_name + ' for bone: ' + bone_name[angle_idx + 1])
-        ax = plt.subplot(212)
-        ax.imshow(mask, extent=[-180, 180, -90, 90], alpha=0.5)
-        ax.imshow(H, extent=[-180, 180, -90, 90], interpolation='bilinear', alpha=0.5)
-        decorate_axis(ax, 'Overlayed')
-        plt.tight_layout()
-    else:
-        f = plt.figure()
-        ax = plt.subplot(111)
-        ax.imshow(H, extent=[-180, 180, -90, 90], interpolation='bilinear', alpha=1)
-        decorate_axis(ax, 'Distribution of ' + dataset_name + ' for bone: ' + bone_name[angle_idx + 1])
-        plt.tight_layout()
-    adjust_figure(left=0.135,
-                  right=0.95,
-                  bottom=0.05,
-                  top=1,
-                  wspace=0,
-                  hspace=0
-                  )
-    save_name = dataset_name + bone_name[angle_idx + 1] + '_gamma_' + str(gamma) + '.jpg'
-    f.savefig(os.path.join(save_path, save_name))
-    plt.close(f)
-    return save_name, H_return
+# def plot_distribution(H_temp,
+#                       angle_idx,
+#                       dataset_name,
+#                       gamma,
+#                       save_path='../viz'
+#                       ):
+#     """
+#     Visualize distribution of limb orientation.
+#     """
+#     # angles: [n_samples, 2] in theta and phi order
+#     # plot the distribution of local joint angles and overlay valid regions
+#     plt.ioff()
+#     if not os.path.exists(save_path):
+#         os.makedirs(save_path)
+#     H = H_temp.copy()
+#     # normalize
+#     H = (H - H.min()) / (H.max() - H.min())
+#     # perform "gamma correction"
+#     H = np.power(H, gamma)
+#     # normalize again
+#     H = (H - H.min()) / (H.max() - H.min())
+#     H_return = H.copy().reshape(121, 61)
+#     # map to color
+#     H = cmap(H).reshape((121, 61, 4))
+#     H = [np.expand_dims(H[:, :, i].T, axis=2) for i in range(4)]
+#     H = np.concatenate(H, axis=2)
+#     if angle_idx in [0, 1, 3, 5, 7]:
+#         record_idx = record_indices[angle_idx]
+#         mask_temp = angle_spread[0, record_idx]
+#         mask = np.zeros((61, 121, 4))
+#         mask[:, :, 3] = mask_temp.T
+#         mask[:, :, 1] = mask_temp.T
+#         f = plt.figure(figsize=(5, 6))
+#         ax = plt.subplot(211)
+#         ax.imshow(H, extent=[-180, 180, -90, 90], interpolation='bilinear', alpha=1)
+#         decorate_axis(ax, 'Distribution of ' + dataset_name + ' for bone: ' + bone_name[angle_idx + 1])
+#         ax = plt.subplot(212)
+#         ax.imshow(mask, extent=[-180, 180, -90, 90], alpha=0.5)
+#         ax.imshow(H, extent=[-180, 180, -90, 90], interpolation='bilinear', alpha=0.5)
+#         decorate_axis(ax, 'Overlayed')
+#         plt.tight_layout()
+#     else:
+#         f = plt.figure()
+#         ax = plt.subplot(111)
+#         ax.imshow(H, extent=[-180, 180, -90, 90], interpolation='bilinear', alpha=1)
+#         decorate_axis(ax, 'Distribution of ' + dataset_name + ' for bone: ' + bone_name[angle_idx + 1])
+#         plt.tight_layout()
+#     adjust_figure(left=0.135,
+#                   right=0.95,
+#                   bottom=0.05,
+#                   top=1,
+#                   wspace=0,
+#                   hspace=0
+#                   )
+#     save_name = dataset_name + bone_name[angle_idx + 1] + '_gamma_' + str(gamma) + '.jpg'
+#     f.savefig(os.path.join(save_path, save_name))
+#     plt.close(f)
+#     return save_name, H_return
 
 
 # =============================================================================#
@@ -718,110 +717,110 @@ def get_skeleton(bones, pose, bone_length=template_bone_lengths):
         new_pose[nt_child_indices[bone_idx]] = new_pose[nt_parent_indices[bone_idx]] \
                                                - bones[bone_idx] * bone_length[bone_idx]
     return new_pose
+#
+#
+# def test_get_skeleton():
+#     pose = template
+#     nt_parent_indices = [13, 17, 18, 25, 26, 6, 7, 1, 2]
+#     nt_child_indices = [15, 18, 19, 26, 27, 7, 8, 2, 3]
+#     global_bones = pose[nt_parent_indices, :] - pose[nt_child_indices, :]
+#     for bone_idx in range(len(global_bones)):
+#         global_bones[bone_idx] = normalize(global_bones[bone_idx])
+#     local_c = to_local(pose)
+#     global_c = to_global(pose, local_c)['bg']
+#     new_pose = get_skeleton(global_c, pose)
+#     maximum_error = np.max(np.abs(new_pose - pose))
+#     print('maximum error', maximum_error)
+#     return maximum_error
 
 
-def test_get_skeleton():
-    pose = template
-    nt_parent_indices = [13, 17, 18, 25, 26, 6, 7, 1, 2]
-    nt_child_indices = [15, 18, 19, 26, 27, 7, 8, 2, 3]
-    global_bones = pose[nt_parent_indices, :] - pose[nt_child_indices, :]
-    for bone_idx in range(len(global_bones)):
-        global_bones[bone_idx] = normalize(global_bones[bone_idx])
-    local_c = to_local(pose)
-    global_c = to_global(pose, local_c)['bg']
-    new_pose = get_skeleton(global_c, pose)
-    maximum_error = np.max(np.abs(new_pose - pose))
-    print('maximum error', maximum_error)
-    return maximum_error
-
-
-def grow_from_torso(poses, all_angles, cache=False):
-    """
-    Update the non-torso limb of a skeleton by specifying limb orientations.
-    """
-    new_poses = poses.copy()
-    return_value = {}
-    if cache:
-        return_value['cache'] = []
-        return_value['bl'] = []
-    for pose_id in range(len(poses)):
-        pose = poses[pose_id].reshape(32, -1)
-        angles = all_angles[:, pose_id, :]
-        # convert to spherical coordinate in radians
-        spherical = np.ones((len(angles), 3))
-        spherical[:, 1:] = angles / 180 * np.pi
-        spherical[:, 1] -= np.pi
-        spherical[:, 2] -= np.pi / 2
-        # convert to local cartisian coordinate
-        local_xyz = to_xyz(spherical)
-        # convert to global coordinate
-        return_value_temp = to_global(pose, local_xyz, cache=cache)
-        if cache:
-            return_value['cache'].append(return_value_temp['cache'])
-            return_value['bl'].append(return_value_temp['bl'])
-        global_xyz = return_value_temp['bg']
-        new_poses[pose_id] = get_skeleton(global_xyz, new_poses[pose_id].reshape(32, -1)).reshape(-1)
-    return_value['np'] = new_poses
-    return return_value
-
-
-def test_grow_from_torso():
-    poses = template.reshape(1, 96)
-    _, angles = is_valid(poses.reshape(32, -1), return_ang=True)
-    local_coordinate = to_local(poses.reshape(32, -1))
-    angles = angles[:, 1:].reshape(9, 1, 2)
-    # to degrees
-    angles *= 3
-    return_dic = grow_from_torso(poses, angles, cache=True)
-    new_poses = return_dic['np']
-    bones_local = return_dic['bl']
-    print(np.max(np.abs(local_coordinate - bones_local)))
-    maximum_error = np.max(np.abs(new_poses - poses))
-    print('maximum error1', maximum_error)
-    _, new_angles = is_valid(new_poses, return_ang=True)
-    maximum_error = np.max(np.abs(angles[:, 0, :] / 3 - new_angles[:, 1:]))
-    print('maximum error2', maximum_error)
-    return
-
-
-def sample_lower_limbs(angles, bin_size=3):
-    """
-    Sample limb orientations for lower limbs.
-    """
-    # angles of shape [num_bones, sample_size, 2]
-    for sample_id in range(angles.shape[1]):
-        for angle_idx in [2, 4, 6, 8]:  # TODO ??
-            record_idx = record_indices[angle_idx]
-            parent = angles[angle_idx - 1, sample_id, :]
-            theta = np.floor(parent[0] / 3)
-            phi = np.floor(parent[1] / 3)  # convert to bins
-            candidate_length = len(con_dis[record_idx][(theta, phi)])
-            # change some boundary points
-            if candidate_length == 0:
-                keys = list(con_dis[record_idx].keys())
-                while candidate_length == 0:
-                    temp_idx = np.random.choice(len(keys), 1)
-                    theta, phi = keys[temp_idx[0]]
-                    candidate_length = len(con_dis[record_idx][(theta, phi)])
-            chosen_idx = np.random.choice(candidate_length, 1)
-            angles[angle_idx, sample_id, :] = con_dis[record_idx][(theta, phi)][chosen_idx]
-    # convert to degrees with some noise
-    angles[[2, 4, 6, 8], :, :] = angles[[2, 4, 6, 8], :, :] * bin_size  # TODO  ????
-    angles[[2, 4, 6, 8], :, :] += np.random.rand(4, angles.shape[1], 2) * bin_size
-    return angles
-
-
-def sample_upper_limbs(angles, sample_num):
-    """
-    Sample limb orientation for upper limbs.
-    """
-    # sample torso limbs from the valid maps uniformly
-    # angles of shape [num_bones, sample_size, 2]
-    for angle_idx in [0, 1, 3, 5, 7]:  # TODO ????
-        valid_map = angle_spread[0, record_indices[angle_idx]]
-        valid_map = valid_map.astype(np.float16)
-        valid_map /= valid_map.sum()
-        bone_angles = sample_from_histogram(valid_map, total=sample_num,
-                                            add_noise=True)
-        angles[angle_idx, :, :] = bone_angles
-    return angles
+# def grow_from_torso(poses, all_angles, cache=False):
+#     """
+#     Update the non-torso limb of a skeleton by specifying limb orientations.
+#     """
+#     new_poses = poses.copy()
+#     return_value = {}
+#     if cache:
+#         return_value['cache'] = []
+#         return_value['bl'] = []
+#     for pose_id in range(len(poses)):
+#         pose = poses[pose_id].reshape(32, -1)
+#         angles = all_angles[:, pose_id, :]
+#         # convert to spherical coordinate in radians
+#         spherical = np.ones((len(angles), 3))
+#         spherical[:, 1:] = angles / 180 * np.pi
+#         spherical[:, 1] -= np.pi
+#         spherical[:, 2] -= np.pi / 2
+#         # convert to local cartisian coordinate
+#         local_xyz = to_xyz(spherical)
+#         # convert to global coordinate
+#         return_value_temp = to_global(pose, local_xyz, cache=cache)
+#         if cache:
+#             return_value['cache'].append(return_value_temp['cache'])
+#             return_value['bl'].append(return_value_temp['bl'])
+#         global_xyz = return_value_temp['bg']
+#         new_poses[pose_id] = get_skeleton(global_xyz, new_poses[pose_id].reshape(32, -1)).reshape(-1)
+#     return_value['np'] = new_poses
+#     return return_value
+#
+#
+# def test_grow_from_torso():
+#     poses = template.reshape(1, 96)
+#     _, angles = is_valid(poses.reshape(32, -1), return_ang=True)
+#     local_coordinate = to_local(poses.reshape(32, -1))
+#     angles = angles[:, 1:].reshape(9, 1, 2)
+#     # to degrees
+#     angles *= 3
+#     return_dic = grow_from_torso(poses, angles, cache=True)
+#     new_poses = return_dic['np']
+#     bones_local = return_dic['bl']
+#     print(np.max(np.abs(local_coordinate - bones_local)))
+#     maximum_error = np.max(np.abs(new_poses - poses))
+#     print('maximum error1', maximum_error)
+#     _, new_angles = is_valid(new_poses, return_ang=True)
+#     maximum_error = np.max(np.abs(angles[:, 0, :] / 3 - new_angles[:, 1:]))
+#     print('maximum error2', maximum_error)
+#     return
+#
+#
+# def sample_lower_limbs(angles, bin_size=3):
+#     """
+#     Sample limb orientations for lower limbs.
+#     """
+#     # angles of shape [num_bones, sample_size, 2]
+#     for sample_id in range(angles.shape[1]):
+#         for angle_idx in [2, 4, 6, 8]:  # TODO ??
+#             record_idx = record_indices[angle_idx]
+#             parent = angles[angle_idx - 1, sample_id, :]
+#             theta = np.floor(parent[0] / 3)
+#             phi = np.floor(parent[1] / 3)  # convert to bins
+#             candidate_length = len(con_dis[record_idx][(theta, phi)])
+#             # change some boundary points
+#             if candidate_length == 0:
+#                 keys = list(con_dis[record_idx].keys())
+#                 while candidate_length == 0:
+#                     temp_idx = np.random.choice(len(keys), 1)
+#                     theta, phi = keys[temp_idx[0]]
+#                     candidate_length = len(con_dis[record_idx][(theta, phi)])
+#             chosen_idx = np.random.choice(candidate_length, 1)
+#             angles[angle_idx, sample_id, :] = con_dis[record_idx][(theta, phi)][chosen_idx]
+#     # convert to degrees with some noise
+#     angles[[2, 4, 6, 8], :, :] = angles[[2, 4, 6, 8], :, :] * bin_size  # TODO  ????
+#     angles[[2, 4, 6, 8], :, :] += np.random.rand(4, angles.shape[1], 2) * bin_size
+#     return angles
+#
+#
+# def sample_upper_limbs(angles, sample_num):
+#     """
+#     Sample limb orientation for upper limbs.
+#     """
+#     # sample torso limbs from the valid maps uniformly
+#     # angles of shape [num_bones, sample_size, 2]
+#     for angle_idx in [0, 1, 3, 5, 7]:  # TODO ????
+#         valid_map = angle_spread[0, record_indices[angle_idx]]
+#         valid_map = valid_map.astype(np.float16)
+#         valid_map /= valid_map.sum()
+#         bone_angles = sample_from_histogram(valid_map, total=sample_num,
+#                                             add_noise=True)
+#         angles[angle_idx, :, :] = bone_angles
+#     return angles
