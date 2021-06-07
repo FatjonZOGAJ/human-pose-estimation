@@ -166,10 +166,10 @@ def main():
     else:
         logging.info('=> model is trained on 3D ground truth')
     if not config.CPU:
-        criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM, bone_loss=config.LOSS.BONE_LOSS,
+        criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM, use_bone_loss=config.LOSS.BONE_LOSS,
                             is_2d=is_2d).cuda()
     else:
-        criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM, bone_loss=config.LOSS.BONE_LOSS,
+        criterion = loss_fn(num_joints=config.MODEL.NUM_JOINTS, norm=config.LOSS.NORM, use_bone_loss=config.LOSS.BONE_LOSS,
                             is_2d=is_2d)
 
     optimizer = get_optimizer(config, model)

@@ -32,6 +32,7 @@ config.LOSS = edict()
 config.LOSS.FN = 'L1JointRegressionLoss'
 # h36m specific training params
 config.LOSS.NORM = False
+config.LOSS.BONE_LOSS = False
 
 # DATASET related params
 config.DATASET = edict()

@@ -4,7 +4,6 @@ from torch.utils.data import Dataset
 
 from lib.core.loss import get_label_func
 from lib.utils.augmentation import load_occluders
-from lib.utils.skeleton import Skeleton
 
 H36M_NAMES = [''] * 17
 H36M_NAMES[0] = 'Hip'
@@ -42,10 +41,6 @@ MPII_NAMES[12] = 'RShoulder'
 MPII_NAMES[13] = 'LShoulder'
 MPII_NAMES[14] = 'LElbow'
 MPII_NAMES[15] = 'LWrist'
-
-StandardSkeleton = Skeleton(parents=[-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, 9, 8, 11, 12, 8, 14, 15],
-                            joints_left=[4, 5, 6, 11, 12, 13],
-                            joints_right=[1, 2, 3, 14, 15, 16])
 
 logger = logging.getLogger(__name__)
 

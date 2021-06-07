@@ -20,7 +20,7 @@ MODEL:
   RESUME: ''
   TIME_STR: ''
   NUM_JOINTS: 17
-  DEPTH_RES: 1
+  DEPTH_RES: 64
   VOLUME:
     FINAL_CONV_KERNEL: 1
     DECONV_WITH_BIAS: false
@@ -39,8 +39,10 @@ TRAIN:
   LR: 0.0001
   LR_FACTOR: 0.1
   LR_STEP:
-  - 90
-  - 120
+  - 40
+  - 60
+  - 80
+  - 100
   WD: 0.0001
   GAMMA1: 0.99
   GAMMA2: 0.0

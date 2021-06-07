@@ -1,43 +1,51 @@
+import logging
+
 import torch
 from torch.nn import functional as F
 import numpy as np
 import torch.nn as nn
 import math
-from lib.dataset.JointDataset import StandardSkeleton as skeleton
+from lib.utils.skeleton import Skeleton
+
+skeleton = Skeleton(parents=[-1, 0, 1, 2, 0, 4, 5, 0, 7, 8, 9, 8, 11, 12, 8, 14, 15],
+                    joints_left=[4, 5, 6, 11, 12, 13],
+                    joints_right=[1, 2, 3, 14, 15, 16])
 
 
 def weighted_l1_loss(input, target, weights, size_average, norm=False, include_bones=False):
     if norm:
         input = input / torch.norm(input, 1)
         target = target / torch.norm(target, 1)
-
+    #TODO implement wrist weighting here
     out = torch.abs(input - target)
     out = out * weights
-    if size_average:
-        num_valid = weights.byte().any(dim=1).float().sum()
-        out = out.sum() / num_valid
+    out = out.sum()
     if include_bones:
-        out += bone_loss(input, target, weights, size_average)
+        out += bone_loss(input, target, weights)
+    if size_average:
+        num_valid = weights.byte().any(dim=1).float().sum()  # sum of batch entries having all valid joints
+        out = out / num_valid
     return out
 
 
-def bone_loss(input, target, weights, size_average):
+def bone_loss(input, target, weights):
     input = input * weights
     target = target * weights
     children = skeleton.children()
+    batch_size = input.shape[0]
+    input = input.reshape([batch_size, 17, 3])
+    target = target.reshape([batch_size, 17, 3])
 
-    valid = 0
     bone_loss = 0
-    for i in range(0, children):
-        for child in children[i]:
-            if weights[i] and weights[child]:
-                bone_loss += torch.abs((input[i] - input[child]) - (target[i] - target[child]))
-                valid += 1
+    for sample in range(0, batch_size):
+        for parent in range(0, len(children)):
+            for child in children[parent]:
+                bone_loss += torch.abs(
+                    (input[sample, parent] - input[sample, child]) -
+                    (target[sample, parent] - target[sample, child])
+                )
 
-    if size_average:
-        bone_loss /= valid
-
-    return bone_loss
+    return torch.sum(bone_loss)
 
 
 def _assert_no_grad(tensor):
@@ -47,13 +55,16 @@ def _assert_no_grad(tensor):
 
 
 class L1JointRegressionLoss(nn.Module):
-    def __init__(self, num_joints, size_average=True, reduce=True, norm=False, is_2d=False):
+    def __init__(self, num_joints, size_average=True, reduce=True, norm=False, use_bone_loss=False, is_2d=False):
         super(L1JointRegressionLoss, self).__init__()
         self.size_average = size_average
         self.reduce = reduce
         self.num_joints = num_joints
         self.norm = norm
         self.is_2d = is_2d
+        self.bone_loss = use_bone_loss
+        if self.bone_loss:
+            logging.info('=> using bone loss')
 
     def forward(self, preds, *args):
         gt_joints = args[0]
