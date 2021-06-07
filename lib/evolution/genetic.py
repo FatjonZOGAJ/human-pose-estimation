@@ -3,8 +3,7 @@ Utility functions for genetic evolution.
 """
 from lib.evolution.anglelimits import \
     to_spherical, \
-    nt_parent_indices, nt_child_indices, to_local, to_global, get_skeleton  #, \
-    # is_valid_local, is_valid, \
+    nt_parent_indices, nt_child_indices, to_local, to_global, get_skeleton
 
 
 import matplotlib.pyplot as plt
@@ -180,7 +179,7 @@ def get_random_rotation(sigma=60.):
 
 def rotate_bone_random(bone, sigma=10.):
     r = get_random_rotation(sigma)
-    bone_rot = r.as_dcm() @ bone.reshape(3, 1)
+    bone_rot = r.as_matrix() @ bone.reshape(3, 1)
     return bone_rot.reshape(3)
 
 
@@ -194,7 +193,7 @@ def rotate_pose_random(pose=None, sigma=60.):
         # rotate around hip
         hip = pose[0].reshape(1, 3)
         relative_pose = pose - hip
-        rotated = r.as_dcm() @ relative_pose.T
+        rotated = r.as_matrix() @ relative_pose.T
         result = rotated.T + hip
     return result
 

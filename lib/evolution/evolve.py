@@ -1,10 +1,10 @@
 import torch
+import numpy as np
 
 import torch.utils.data
 from scripts.train import parse_args, reset_config
 import lib.dataset as dataset
 from lib.core.config import config, gen_config
-from lib.utils.utils import create_logger
 from lib.evolution.genetic import evolution
 from lib.evolution.parameter import parse_arg_evolution
 from lib.utils.img_utils import gen_trans_from_patch_cv, trans_point2d
@@ -29,6 +29,22 @@ def normalize(population, db):
         population[i][:, 2] = population[i][:, 2] / db.patch_width
 
 
+def normalize2(population):
+    population = list(population)
+    for i in range(len(population)):
+        population[i] = population[i].reshape((17, 3))
+        population[i] = population[i] - population[i][0]
+        population[i] = (population[i] - population[i].mean(axis=0)) / population[i].std(axis=0)
+        population[i] = population[i] - population[i][0]
+        population[i] = population[i].reshape((-1))
+
+    return np.array(population)
+
+
+def save_to_csv(population, file_name):
+    np.savetxt(file_name, population, delimiter=",")
+
+
 if __name__ == "__main__":
     args = parse_args()
     reset_config(config, args)
@@ -43,24 +59,35 @@ if __name__ == "__main__":
         image_set=config.DATASET.TRAIN_SET,
         is_train=True
     )
+    valid_dataset = ds(
+        cfg=config,
+        root=config.DATASET.ROOT,
+        image_set=config.DATASET.TEST_SET,
+        is_train=False
+    )
 
     initial_population = []
+    initial_population_val = []
     for db in train_dataset.db:
         initial_population.append(db['joints_3d'].reshape((-1)))
 
-    evolved_population = evolution(initial_population,
-                                   opt,
-                                   model_file=None
-                                   )
+    for db in valid_dataset.db:
+        initial_population_val.append(db['joints_3d'].reshape((-1)))
 
-    evolved_population = normalize(evolved_population, train_dataset.db)
+    evolved_population = evolution(initial_population, opt, model_file=None)
+    print("Evolved train dataset")
+    save_to_csv(evolved_population, "evolved.csv")
+    evolved_population = normalize2(evolved_population)
+    save_to_csv(evolved_population, "evolved_normalized.csv")
+
+    evolved_population = evolution(initial_population_val, opt, model_file=None)
+    print("Evolved validation dataset")
+    save_to_csv(evolved_population, "evolved_val.csv")
+    evolved_population = normalize2(evolved_population)
+    save_to_csv(evolved_population, "evolved_normalized_val.csv")
+
     # logger.info('=> loading the valid dataset')
-    # valid_dataset = ds(
-    #     cfg=config,
-    #     root=config.DATASET.ROOT,
-    #     image_set=config.DATASET.TEST_SET,
-    #     is_train=False
-    # )
+
     #
     # gpus = [int(i) for i in config.GPUS.split(',')]
     # train_loader = torch.utils.data.DataLoader(

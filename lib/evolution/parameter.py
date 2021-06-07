@@ -45,9 +45,6 @@ def parse_arg_evolution():
     parser.add_argument('-I', type=bool, default=False)
     # File name for saving
     parser.add_argument('-SN', type=str, default='evolved_data')
-    # Usage: generate data
-    parser.add_argument('-generate', type=bool, default=False)
-    # Usage: visualize data
     # Usage: split and save evolved dataset
     parser.add_argument('-split', type=bool, default=False)
     parser.add_argument('-split_ratio', type=float, default=0.9)
