@@ -3,9 +3,10 @@ from torch.nn import functional as F
 import numpy as np
 import torch.nn as nn
 import math
+from lib.dataset.JointDataset import StandardSkeleton as skeleton
 
 
-def weighted_l1_loss(input, target, weights, size_average, norm=False):
+def weighted_l1_loss(input, target, weights, size_average, norm=False, include_bones=False):
     if norm:
         input = input / torch.norm(input, 1)
         target = target / torch.norm(target, 1)
@@ -14,9 +15,29 @@ def weighted_l1_loss(input, target, weights, size_average, norm=False):
     out = out * weights
     if size_average:
         num_valid = weights.byte().any(dim=1).float().sum()
-        return out.sum() / num_valid
-    else:
-        return out.sum()
+        out = out.sum() / num_valid
+    if include_bones:
+        out += bone_loss(input, target, weights, size_average)
+    return out
+
+
+def bone_loss(input, target, weights, size_average):
+    input = input * weights
+    target = target * weights
+    children = skeleton.children()
+
+    valid = 0
+    bone_loss = 0
+    for i in range(0, children):
+        for child in children[i]:
+            if weights[i] and weights[child]:
+                bone_loss += torch.abs((input[i] - input[child]) - (target[i] - target[child]))
+                valid += 1
+
+    if size_average:
+        bone_loss /= valid
+
+    return bone_loss
 
 
 def _assert_no_grad(tensor):
@@ -45,7 +66,7 @@ class L1JointRegressionLoss(nn.Module):
 
         _assert_no_grad(gt_joints)
         _assert_no_grad(gt_joints_vis)
-        return weighted_l1_loss(pred_jts, gt_joints, gt_joints_vis, self.size_average, self.norm)
+        return weighted_l1_loss(pred_jts, gt_joints, gt_joints_vis, self.size_average, self.norm, self.bone_loss)
 
 
 def generate_joint_location_label(patch_width, patch_height, joints, joints_vis):

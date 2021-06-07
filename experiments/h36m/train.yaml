@@ -29,6 +29,7 @@ MODEL:
     BN_MOMENTUM: 0.1
 LOSS:
   FN: 'L1JointRegressionLoss'
+  BONE_LOSS: True
 TRAIN:
   BATCH_SIZE: 16
   SHUFFLE: true
