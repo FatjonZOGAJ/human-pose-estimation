@@ -5,6 +5,7 @@ import time
 import numpy as np
 import torch
 
+from lib.models.gcn_end_to_end import GraphModel
 from lib.utils.img_utils import trans_coords_from_patch_to_org_3d
 from lib.core.loss import get_result_func
 from lib.utils.utils import AverageMeter
@@ -13,6 +14,7 @@ from lib.core.loss import get_joint_regression_result
 DEBUG_MODE_MAX_ITER = 2
 
 logger = logging.getLogger(__name__)
+
 
 def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict):
     batch_time = AverageMeter()
@@ -37,12 +39,8 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             batch_label_weight = batch_label_weight.cuda()
 
         batch_size = batch_data.size(0)
-        if model.module.drop_joint_idx != -1:
-            # should be 27, reason why it performs better when dropping the last joint is that RWrist has highest error
-            batch_label = batch_label[:, [*range(0, model.module.drop_joint_idx), *range(model.module.drop_joint_idx+3,
-                                                                51)]]
-            batch_label_weight = batch_label_weight[:, [*range(0, model.module.drop_joint_idx), *range(model.module.drop_joint_idx+3,
-                                                                              51)]]
+        batch_label, batch_label_weight = drop_or_reorder_joint(batch_label, batch_label_weight, model)
+
         # compute output
         preds = model(batch_data if not model.module.use_gt_as_input else batch_label)
 
@@ -111,11 +109,8 @@ def validate(val_loader, model, DEBUG_MODE_BREAK, config=None):
                 # batch_label = batch_label.cuda()
                 # batch_label_weight = batch_label_weight.cuda()
 
-            if model.module.drop_joint_idx != -1:
-                batch_label = batch_label[:, [*range(0, model.module.drop_joint_idx), *range(model.module.drop_joint_idx+3,
-                                                                                51)]]
-                batch_label_weight = batch_label_weight[:, [*range(0, model.module.drop_joint_idx), *range(model.module.drop_joint_idx+3,
-                                                                                          51)]]
+            batch_label, batch_label_weight = drop_or_reorder_joint(batch_label, batch_label_weight, model)
+
             # compute output
             preds = model(batch_data if not model.module.use_gt_as_input else batch_label)
             del batch_data, batch_label, batch_label_weight
@@ -134,6 +129,18 @@ def validate(val_loader, model, DEBUG_MODE_BREAK, config=None):
                                     ]
 
         return preds_in_patch_with_score
+
+
+def drop_or_reorder_joint(batch_label, batch_label_weight, model):
+    drop_joint_idx = model.module.drop_joint_idx
+    if drop_joint_idx != -1:
+        batch_label = batch_label[:, [*range(0, drop_joint_idx * 3), *range(drop_joint_idx * 3 + 3, 51)]]
+        batch_label_weight = batch_label_weight[:, [*range(0, drop_joint_idx * 3), *range(drop_joint_idx * 3 + 3, 51)]]
+    elif model.module.move_neck_nose_to_end:        # only if not dropping a joint
+        idx_neck = 9
+        batch_label = batch_label[:, [*range(0, idx_neck * 3), *range(10 * 3, 51), *range(idx_neck * 3, 10 * 3)]]
+        batch_label_weight = batch_label_weight[:, [*range(0, idx_neck * 3), *range(10 * 3, 51), *range(idx_neck * 3, 10 * 3)]]
+    return batch_label, batch_label_weight
 
 
 def dirty_solution_for_partial_batches(preds_in_patch_with_score):

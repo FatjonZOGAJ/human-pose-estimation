@@ -9,12 +9,13 @@ from lib.utils.sem_gcn_utils.h36m_dataset import h36m_skeleton, H36M_NAMES, h36m
 # drop_joint_idx corresponds to H36M_NAMES indices starting with 0 (aka [0, 16])
 class PoseGCNRegressor(torch.nn.Module):
     def __init__(self, cfg, use_gt_as_input=True, use_2d_input=True, input_joint_dim=2, remove_static_joints=True,
-                 drop_joint_idx=-1, **kwargs):
+                 drop_joint_idx=-1, move_neck_nose_to_end=True, **kwargs):
         super(PoseGCNRegressor, self).__init__()
         self.input_joint_dim = input_joint_dim
-        self.drop_joint_idx = drop_joint_idx * 3
+        self.drop_joint_idx = drop_joint_idx
         self.use_gt_as_input = use_gt_as_input
         self.use_2d_input = use_2d_input
+        self.move_neck_nose_to_end = move_neck_nose_to_end
 
         self.skeleton = h36m_skeleton
         if remove_static_joints:
@@ -44,6 +45,10 @@ class PoseGCNRegressor(torch.nn.Module):
             else:
                 x = x[:, np.mod(np.arange(x.shape[1]), 3) != 2]
         x = x.reshape(x.shape[0], -1, self.input_joint_dim)  # -1 takes care of 16 and 17 joints case
+        # move Neck/Nose to end as we add it that way to SemGCN
+        if not self.use_gt_as_input:        # we reorder gt labels anyway -> these are now input
+            if x.shape[1] == 17 and self.move_neck_nose_to_end:
+                x = torch.cat([x[:, :9, :], x[:, 10:, :], x[:, 9:10, :]], axis=1)
         x = self.model_pos(x)
         return x
 

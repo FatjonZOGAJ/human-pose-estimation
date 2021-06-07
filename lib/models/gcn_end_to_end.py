@@ -12,25 +12,29 @@ class GraphModel(torch.nn.Module):
         super(GraphModel, self).__init__()
         self.use_gt_as_input = False
         self.drop_joint_idx = -1
+        self.move_neck_nose_to_end = True
         self.freeze_backbone_completely = cfg.MODEL.FREEZE_BACKBONE_COMPLETELY
+
         self.model_2d = models.nets['pose3d_vol'].get_pose_net(cfg, True and cfg.MODEL.INIT_WEIGHTS)
-        checkpoint = torch.load(cfg.MODEL.CKPT_2D)
-        # drop 'module.' in key names as we load parts separately
-        checkpoint = {k[7:]: v
-                      for k, v in checkpoint.items()}
-        self.model_2d.load_state_dict(checkpoint)
+        if cfg.MODEL.CKPT_2D != '':
+            checkpoint = torch.load(cfg.MODEL.CKPT_2D)
+            # drop 'module.' in key names as we load parts separately
+            checkpoint = {k[7:]: v
+                          for k, v in checkpoint.items()}
+            self.model_2d.load_state_dict(checkpoint)
         # Last Layer of ResNext is not frozen as it was trained that way
         if self.freeze_backbone_completely:
             GraphModel.freeze_model(self.model_2d)
 
         self.model_pos = PoseGCNRegressor(cfg, use_gt_as_input=False, use_2d_input=True,
-                                          input_joint_dim=cfg.MODEL.SEM_GCN.INPUT_JOINT_DIM)
-        checkpoint = torch.load(cfg.MODEL.CKPT_3D)
-        # drop 'module.' in key names as we load parts separately
-        checkpoint = {k[7:]: v
-                      for k, v in checkpoint.items()}
-        self.model_pos.load_state_dict(checkpoint)
-        # when resuming, we load the model from MODEL.TIME_STR again
+                                          input_joint_dim=cfg.MODEL.SEM_GCN.INPUT_JOINT_DIM, move_neck_nose_to_end=True)
+        if cfg.MODEL.CKPT_3D != '':
+            checkpoint = torch.load(cfg.MODEL.CKPT_3D)
+            # drop 'module.' in key names as we load parts separately
+            checkpoint = {k[7:]: v
+                          for k, v in checkpoint.items()}
+            self.model_pos.load_state_dict(checkpoint)
+            # when resuming, we load the model from MODEL.TIME_STR again
 
     def forward(self, x):
         x = self.model_2d(x)  # predict 2d joints
