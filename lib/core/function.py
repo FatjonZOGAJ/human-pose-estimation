@@ -136,10 +136,12 @@ def drop_or_reorder_joint(batch_label, batch_label_weight, model):
     if drop_joint_idx != -1:
         batch_label = batch_label[:, [*range(0, drop_joint_idx * 3), *range(drop_joint_idx * 3 + 3, 51)]]
         batch_label_weight = batch_label_weight[:, [*range(0, drop_joint_idx * 3), *range(drop_joint_idx * 3 + 3, 51)]]
-    elif model.module.move_neck_nose_to_end:        # only if not dropping a joint
+    elif model.module.move_neck_nose_to_end:  # only if not dropping a joint
         idx_neck = 9
-        batch_label = batch_label[:, [*range(0, idx_neck * 3), *range(10 * 3, 51), *range(idx_neck * 3, 10 * 3)]]
-        batch_label_weight = batch_label_weight[:, [*range(0, idx_neck * 3), *range(10 * 3, 51), *range(idx_neck * 3, 10 * 3)]]
+        reordered_joints = [*range(0, idx_neck * 3), *range((idx_neck + 1) * 3, 51),
+                            *range(idx_neck * 3, (idx_neck + 1) * 3)]
+        batch_label = batch_label[:, reordered_joints]
+        batch_label_weight = batch_label_weight[:, reordered_joints]
     return batch_label, batch_label_weight
 
 

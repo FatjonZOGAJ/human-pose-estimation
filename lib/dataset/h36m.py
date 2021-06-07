@@ -57,6 +57,9 @@ class H36M(JointDataset):
         self.parent_ids = np.array([0, 0, 1, 2, 0, 4, 5, 0, 8, 8, 9, 8, 11, 12, 8, 14, 15], dtype=np.int)
 
         self.flip_pairs = np.array([[1, 4], [2, 5], [3, 6], [14, 11], [15, 12], [16, 13]], dtype=np.int)
+        # TODO: check if necessary when training end-to-end
+        #if cfg.MODEL.MOVE_NECK_NOSE_TO_END:
+        #    self.flip_pairs = np.array([[1, 4], [2, 5], [3, 6], [15, 12], [16, 13], [17, 14]], dtype=np.int)
 
         self.num_joints = cfg.MODEL.NUM_JOINTS
         global fmt_pred
