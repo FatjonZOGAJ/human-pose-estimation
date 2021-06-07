@@ -31,6 +31,8 @@ MODEL:
     HID_DIM: 128
     NUM_LAYERS: 4
     DROPOUT: 0.0
+    INPUT_JOINT_DIM: 2
+  MOVE_NECK_NOSE_TO_END: False
 
 LOSS:
   FN: 'L1JointRegressionLoss'

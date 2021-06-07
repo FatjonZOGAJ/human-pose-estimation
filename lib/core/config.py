@@ -30,7 +30,8 @@ config.MODEL.VOLUME = {}
 config.MODEL.SEM_GCN = {}
 config.MODEL.CKPT_2D = ''
 config.MODEL.CKPT_3D = ''
-config.MODEL.FREEZE_BACKBONE_COMPLETELY = True
+config.MODEL.FREEZE_BACKBONE_COMPLETELY = False
+config.MODEL.MOVE_NECK_NOSE_TO_END = False
 
 
 # Loss function params

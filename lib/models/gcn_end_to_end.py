@@ -27,7 +27,8 @@ class GraphModel(torch.nn.Module):
             GraphModel.freeze_model(self.model_2d)
 
         self.model_pos = PoseGCNRegressor(cfg, use_gt_as_input=False, use_2d_input=True,
-                                          input_joint_dim=cfg.MODEL.SEM_GCN.INPUT_JOINT_DIM, move_neck_nose_to_end=True)
+                                          input_joint_dim=cfg.MODEL.SEM_GCN.INPUT_JOINT_DIM,
+                                          move_neck_nose_to_end=cfg.MODEL.MOVE_NECK_NOSE_TO_END)
         if cfg.MODEL.CKPT_3D != '':
             checkpoint = torch.load(cfg.MODEL.CKPT_3D)
             # drop 'module.' in key names as we load parts separately

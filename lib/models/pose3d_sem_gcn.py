@@ -46,7 +46,7 @@ class PoseGCNRegressor(torch.nn.Module):
                 x = x[:, np.mod(np.arange(x.shape[1]), 3) != 2]
         x = x.reshape(x.shape[0], -1, self.input_joint_dim)  # -1 takes care of 16 and 17 joints case
         # move Neck/Nose to end as we add it that way to SemGCN
-        if not self.use_gt_as_input:        # we reorder gt labels anyway -> these are now input
+        if not self.use_gt_as_input:  # we reorder gt labels anyway -> these are now input
             if x.shape[1] == 17 and self.move_neck_nose_to_end:
                 x = torch.cat([x[:, :9, :], x[:, 10:, :], x[:, 9:10, :]], axis=1)
         x = self.model_pos(x)
@@ -54,5 +54,6 @@ class PoseGCNRegressor(torch.nn.Module):
 
 
 def get_pose_net(cfg, **kwargs):
-    model = PoseGCNRegressor(cfg, **kwargs)
+    model = PoseGCNRegressor(cfg, **kwargs, move_neck_nose_to_end=cfg.MODEL.MOVE_NECK_NOSE_TO_END,
+                             input_joint_dim=cfg.MODEL.SEM_GCN.INPUT_JOINT_DIM)
     return model

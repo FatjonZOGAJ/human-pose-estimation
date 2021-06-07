@@ -45,10 +45,10 @@ class _ResGraphConv(nn.Module):
 
 
 class _GraphNonLocal(nn.Module):
-    def __init__(self, hid_dim, grouped_order, restored_order, group_size):
+    def __init__(self, hid_dim, grouped_order, restored_order, group_size, inter_channels=None):
         super(_GraphNonLocal, self).__init__()
 
-        self.nonLocal = GraphNonLocal(hid_dim, sub_sample=group_size)
+        self.nonLocal = GraphNonLocal(hid_dim, inter_channels=inter_channels, sub_sample=group_size)
         self.grouped_order = grouped_order
         self.restored_order = restored_order
 
@@ -74,20 +74,29 @@ class SemGCN(nn.Module):
             assert group_size > 1
 
             grouped_order = list(reduce(lambda x, y: x + y, nodes_group))
+            reorder_neck_nose = True
+            if reorder_neck_nose:
+                grouped_order = [i + 1 if i >= 9 else i  # fix nodes_group not taking into account Neck/Nose
+                                 for i in grouped_order]
+                grouped_order.append(9)  # add Neck/Nose to end
             restored_order = [0] * len(grouped_order)
             for i in range(len(restored_order)):
                 for j in range(len(grouped_order)):
-                    if grouped_order[j] == i:           # restored_order[0] = idx of 0 where it appears in grouped_order
+                    if grouped_order[j] == i:  # restored_order[0] = idx of 0 where it appears in grouped_order
                         restored_order[i] = j
                         break
-            # Add 17th joint by itself
-            grouped_order.append(16)
-            restored_order.append(16)
 
-            _gconv_input.append(_GraphNonLocal(hid_dim, grouped_order, restored_order, group_size))
+            # defining inter_channels allows us to set size of feature downpooling (default = input (aka hid_dim) / 2)
+            inter_channels = None
+            sub_sample_pooling = 1  # was group_size; 1 means do not downsample joints
+            _gconv_input.append(
+                _GraphNonLocal(hid_dim, grouped_order, restored_order, sub_sample_pooling,
+                               inter_channels=inter_channels))
             for i in range(num_layers):
                 _gconv_layers.append(_ResGraphConv(adj, hid_dim, hid_dim, hid_dim, p_dropout=p_dropout))
-                _gconv_layers.append(_GraphNonLocal(hid_dim, grouped_order, restored_order, group_size))
+                _gconv_layers.append(
+                    _GraphNonLocal(hid_dim, grouped_order, restored_order, sub_sample_pooling,
+                                   inter_channels=inter_channels))
 
         self.gconv_input = nn.Sequential(*_gconv_input)
         self.gconv_layers = nn.Sequential(*_gconv_layers)
