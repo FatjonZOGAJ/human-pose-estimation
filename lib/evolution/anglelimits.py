@@ -12,14 +12,14 @@ from mpl_toolkits.mplot3d import Axes3D
 
 root = "resources/constraints"
 # logging.info("Loading files from " + root)
-# model_path = os.path.join(root, "jointAngleModel_v2.npy")
-# joint_angle_limits = np.load(model_path, allow_pickle=True).item()
-# angle_spread = joint_angle_limits['angleSprd']
-# # separation plane for conditional joint angle
-# sepPlane = joint_angle_limits['sepPlane']
-# E2 = joint_angle_limits['E2']
-# bounds = joint_angle_limits['bounds']
-# # static pose and parameters used in coordinate transformation
+model_path = os.path.join(root, "jointAngleModel_v2.npy")
+joint_angle_limits = np.load(model_path, allow_pickle=True).item()
+angle_spread = joint_angle_limits['angleSprd']
+# separation plane for conditional joint angle
+sepPlane = joint_angle_limits['sepPlane']
+E2 = joint_angle_limits['E2']
+bounds = joint_angle_limits['bounds']
+# static pose and parameters used in coordinate transformation
 static_pose_path = os.path.join(root, "staticPose.npy")
 static_pose = np.load(static_pose_path, allow_pickle=True).item()
 di = static_pose['di']
@@ -100,74 +100,74 @@ bone_name = {
 
 
 # =============================================================================#
-# def is_valid_local(skeleton_local, return_ang=False):
-#     """
-#     Check if the limbs represented in local coordinate system are valid or not.
-#     """
-#     valid_vec = np.ones((num_of_bones), dtype=np.bool)
-#     angles = to_spherical(skeleton_local)
-#     angles[:, 1:] *= 180 / np.pi
-#     # convert to valid range and discretize
-#     # theta: -180~180 degrees discretized into 120 bins
-#     # phi: -90~90 degrees discretized into 60 bins
-#     angles[:, 1] = np.floor((angles[:, 1] + 180) / 3 + 1)
-#     angles[:, 2] = np.floor((angles[:, 2] + 90) / 3 + 1)
-#     # go through each bone and check the angle-limits
-#     for angle_idx in range(len(angles)):
-#         angle = angles[angle_idx]
-#         record_idx = record_indices[angle_idx]
-#         theta, phi = int(angle[1]), int(angle[2])
-#         if angle_idx in [0, 1, 3, 5, 7]:  # TODO: where this comes from??
-#             test_value = angle_spread[0, record_idx][theta - 1, phi - 1]
-#             if test_value == 0:
-#                 valid_vec[angle_idx] == False
-#         else:
-#             angle_parent = angles[angle_idx - 1]
-#             theta_p, phi_p = int(angle_parent[1]), int(angle_parent[2])
-#             vector = normalize(sepPlane[0, record_idx][theta_p - 1, phi_p - 1])
-#             for value in vector:
-#                 if np.isnan(value):
-#                     valid_vec[angle_idx] = False
-#                     continue
-#             if np.dot(np.hstack([skeleton_local[angle_idx], 1]), vector) > 0:
-#                 valid_vec[angle_idx] = False
-#             else:
-#                 e1 = vector[:-1]
-#                 e2 = E2[0, record_idx][theta_p - 1, phi_p - 1]
-#                 T = gram_schmidt_columns(np.hstack([e1.reshape(3, 1),
-#                                                     e2.reshape(3, 1),
-#                                                     np.cross(e1, e2).reshape(3, 1)]))
-#                 bnd = bounds[0, record_idx][theta_p - 1, phi_p - 1]
-#                 u = (T[:, 1:]).T @ skeleton_local[angle_idx]
-#                 if u[0] < bnd[0] or u[0] > bnd[1] or u[1] < bnd[2] or u[1] > bnd[3]:
-#                     valid_vec[angle_idx] = False
-#     if return_ang:
-#         return valid_vec, angles
-#     else:
-#         return valid_vec
+def is_valid_local(skeleton_local, return_ang=False):
+    """
+    Check if the limbs represented in local coordinate system are valid or not.
+    """
+    valid_vec = np.ones((num_of_bones), dtype=np.bool)
+    angles = to_spherical(skeleton_local)
+    angles[:, 1:] *= 180 / np.pi
+    # convert to valid range and discretize
+    # theta: -180~180 degrees discretized into 120 bins
+    # phi: -90~90 degrees discretized into 60 bins
+    angles[:, 1] = np.floor((angles[:, 1] + 180) / 3 + 1)
+    angles[:, 2] = np.floor((angles[:, 2] + 90) / 3 + 1)
+    # go through each bone and check the angle-limits
+    for angle_idx in range(len(angles)):
+        angle = angles[angle_idx]
+        record_idx = record_indices[angle_idx]
+        theta, phi = int(angle[1]), int(angle[2])
+        if angle_idx in [0, 1, 3, 5, 7]:  # TODO: where this comes from??
+            test_value = angle_spread[0, record_idx][theta - 1, phi - 1]
+            if test_value == 0:
+                valid_vec[angle_idx] = False
+        else:
+            angle_parent = angles[angle_idx - 1]
+            theta_p, phi_p = int(angle_parent[1]), int(angle_parent[2])
+            vector = normalize(sepPlane[0, record_idx][theta_p - 1, phi_p - 1])
+            for value in vector:
+                if np.isnan(value):
+                    valid_vec[angle_idx] = False
+                    continue
+            if np.dot(np.hstack([skeleton_local[angle_idx], 1]), vector) > 0:
+                valid_vec[angle_idx] = False
+            else:
+                e1 = vector[:-1]
+                e2 = E2[0, record_idx][theta_p - 1, phi_p - 1]
+                T = gram_schmidt_columns(np.hstack([e1.reshape(3, 1),
+                                                    e2.reshape(3, 1),
+                                                    np.cross(e1, e2).reshape(3, 1)]))
+                bnd = bounds[0, record_idx][theta_p - 1, phi_p - 1]
+                u = (T[:, 1:]).T @ skeleton_local[angle_idx]
+                if u[0] < bnd[0] or u[0] > bnd[1] or u[1] < bnd[2] or u[1] > bnd[3]:
+                    valid_vec[angle_idx] = False
+    if return_ang:
+        return valid_vec, angles
+    else:
+        return valid_vec
 
 
-# def is_valid(skeleton, return_ang=False, camera=False):
-#     """
-#     args:
-#         skeleton: input skeleton of shape [num_joints, 3] use the annotation
-#         of Human 3.6M dataset
-#     return:
-#         valid_vec: boolean vector specifying the validity for each bone.
-#         return 0 for invalid bones.
-#         camera: relative orientation of camera and human
-#     """
-#
-#     skeleton = skeleton.reshape(17, -1)  # TODO: check this
-#     # the ordering of coordinate used by the Prior was x,z and y
-#     skeleton = skeleton[:, [0, 2, 1]]
-#     # convert bone vectors into local coordinate
-#     skeleton_local = to_local(skeleton)
-#     ret = is_valid_local(skeleton_local, return_ang=return_ang)
-#     if return_ang:
-#         return ret[0], ret[1]
-#     else:
-#         return ret
+def is_valid(skeleton, return_ang=False, camera=False):
+    """
+    args:
+        skeleton: input skeleton of shape [num_joints, 3] use the annotation
+        of Human 3.6M dataset
+    return:
+        valid_vec: boolean vector specifying the validity for each bone.
+        return 0 for invalid bones.
+        camera: relative orientation of camera and human
+    """
+
+    skeleton = skeleton.reshape(17, -1)  # TODO: check this
+    # the ordering of coordinate used by the Prior was x,z and y
+    skeleton = skeleton[:, [0, 2, 1]]
+    # convert bone vectors into local coordinate
+    skeleton_local = to_local(skeleton)
+    ret = is_valid_local(skeleton_local, return_ang=return_ang)
+    if return_ang:
+        return ret[0], ret[1]
+    else:
+        return ret
 
 
 def normalize(vector):

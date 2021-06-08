@@ -17,7 +17,7 @@ def parse_arg_evolution():
     parser.add_argument('-E', type=bool, default=True)
     parser.add_argument('-T', type=float, default=2.5) # the target ratio
     # Fraction
-    parser.add_argument('-F', type=float, default=0.05)
+    parser.add_argument('-F', type=float, default=0.1)
     # Apply mutation on skeleton orientation
     parser.add_argument('-M', type=bool, default=True)
     # Apply mutation on bone vector length
@@ -37,7 +37,7 @@ def parse_arg_evolution():
     # Apply the crossover operator
     parser.add_argument('-CV', type=bool, default=True)
     # Apply constraint to rule out invalid poses
-    parser.add_argument('-C', type=bool, default=False)
+    parser.add_argument('-C', type=bool, default=True)
     # Threshold for valid bone vector
     parser.add_argument('-Th', type=int, default=9)
     # Visualize the synthetic skeleton during exploring the data space

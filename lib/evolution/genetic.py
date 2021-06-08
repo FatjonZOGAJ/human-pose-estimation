@@ -3,7 +3,7 @@ Utility functions for genetic evolution.
 """
 from lib.evolution.anglelimits import \
     to_spherical, \
-    nt_parent_indices, nt_child_indices, to_local, to_global, get_skeleton
+    nt_parent_indices, nt_child_indices, to_local, to_global, get_skeleton, is_valid_local
 
 
 import matplotlib.pyplot as plt
@@ -253,12 +253,12 @@ def exploration(father, mother, opt, post_processing=True):
     son_pose, daughter_pose = None, None
     if opt.C:
         # apply joint angle constraint as the fitness function
-        # valid_vec_fa = is_valid_local(bones_father)
-        # valid_vec_mo = is_valid_local(bones_mother)
-        pass
-    if not opt.C:  #or valid_vec_fa.sum() >= opt.Th:
+        valid_vec_fa = is_valid_local(bones_father)
+        valid_vec_mo = is_valid_local(bones_mother)
+
+    if not opt.C or valid_vec_fa.sum() >= opt.Th:
         son_pose = modify_pose(father, bones_father, mother_bone_length, ro=True)
-    if not opt.C:  #or valid_vec_mo.sum() >= opt.Th:
+    if not opt.C or valid_vec_mo.sum() >= opt.Th:
         daughter_pose = modify_pose(mother, bones_mother, father_bone_length, ro=True)
     if opt.M:
         # global mutation: rotate the whole 3D skeleton

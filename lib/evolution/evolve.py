@@ -2,6 +2,8 @@ import torch
 import numpy as np
 
 import torch.utils.data
+
+from lib.utils.utils import calc_kpt_bound
 from scripts.train import parse_args, reset_config
 import lib.dataset as dataset
 from lib.core.config import config, gen_config
@@ -17,8 +19,9 @@ def normalize(population, db):
         population[i] = population[i].reshape((17, 3))
         c_x = population[i][0, 0]
         c_y = population[i][0, 1]
-        bb_width = 1
-        bb_height = 1
+        u, d, l, r = calc_kpt_bound(population[i], np.ones((17, 3)))
+        bb_width = r - l
+        bb_height = d - u
         trans = gen_trans_from_patch_cv(c_x, c_y, bb_width, bb_height, db.patch_width, db.patch_height, 1.0, 0, inv=False)
         for n_jt in range(len(population[i])):
             population[i][n_jt, 0:2] = trans_point2d(population[n_jt, 0:2], trans)
@@ -70,21 +73,25 @@ if __name__ == "__main__":
     initial_population_val = []
     for db in train_dataset.db:
         initial_population.append(db['joints_3d'].reshape((-1)))
+        p = db['joints_3d']
+        u, d, l, r = calc_kpt_bound(p, np.ones((17, 3)))
+        bb_width = r - l
+        bb_height = d - u
 
     for db in valid_dataset.db:
         initial_population_val.append(db['joints_3d'].reshape((-1)))
 
     evolved_population = evolution(initial_population, opt, model_file=None)
     print("Evolved train dataset")
-    save_to_csv(evolved_population, "evolved.csv")
+    save_to_csv(evolved_population, "evolved2.csv")
     evolved_population = normalize2(evolved_population)
-    save_to_csv(evolved_population, "evolved_normalized.csv")
+    save_to_csv(evolved_population, "evolved_normalized2.csv")
 
     evolved_population = evolution(initial_population_val, opt, model_file=None)
     print("Evolved validation dataset")
-    save_to_csv(evolved_population, "evolved_val.csv")
+    save_to_csv(evolved_population, "evolved_val2.csv")
     evolved_population = normalize2(evolved_population)
-    save_to_csv(evolved_population, "evolved_normalized_val.csv")
+    save_to_csv(evolved_population, "evolved_normalized_val2.csv")
 
     # logger.info('=> loading the valid dataset')
 
