@@ -27,6 +27,7 @@ from lib.utils.utils import create_logger
 import lib.core.loss as loss
 import lib.dataset as dataset
 import lib.models as models
+from torch.utils.data import ConcatDataset
 
 import numpy as np
 
@@ -201,24 +202,17 @@ def main():
         else:
             logger.warning(f'WARN: MODEL.RESUME set, but no file found {config.MODEL.RESUME}')
 
-    # Choose the dataset, either Human3.6M or mpii
-    ds = eval('dataset.' + config.DATASET.DATASET)
-
-    # Data loading code
-    logger.info('=> loading the train dataset')
-    train_dataset = ds(
-        cfg=config,
-        root=config.DATASET.ROOT,
-        image_set=config.DATASET.TRAIN_SET,
-        is_train=True
-    )
-    logger.info('=> loading the valid dataset')
-    valid_dataset = ds(
-        cfg=config,
-        root=config.DATASET.ROOT,
-        image_set=config.DATASET.TEST_SET,
-        is_train=False
-    )
+    if config.DATASET.DATASET == 'both':
+        logger.info('=> using MPII and H36m for training')
+        train_dataset1, valid_dataset = get_datasets(logger, eval('dataset.h36m'), 'h36m', config.DATASET.TRAIN_SET,
+                                                     config.DATASET.TEST_SET)
+        train_dataset2, train_dataset3 = get_datasets(logger, eval('dataset.mpii'), 'mpii', config.DATASET.TRAIN_SET,
+                                                      config.DATASET.TEST_SET)
+        train_dataset = ConcatDataset([train_dataset1, train_dataset2, train_dataset3])
+    else:
+        train_dataset, valid_dataset = get_datasets(logger, eval('dataset.' + config.DATASET.DATASET),
+                                                    config.DATASET.DATASET, config.DATASET.TRAIN_SET,
+                                                    config.DATASET.TEST_SET)
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -272,6 +266,25 @@ def main():
     logger.info('saving final model state to {}'.format(
         final_model_state_file))
     torch.save(model.module.state_dict(), final_model_state_file)
+
+
+def get_datasets(logger, ds, name, train, test):
+    # Data loading code
+    logger.info('=> loading the train dataset')
+    train_dataset = ds(
+        cfg=config,
+        root=f'data/{name}',
+        image_set=train,
+        is_train=True
+    )
+    logger.info('=> loading the valid dataset')
+    valid_dataset = ds(
+        cfg=config,
+        root=f'data/{name}',
+        image_set=test if name == 'h36m' else 'valid',
+        is_train=False
+    )
+    return train_dataset, valid_dataset
 
 
 if __name__ == '__main__':

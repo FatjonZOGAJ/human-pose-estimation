@@ -45,6 +45,7 @@ MPII_NAMES[15] = 'LWrist'
 logger = logging.getLogger(__name__)
 
 H36M_TO_MPII_PERM = np.array([H36M_NAMES.index(h) for h in MPII_NAMES if h != '' and h in H36M_NAMES])
+MPII_TO_H36M_PERM = np.array([MPII_NAMES.index(h) for h in H36M_NAMES if h != '' and h in MPII_NAMES])
 
 
 class JointDataset(Dataset):
@@ -63,10 +64,6 @@ class JointDataset(Dataset):
         self.rect_3d_width = 2000.
         self.rect_3d_height = 2000.
 
-        # TODO: All pre-trained models expect input images normalized in the same way, i.e. mini-batches of 3-channel RGB images of shape (3 x H x W), where H and W are expected to be at least 224. The images have to be loaded in to a range of [0, 1] and then normalized using mean = [0.485, 0.456, 0.406] and std = [0.229, 0.224, 0.225]. You can use the following transform to normalize:
-        # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        # https://github.com/pytorch/examples/blob/42e5b996718797e45c46a25c55b031e6768f8440/imagenet/main.py#L89-L101
-        # above percentages are equivalent to these
         self.mean = np.array([123.675, 116.280, 103.530])
         self.std = np.array([58.395, 57.120, 57.375])
         self.num_cams = cfg.DATASET.NUM_CAMS
