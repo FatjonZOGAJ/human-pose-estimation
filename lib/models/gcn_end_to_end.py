@@ -12,7 +12,7 @@ class GraphModel(torch.nn.Module):
         super(GraphModel, self).__init__()
         self.use_gt_as_input = False
         self.drop_joint_idx = -1
-        self.move_neck_nose_to_end = True
+        self.move_neck_nose_to_end = cfg.MODEL.MOVE_NECK_NOSE_TO_END
         self.freeze_backbone_completely = cfg.MODEL.FREEZE_BACKBONE_COMPLETELY
 
         self.model_2d = models.nets['pose3d_vol'].get_pose_net(cfg, True and cfg.MODEL.INIT_WEIGHTS)

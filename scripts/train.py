@@ -75,14 +75,14 @@ def parse_args():
                         type=int,
                         default=-1)
     parser.add_argument('--model_time_str',
-                        help='Preload a previously trained model. Currently only works for validation.',
+                        help='Preload a previously trained model.',
                         type=str)
     parser.add_argument('--cpu',
                         help='run on cpu',
                         type=int,
                         default=-1)
     parser.add_argument('--model_backbone',
-                        help='Preload a previously trained model. Currently only works for validation.',
+                        help='Sets the ResNet variation',
                         type=str)
     parser.add_argument('--dataset_augment',
                         help='flip, rotate, scale etc',
