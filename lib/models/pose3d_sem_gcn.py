@@ -8,13 +8,12 @@ from lib.utils.sem_gcn_utils.h36m_dataset import h36m_skeleton, H36M_NAMES, h36m
 
 # drop_joint_idx corresponds to H36M_NAMES indices starting with 0 (aka [0, 16])
 class PoseGCNRegressor(torch.nn.Module):
-    def __init__(self, cfg, use_gt_as_input=True, use_2d_input=True, input_joint_dim=2, remove_static_joints=True,
+    def __init__(self, cfg, use_gt_as_input=True, input_joint_dim=2, remove_static_joints=True,
                  drop_joint_idx=-1, move_neck_nose_to_end=True, **kwargs):
         super(PoseGCNRegressor, self).__init__()
         self.input_joint_dim = input_joint_dim
         self.drop_joint_idx = drop_joint_idx
         self.use_gt_as_input = use_gt_as_input
-        self.use_2d_input = use_2d_input
         self.move_neck_nose_to_end = move_neck_nose_to_end
 
         self.skeleton = h36m_skeleton
@@ -35,11 +34,12 @@ class PoseGCNRegressor(torch.nn.Module):
         adj = adj_mx_from_skeleton(self.skeleton)
         # TODO play around with dropout and num_layers later
         self.model_pos = SemGCN(adj, cfg.MODEL.SEM_GCN.HID_DIM, num_layers=cfg.MODEL.SEM_GCN.NUM_LAYERS,
-                                p_dropout=cfg.MODEL.SEM_GCN.DROPOUT, nodes_group=h36m_skeleton_joints_group)
+                                p_dropout=cfg.MODEL.SEM_GCN.DROPOUT, nodes_group=h36m_skeleton_joints_group,
+                                coords_dim=(self.input_joint_dim, 3))
 
     def forward(self, x):
         # Drop third dimension z
-        if self.use_2d_input:
+        if self.input_joint_dim == 2:
             if len(x.shape) == 3:
                 x = x[:, :, :-1]  # (batch_size, 17, 2)
             else:

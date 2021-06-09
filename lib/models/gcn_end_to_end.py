@@ -26,7 +26,7 @@ class GraphModel(torch.nn.Module):
         if self.freeze_backbone_completely:
             GraphModel.freeze_model(self.model_2d)
 
-        self.model_pos = PoseGCNRegressor(cfg, use_gt_as_input=False, use_2d_input=True,
+        self.model_pos = PoseGCNRegressor(cfg, use_gt_as_input=False,
                                           input_joint_dim=cfg.MODEL.SEM_GCN.INPUT_JOINT_DIM,
                                           move_neck_nose_to_end=cfg.MODEL.MOVE_NECK_NOSE_TO_END)
         if cfg.MODEL.CKPT_3D != '':
