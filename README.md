@@ -17,6 +17,26 @@ Downloading the VOC dataset needed for occlusion.
 Set the DATASET.VOC parameter in the train.yaml to the location of VOC2012.
 To use occlusion set the DATASET.OCCLUSION parameter to True in train.yaml
 
+## Data evolution
+Firstly, it is necessary to download:
++ bones.npy
++ jointAngleModel_v2.npy
++ staticPose.npy
++ template.npy  
+
+from the [here](https://drive.google.com/drive/folders/1MUcR9oBNUpTAJ7YUWdyVLKCQW874FszI).
+To evolve the dataset run script evolve.py using the same parameter for the train.yaml, example
+
+`python lib/evolution/evolve.py --cfg experiments/h36m/train.yaml`
+
+It is necessary that data augmentation and occlusion parameter are set to False, other evolution parameters
+are specified in lib/evolution/parameter.py. 
+
+To use the evolved dataset one can make use of lib/evolution/evolution_dataset.py where the necessary parameters are
+path to the normalized csv file and the path to unnormalized csv file, the class using the DataLoader returns joints_2d
+and the joints_3d.
+
+
 ## Using CPU
 In debug mode one can set in the train.yaml CPU parameter to True, default is False
 and the rest of the code works t same way as before without using CPU.
