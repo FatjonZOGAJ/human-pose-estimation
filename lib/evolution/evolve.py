@@ -1,4 +1,3 @@
-import torch
 import numpy as np
 
 import torch.utils.data
@@ -88,22 +87,3 @@ if __name__ == "__main__":
     save_to_csv(evolved_population, "evolved_val2.csv")
     evolved_population = normalize2(evolved_population)
     save_to_csv(evolved_population, "evolved_normalized_val2.csv")
-
-    # logger.info('=> loading the valid dataset')
-
-    #
-    # gpus = [int(i) for i in config.GPUS.split(',')]
-    # train_loader = torch.utils.data.DataLoader(
-    #     train_dataset,
-    #     batch_size=config.TRAIN.BATCH_SIZE * len(gpus),
-    #     shuffle=config.TRAIN.SHUFFLE,
-    #     num_workers=config.WORKERS,
-    #     pin_memory=True
-    # )
-    # valid_loader = torch.utils.data.DataLoader(
-    #     valid_dataset,
-    #     batch_size=config.TEST.BATCH_SIZE * len(gpus),
-    #     shuffle=False,
-    #     num_workers=config.WORKERS,
-    #     pin_memory=True
-    # )
