@@ -73,10 +73,6 @@ if __name__ == "__main__":
     initial_population_val = []
     for db in train_dataset.db:
         initial_population.append(db['joints_3d'].reshape((-1)))
-        p = db['joints_3d']
-        u, d, l, r = calc_kpt_bound(p, np.ones((17, 3)))
-        bb_width = r - l
-        bb_height = d - u
 
     for db in valid_dataset.db:
         initial_population_val.append(db['joints_3d'].reshape((-1)))
