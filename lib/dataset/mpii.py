@@ -113,10 +113,10 @@ class MPII(JointDataset):
             img_path = os.path.join(self.root, 'images', a['image'])
             gt_db.append({
                 'image': img_path,
-                'center_x': c_x,
-                'center_y': c_y,
-                'width': width,
-                'height': height,
+                'center_x': np.asarray([c_x]),
+                'center_y': np.asarray([c_y]),
+                'width': np.asarray([width]),
+                'height': np.asarray([height]),
                 'flip_pairs': self.flip_pairs,
                 'parent_ids': self.parent_ids,
                 'joints_3d': jts_3d,
