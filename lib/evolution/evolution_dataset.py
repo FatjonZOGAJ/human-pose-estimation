@@ -1,10 +1,31 @@
+import random
+
+import numpy as np
 import torch
 from torch.utils.data import Dataset
 from numpy import genfromtxt
 
 
+class EvolutionDataWrapper(Dataset):
+    def __init__(self, H36M, EvolutionGenerator):
+        self.EvolutionGenerator = EvolutionGenerator
+        self.H36M = H36M
+
+    def __getitem__(self, index):
+        if random.random() > 0.8:
+            batch_data, batch_label, batch_label_weight, meta = self.H36M.__getitem__(index % self.H36M.__len__())
+            batch_label = torch.from_numpy(batch_label).float()
+            batch_label_weight = torch.from_numpy(batch_label_weight).float()
+            return batch_label, batch_label, batch_label_weight, np.ones(51)    # TODO fix types
+        else:
+            return self.EvolutionGenerator.__getitem__(index % self.EvolutionGenerator.__len__())
+
+    def __len__(self):
+        return self.H36M.__len__() + self.EvolutionGenerator.__len__()
+
+
 class EvolutionGenerator(Dataset):
-    def __init__(self, normalized_path, target_path):
+    def __init__(self, normalized_path):
         self.input_2d_joints = genfromtxt(normalized_path, delimiter=',')
         self.input_2d_joints = self.input_2d_joints.reshape((len(self.input_2d_joints), 17, 3))
         self.input_2d_joints = self.input_2d_joints[:, :, :-1]
@@ -18,7 +39,7 @@ class EvolutionGenerator(Dataset):
         joints_3d = self.joints_3d[index]
         joints_3d = torch.from_numpy(joints_3d).float()
 
-        return joints_2d, joints_3d
+        return joints_2d, joints_3d, np.ones(51), np.ones(51)
 
     def __len__(self):
         return len(self.input_2d_joints)
