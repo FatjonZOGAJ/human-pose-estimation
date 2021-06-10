@@ -51,7 +51,7 @@ def save_to_csv(population, file_name):
     np.savetxt(file_name, population, delimiter=",")
 
 
-def normalize_saved(path, db, save_path):
+def normalize_and_saved(path, db, save_path):
     population = genfromtxt(path, delimiter=',')
     normalized_population = normalize(population, db)
     save_to_csv(normalized_population, save_path)
@@ -78,8 +78,8 @@ if __name__ == "__main__":
         is_train=False
     )
 
-    # normalize_saved('evolved_val2.csv', valid_dataset, 'evolved_normalized_val3.csv')
-    # normalize_saved('evolved2.csv', train_dataset, 'evolved_normalized3.csv')
+    # normalize_and_saved('evolved_val2.csv', valid_dataset, 'evolved_normalized_val3.csv')
+    # normalize_and_saved('evolved2.csv', train_dataset, 'evolved_normalized3.csv')
 
     initial_population = []
     initial_population_val = []
@@ -90,14 +90,14 @@ if __name__ == "__main__":
     for db in valid_dataset.db:
         initial_population_val.append(db['joints_3d'].reshape((-1)))
 
-    # evolved_population = evolution(initial_population, opt, model_file=None)
-    # print("Evolved train dataset")
-    # save_to_csv(evolved_population, "evolved2.csv")
-    # evolved_population = normalize(evolved_population, train_dataset)
-    # save_to_csv(evolved_population, "evolved_normalized2.csv")
+    evolved_population = evolution(initial_population, opt, model_file=None)
+    print("Evolved train dataset")
+    save_to_csv(evolved_population, "evolved2.csv")
+    evolved_population = normalize(evolved_population, train_dataset)
+    save_to_csv(evolved_population, "evolved_normalized2.csv")
 
     evolved_population = evolution(initial_population_val, opt, model_file=None)
     print("Evolved validation dataset")
-    save_to_csv(evolved_population, "evolved_val4.csv")
+    save_to_csv(evolved_population, "evolved_val2.csv")
     evolved_population = normalize(evolved_population, valid_dataset)
-    save_to_csv(evolved_population, "evolved_normalized_val4.csv")
+    save_to_csv(evolved_population, "evolved_normalized_val2.csv")
