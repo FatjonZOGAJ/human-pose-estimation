@@ -6,11 +6,15 @@ import shutil
 
 import yaml
 
-import _init_paths
+#import _init_paths
 
 import torch
 
 # You can uncomment this line for reproducibility
+from torch.utils.data import ConcatDataset
+
+from lib.evolution.evolution_dataset import EvolutionGenerator, EvolutionDataWrapper
+
 torch.manual_seed(3)
 import torch.optim
 import torch.utils.data
@@ -213,6 +217,8 @@ def main():
         image_set=config.DATASET.TRAIN_SET,
         is_train=True
     )
+    train_dataset_evol  = EvolutionGenerator('evolved_normalized2.csv')
+
     logger.info('=> loading the valid dataset')
     valid_dataset = ds(
         cfg=config,
@@ -222,7 +228,9 @@ def main():
     )
 
     train_loader = torch.utils.data.DataLoader(
-        train_dataset,
+        #ConcatDataset((train_dataset, train_dataset_evol)),
+        EvolutionDataWrapper(train_dataset, train_dataset_evol),
+        #sampler=torch.utils.data.WeightedRandomSampler(),
         batch_size=config.TRAIN.BATCH_SIZE * len(gpus),
         shuffle=config.TRAIN.SHUFFLE,
         num_workers=config.WORKERS,

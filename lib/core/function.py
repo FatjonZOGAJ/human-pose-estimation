@@ -76,7 +76,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             writer.add_scalar('train_loss', losses.val, global_steps)
             writer_dict['train_global_steps'] = global_steps + 1
 
-        if config.TRAIN.DEBUG_MODE:
+        if config.TRAIN.DEBUG_MODE and False:
             # Scale to transformed image size i.e. 256x256
             preds_in_patch_with_score = [get_joint_regression_result(256, 256, preds[0].cpu().reshape([1, 17, 3]))]
             preds = dirty_solution_for_partial_batches(preds_in_patch_with_score)[0]
