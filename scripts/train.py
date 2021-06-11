@@ -6,7 +6,7 @@ import shutil
 
 import yaml
 
-#import _init_paths
+# import _init_paths
 
 import torch
 
@@ -217,7 +217,6 @@ def main():
         image_set=config.DATASET.TRAIN_SET,
         is_train=True
     )
-    train_dataset_evol  = EvolutionGenerator('evolved_normalized2.csv')
 
     logger.info('=> loading the valid dataset')
     valid_dataset = ds(
@@ -226,11 +225,16 @@ def main():
         image_set=config.DATASET.TEST_SET,
         is_train=False
     )
+    if config.DATASET.EVOLVED == 1:
+        train_dataset = EvolutionGenerator('evolved_normalized3.csv')  # TODO: concatenate validation data
+    elif config.DATASET.EVOLVED == 2:
+        train_dataset_evol = EvolutionGenerator('evolved_normalized3.csv')  # TODO: concatenate validation data
+        train_dataset = EvolutionDataWrapper(train_dataset, train_dataset_evol),
+
+
 
     train_loader = torch.utils.data.DataLoader(
-        #ConcatDataset((train_dataset, train_dataset_evol)),
-        EvolutionDataWrapper(train_dataset, train_dataset_evol),
-        #sampler=torch.utils.data.WeightedRandomSampler(),
+        train_dataset,
         batch_size=config.TRAIN.BATCH_SIZE * len(gpus),
         shuffle=config.TRAIN.SHUFFLE,
         num_workers=config.WORKERS,

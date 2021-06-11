@@ -60,7 +60,8 @@ class _GraphNonLocal(nn.Module):
 
 
 class SemGCN(nn.Module):
-    def __init__(self, adj, hid_dim, coords_dim=(2, 3), num_layers=4, nodes_group=None, p_dropout=None):
+    def __init__(self, adj, hid_dim, coords_dim=(2, 3), num_layers=4, nodes_group=None, p_dropout=None,
+                 sub_sample_pooling=2, move_neck_nose_to_end=False):
         super(SemGCN, self).__init__()
 
         _gconv_input = [_GraphConv(adj, coords_dim[0], hid_dim, p_dropout=p_dropout)]
@@ -74,21 +75,25 @@ class SemGCN(nn.Module):
             assert group_size > 1
 
             grouped_order = list(reduce(lambda x, y: x + y, nodes_group))
-            reorder_neck_nose = True
-            if reorder_neck_nose:
+            restored_order = [0] * len(grouped_order)
+            if move_neck_nose_to_end:
                 grouped_order = [i + 1 if i >= 9 else i  # fix nodes_group not taking into account Neck/Nose
                                  for i in grouped_order]
                 grouped_order.append(9)  # add Neck/Nose to end
-            restored_order = [0] * len(grouped_order)
+                sub_sample_pooling = 1  # was group_size; 1 means do not downsample joints
             for i in range(len(restored_order)):
                 for j in range(len(grouped_order)):
                     if grouped_order[j] == i:  # restored_order[0] = idx of 0 where it appears in grouped_order
                         restored_order[i] = j
                         break
 
+            # has to be after above for loop, while adding Neck/Nose has to be done before
+            if not move_neck_nose_to_end:  # Add Neck/Nose at normal position
+                grouped_order.append(16)
+                restored_order.append(16)
+
             # defining inter_channels allows us to set size of feature downpooling (default = input (aka hid_dim) / 2)
             inter_channels = None
-            sub_sample_pooling = 1  # was group_size; 1 means do not downsample joints
             _gconv_input.append(
                 _GraphNonLocal(hid_dim, grouped_order, restored_order, sub_sample_pooling,
                                inter_channels=inter_channels))

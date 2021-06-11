@@ -35,7 +35,7 @@ class PoseGCNRegressor(torch.nn.Module):
         # TODO play around with dropout and num_layers later
         self.model_pos = SemGCN(adj, cfg.MODEL.SEM_GCN.HID_DIM, num_layers=cfg.MODEL.SEM_GCN.NUM_LAYERS,
                                 p_dropout=cfg.MODEL.SEM_GCN.DROPOUT, nodes_group=h36m_skeleton_joints_group,
-                                coords_dim=(self.input_joint_dim, 3))
+                                coords_dim=(self.input_joint_dim, 3), move_neck_nose_to_end=self.move_neck_nose_to_end)
 
     def forward(self, x):
         # Drop third dimension z

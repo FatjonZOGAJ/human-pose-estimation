@@ -60,6 +60,7 @@ config.DATASET.DEPTH_RANGE = 2000 # width, height of the area around the subject
 # training data augmentation
 config.DATASET.Z_WEIGHT = 1. # weighting parameter for z axis
 config.DATASET.AUGMENT = False
+config.DATASET.EVOLVED = 0      # 0 No evolved data; 1 evolved data, 2 evolved and normal data
 
 # train
 config.TRAIN = edict()

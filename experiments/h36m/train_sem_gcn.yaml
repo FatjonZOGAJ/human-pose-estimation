@@ -13,6 +13,7 @@ DATASET:
   OCCLUSION: True
   VOC: 'VOC2012' # If you want to use synthetic occlusion, please enter the VOC path
   AUGMENT: True
+  EVOLVED: 2    # 0 No evolved data; 1 evolved data, 2 evolved and normal data
 MODEL:
   NAME: pose3d_sem_gcn
   BACKBONE:

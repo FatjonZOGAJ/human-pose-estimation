@@ -14,9 +14,7 @@ class EvolutionDataWrapper(Dataset):
     def __getitem__(self, index):
         if random.random() > 0.8:
             batch_data, batch_label, batch_label_weight, meta = self.H36M.__getitem__(index % self.H36M.__len__())
-            batch_label = torch.from_numpy(batch_label).float()
-            batch_label_weight = torch.from_numpy(batch_label_weight).float()
-            return batch_label, batch_label, batch_label_weight, np.ones(51)    # TODO fix types
+            return batch_label, batch_label, batch_label_weight, np.ones(51)
         else:
             return self.EvolutionGenerator.__getitem__(index % self.EvolutionGenerator.__len__())
 
@@ -27,21 +25,11 @@ class EvolutionDataWrapper(Dataset):
 class EvolutionGenerator(Dataset):
     def __init__(self, normalized_path):
         self.input_2d_joints = genfromtxt(normalized_path, delimiter=',')
-        #self.input_2d_joints = self.input_2d_joints.reshape((len(self.input_2d_joints), 17, 3))
-        #self.input_2d_joints = self.input_2d_joints[:, :, :-1]
-        #self.input_2d_joints = self.input_2d_joints.reshape((len(self.input_2d_joints), -1))
         self.input_3d_joints = genfromtxt(normalized_path, delimiter=',')
-        #self.input_3d_joints = self.input_3d_joints.reshape((len(self.input_2d_joints), 17, 3))
-        #self.input_3d_joints = self.input_3d_joints[:, :, :-1]
-        #self.input_3d_joints = self.input_3d_joints.reshape((len(self.input_2d_joints), -1))
-        # self.joints_3d = self.joints_3d.reshape((len(self.joints_3d), 17, 3))
 
     def __getitem__(self, index):
-        joints_2d = self.input_2d_joints[index]
-        joints_2d = torch.from_numpy(joints_2d).float()
-
-        joints_3d = self.input_3d_joints[index]
-        joints_3d = torch.from_numpy(joints_3d).float()
+        joints_2d = self.input_2d_joints[index].astype(np.float32)
+        joints_3d = self.input_3d_joints[index].astype(np.float32)
 
         return joints_2d, joints_3d, np.ones(51), np.ones(51)
 
