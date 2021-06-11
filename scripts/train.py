@@ -236,8 +236,8 @@ def main():
         lr_scheduler.step()
 
         # evaluate on validation set
-        preds_in_patch_with_score = validate(valid_loader, model, config.TRAIN.DEBUG_MODE)
-        acc = evaluate(epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.TRAIN.DEBUG_MODE,
+        preds_in_patch_with_score = validate(config, valid_loader, model, config.TRAIN.DEBUG_MODE)
+        acc = evaluate(config, epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.TRAIN.DEBUG_MODE,
                        config.DEBUG.DEBUG,
                        writer_dict)
 
