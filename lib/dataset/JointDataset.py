@@ -49,7 +49,7 @@ MPII_TO_H36M_PERM = np.array([MPII_NAMES.index(h) for h in H36M_NAMES if h != ''
 
 
 class JointDataset(Dataset):
-    def __init__(self, cfg, root, image_set, is_train):
+    def __init__(self, cfg, root, image_set, is_train, always_flip=False):
         self.cfg = cfg
         self.is_train = is_train
 
@@ -76,6 +76,7 @@ class JointDataset(Dataset):
         self.db_length = 0
 
         self.db = []
+        self.always_flip = always_flip
 
 
     def __len__(self, ):

@@ -40,7 +40,7 @@ class MPII(JointDataset):
                                                                              occluder=self.occluders,
                                                                              joints=the_db['joints_3d'].copy(),
                                                                              joints_vis=the_db['joints_3d_vis'].copy(),
-                                                                             is_train=self.is_train)
+                                                                             is_train=self.is_train, always_flip=self.always_flip)
         meta = {
             'image': the_db['image'],
             'center_x': the_db['center_x'],

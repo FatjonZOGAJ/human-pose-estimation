@@ -39,8 +39,8 @@ fmt_gt = ['%d'] + ['%.4f'] * 51 + ['%d']
 
 
 class H36M(JointDataset):
-    def __init__(self, cfg, root, image_set, is_train):
-        super().__init__(cfg, root, image_set, is_train)
+    def __init__(self, cfg, root, image_set, is_train, always_flip=False):
+        super().__init__(cfg, root, image_set, is_train, always_flip)
 
         self.parent_ids = np.array([0, 0, 1, 2, 0, 4, 5, 0, 8, 8, 9, 8, 11, 12, 8, 14, 15], dtype=np.int)
 
@@ -88,7 +88,8 @@ class H36M(JointDataset):
                                                                              self.cfg.DATASET.AUGMENT, self.label_func,
                                                                              occluder=self.occluders, joints=joints,
                                                                              joints_vis=joints_vis,
-                                                                             is_train=self.is_train)
+                                                                             is_train=self.is_train,
+                                                                             always_flip=self.always_flip)
 
         meta = {
             'image': image_file,

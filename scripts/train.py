@@ -206,9 +206,18 @@ def main():
         logger.info('=> using MPII and H36m for training')
         train_dataset1, valid_dataset = get_datasets(logger, eval('dataset.h36m'), 'h36m', config.DATASET.TRAIN_SET,
                                                      config.DATASET.TEST_SET)
-        train_dataset2, train_dataset3 = get_datasets(logger, eval('dataset.mpii'), 'mpii', config.DATASET.TRAIN_SET,
-                                                      config.DATASET.TEST_SET)
-        train_dataset = ConcatDataset([train_dataset1, train_dataset2, train_dataset3])
+        # train_dataset2, train_dataset3 = get_datasets(logger, eval('dataset.mpii'), 'mpii', config.DATASET.TRAIN_SET,
+        #                                              config.DATASET.TEST_SET)
+        # train_dataset = ConcatDataset([train_dataset1, train_dataset2, train_dataset3])
+        ds = eval('dataset.h36m')
+        train_dataset2 = ds(
+            cfg=config,
+            root=f'data/h36m',
+            image_set=config.DATASET.TEST_SET,
+            is_train=True, always_flip=True
+        )
+        train_dataset = ConcatDataset([train_dataset1, train_dataset2])
+
     else:
         train_dataset, valid_dataset = get_datasets(logger, eval('dataset.' + config.DATASET.DATASET),
                                                     config.DATASET.DATASET, config.DATASET.TRAIN_SET,
@@ -237,7 +246,8 @@ def main():
 
         # evaluate on validation set
         preds_in_patch_with_score = validate(config, valid_loader, model, config.TRAIN.DEBUG_MODE)
-        acc = evaluate(config, epoch, preds_in_patch_with_score, valid_loader, final_output_dir, config.TRAIN.DEBUG_MODE,
+        acc = evaluate(config, epoch, preds_in_patch_with_score, valid_loader, final_output_dir,
+                       config.TRAIN.DEBUG_MODE,
                        config.DEBUG.DEBUG,
                        writer_dict)
 

@@ -127,7 +127,7 @@ def get_single_patch_sample(img_path, center_x, center_y, width, height, flip_pa
                             patch_width, patch_height,
                             rect_3d_width, mean, std,
                             do_augment, label_func, occluder=None, joints=None, joints_vis=None,
-                            is_train=True):
+                            is_train=True, always_flip=False):
     # 1. load image
     cvimg = cv2.imread(
         img_path, cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION)
@@ -140,6 +140,7 @@ def get_single_patch_sample(img_path, center_x, center_y, width, height, flip_pa
     # 2. get augmentation params
     if do_augment and is_train:
         scale, rot, do_flip, color_scale = do_augmentation(get_default_augment_config())
+        do_flip = True if always_flip else do_flip
     else:
         scale, rot, do_flip, color_scale = 1.0, 0, False, [1.0, 1.0, 1.0]
 
