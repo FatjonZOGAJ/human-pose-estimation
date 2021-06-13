@@ -7,15 +7,12 @@ import argparse
 def parse_arg_evolution():
     parser = argparse.ArgumentParser(description='evolve.py')
     # Hyper-parameters
-    parser.add_argument('--cfg',
-                        help='experiment configure file name',
-                        required=True,
-                        type=str)
+    parser.add_argument('--cfg', help='experiment configure file name', required=True, type=str)
     # Number of generation to run
     parser.add_argument('-G', type=int, default=1)
     # Synthetize enough (E) data with a target ratio after G generations
     parser.add_argument('-E', type=bool, default=True)
-    parser.add_argument('-T', type=float, default=2.5) # the target ratio
+    parser.add_argument('-T', type=float, default=2.5)  # the target ratio
     # Fraction
     parser.add_argument('-F', type=float, default=0.1)
     # Apply mutation on skeleton orientation

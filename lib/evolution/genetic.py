@@ -128,43 +128,6 @@ def get_bone_length(skeleton):
     return bone_lengths
 
 
-def get_h36m_bone_length(visualize=True):
-    # 1: F 5:F 6:M 7:F 8:M 9:M 11:M
-    bl_dic = {1: [], 5: [], 6: [], 7: [], 8: [], 9: [], 11: []}  # TODO??
-    train_dic = np.load('../data/human3.6M/h36m/numpy/threeDPose_train.npy').item()
-    test_dic = np.load('../data/human3.6M/h36m/numpy/threeDPose_test.npy').item()
-
-    def process_dic(data_dic, bl_dic, candicate=50):
-        for key in data_dic.keys():
-            subject = key[0]
-            indices = np.random.choice(len(data_dic[key]), candicate, replace=False)
-            selected = data_dic[key][indices]
-            for pose in selected:
-                bl_dic[subject].append(get_bone_length(pose.reshape(32, 3)))
-        return
-
-    process_dic(train_dic, bl_dic)
-    process_dic(test_dic, bl_dic)
-    for key in bl_dic:
-        for array in bl_dic[key]:
-            array = array.reshape(9, 1)
-        bl_dic[key] = np.vstack(bl_dic[key])
-    if visualize:
-        # as can be observed, only bone length of idx 0 vary a lot. Others are almost fixed
-        #        for key in bl_dic.keys():
-        #            fig, axes = plt.subplots(3,3)
-        #            plt.title('Subject: '+str(key))
-        #            for row in range(3):
-        #                for col in range(3):
-        #                    axes[row][col].hist(bl_dic[key][:,3*row + col], bins=20)
-        fig, axes = plt.subplots(3, 3)
-        all_lengths = np.vstack(list(bl_dic.values()))
-        for row in range(3):
-            for col in range(3):
-                axes[row][col].hist(all_lengths[:, 3 * row + col])
-    return bl_dic
-
-
 def get_random_rotation(sigma=60.):
     angle = np.random.normal(scale=sigma)
     axis_idx = np.random.choice(3, 1)
@@ -272,88 +235,6 @@ def exploration(father, mother, opt, post_processing=True):
         set_z(daughter_pose, np.random.normal(loc=20.0, scale=3.0))
 
     return son_pose, daughter_pose
-
-
-def show3Dpose(channels,
-               ax,
-               lcolor="#3498db",
-               rcolor="#e74c3c",
-               add_labels=True,
-               gt=False,
-               pred=False,
-               plot_dot=False
-               ):  # blue, orange
-    """
-    Visualize a 3d skeleton
-
-    Args
-      channels: 96x1 vector. The pose to plot.
-      ax: matplotlib 3d axis to draw on
-      lcolor: color for left part of the body
-      rcolor: color for right part of the body
-      add_labels: whether to add coordinate labels
-    Returns
-      Nothing. Draws on ax.
-    """
-
-    if channels.shape[0] == 96:
-        vals = np.reshape(channels, (32, -1))
-    else:
-        vals = channels
-    I = np.array([1, 2, 3, 1, 7, 8, 1, 13, 14, 15, 14, 18, 19, 14, 26, 27]) - 1  # start points
-    J = np.array([2, 3, 4, 7, 8, 9, 13, 14, 15, 16, 18, 19, 20, 26, 27, 28]) - 1  # end points
-    LR = np.array([1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1], dtype=bool)
-    dim_use_3d = [3, 4, 5, 6, 7, 8, 9, 10, 11, 18, 19, 20, 21, 22, 23, 24, 25,
-                  26, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 51, 52, 53,
-                  54, 55, 56, 57, 58, 59, 75, 76, 77, 78, 79, 80, 81, 82, 83]
-    # Make connection matrix
-    for i in np.arange(len(I)):
-        x, y, z = [np.array([vals[I[i], j], vals[J[i], j]]) for j in range(3)]
-        if gt:
-            ax.plot(x, y, z, lw=4, c='k')
-        #        ax.plot(x,y, z,  lw=2, c='k')
-
-        elif pred:
-            ax.plot(x, z, -y, lw=4, c='r')
-        #        ax.plot(x,y, z,  lw=2, c='r')
-
-        else:
-            #        ax.plot(x,z, -y,  lw=2, c=lcolor if LR[i] else rcolor)
-            ax.plot(x, y, z, lw=4, c=lcolor if LR[i] else rcolor)
-    if plot_dot:
-        joints = channels.reshape(96)
-        joints = joints[dim_use_3d].reshape(16, 3)
-        ax.scatter(joints[:, 0], joints[:, 1], joints[:, 2], c='k', marker='o')
-    RADIUS = 750  # space around the subject
-    xroot, yroot, zroot = vals[0, 0], vals[0, 1], vals[0, 2]
-    ax.set_xlim3d([-RADIUS + xroot, RADIUS + xroot])
-    ax.set_zlim3d([-RADIUS + zroot, RADIUS + zroot])
-    ax.set_ylim3d([-RADIUS + yroot, RADIUS + yroot])
-
-    if add_labels:
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        ax.set_zlabel("z")
-
-    ax.set_aspect('equal')
-    #  ax.set_xticks([])
-    #  ax.set_yticks([])
-    #  ax.set_zticks([])
-
-    #  ax.get_xaxis().set_ticklabels([])
-    #  ax.get_yaxis().set_ticklabels([])
-    #  ax.set_zticklabels([])
-    # Get rid of the panes (actually, make them white)
-    #  white = (1.0, 1.0, 1.0, 0.0)
-    #  ax.w_xaxis.set_pane_color(white)
-    #  ax.w_yaxis.set_pane_color(white)
-    # Keep z pane
-
-    # Get rid of the lines in 3d
-    #  ax.w_xaxis.line.set_color(white)
-    #  ax.w_yaxis.line.set_color(white)
-    #  ax.w_zaxis.line.set_color(white)
-    ax.view_init(10, -60)
 
 
 def choose_best(population, fraction=0.02, method='random'):
@@ -606,11 +487,9 @@ def evolution(initial_population, opt, model_file=None):
     Dataset evolution.
     """
     population = initial_population
-    # save_results(initial_population, opt, 0)
     initial_num = len(initial_population)
     for gen_idx in range(1, opt.G + 1):
         population = one_iteration(population, opt, model_file=model_file)
-    # save_results(population, opt, gen_idx)
     # if not enough
     if opt.E and len(population) < initial_num * opt.T:
         while len(population) < initial_num * opt.T:
@@ -618,5 +497,4 @@ def evolution(initial_population, opt, model_file=None):
             population = one_iteration(population, opt, model_file=model_file)
             if opt.I:
                 save_results(population.copy(), opt, gen_idx)
-    # save_results(population, opt, gen_idx)
     return population

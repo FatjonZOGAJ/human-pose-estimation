@@ -4,7 +4,7 @@ import torch.utils.data
 
 from scripts.train import parse_args, reset_config
 import lib.dataset as dataset
-from lib.core.config import config, gen_config
+from lib.core.config import config
 from lib.evolution.genetic import evolution
 from lib.evolution.parameter import parse_arg_evolution
 from lib.utils.img_utils import gen_trans_from_patch_cv, trans_point2d
