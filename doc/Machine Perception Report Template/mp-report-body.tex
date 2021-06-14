@@ -12,6 +12,61 @@ Generally, use the \texttt{{\char'134}cite} command to cite other works, e.g. \c
 This section should describe the method of your \emph{final} submission in detail. This includes things you did with the data (e.g. preprocessing, augmentations, changes of representation, etc.) and the actual definition of your model. Sometimes it is fine to describe a model in text or math only, sometimes it is better to create an overview figure. Either way, after reading this section, a reader should be able to implement your architecture.
 If you have enough space, you may list hyperparameter values in an ``Implementation Details'' paragraph. Otherwise list them in the README of your code repo.
 
+
+\subsection{Data augmentation}
+Despite the success of deep models, many of them are still data-hungry, thereofeore we have spent a fare amount of time trying to augment the dataset with synthetic data.
+The input picture is normalized to 284 x 284 dimension. Data augmentation includes rotation $\pm 30$ degrees, random horizontal flipping, scaling by a factor between $0.75$ and $1.25$, color scaling between $0.8$ and $1.2$.
+
+Furthermore, in order to improve the score and to make the network robust to occluded joints we use synthetic occlusion, since erasing objects or simply putting them in the picture improves results in image classification, object detection and person identification~\cite{DBLP:journals/corr/abs-1809-04987}. Using objects in the Pascal VOC dataset we filter out persons, segments with area below 500 px and segments labeled as \emph{difficult} or \emph{truncated}. Finally, with the defined probability $p_occ$ a random number between 1 and 8 of objects from the filtered VOC dataset are added to random locations of the frame. 
+
+Finally. in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints or the human 3D skeleton is represented by a set of bones organized hierarchically in a kinematic tree, this way the the dependence of adjacent joints with tree edges is captured. This can be seen in Fig TODO. Assuming that $\textbf{p}^j$ is the \emph{j}th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as 
+
+$$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
+
+\begin{figure}
+\includegraphics[height=4cm, width=7cm]{skeleton.png}
+\caption{Hierarchical human representation. Left: 3D key-points organized in a kinematic tree where red arrows point from parent joints to children joints.  Right: Zoom-in view of a local coordinate system, source ~\cite{Li_2020_CVPR}}
+\label{skeleton}
+\end{figure}
+
+Every parent node has attached a local coordinate system which is seen in TODO FIG. For $\textbf{p}^{parent(i)}$ local coordinate system is represented by the rotation matrix $\textbf{R}^i = [\textbf{i}^i, \textbf{j}^i, \textbf{k}^i]$, which used to transform the bone vector into the local coordinate system 
+
+$$\textbf{b}_{local} ^{i} = \textbf{R}^{i\textbf{T}}(\textbf{p}^{child(i)}-\textbf{p}^{parent(i)})$$
+
+which is for convenience transformed into spherical coordinates $\textbf{b}_{local}^i = (r_i, \theta _i, \phi _i)$.
+
+The overall algorithm can be seen in ~\ref{alg1}. 
+
+\begin{algorithm}
+    \SetKwInOut{Input}{input}
+    \Input{Initial population of 3D joints $D_{old}=\{\textbf{p}\}_{i=1} ^N$, noise $\sigma$, number of generations $G$}
+    
+    $D_{new} = D_{old}$
+    
+    \For{i=1:G}{
+      Parents=Sample($D_{new}$)
+      
+      Children=NaturalSelection(Mutation(Crossover(Parents)))
+      
+      $D_{new} = D_{new} \cup Children$
+    }
+    return $D_{new}$
+    \caption{Data evolution}
+    \label{alg1}
+\end{algorithm} 
+
+With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Since the data is represented as we mentioned in a hierarchical way crossover is intuitive to implement. Crossover is implemented as a random exchange of sub-trees. TODO: do we want the formal definition?. Mutation operator perturbates the local orientation of one bone vector, which can easily make a invalid pose. Bone vector $\textbf{b}_i = (r_i, \theta _i, \phi _i)$ is randomly selected and Gaussian noise $g ~ N(0, \sigma)$ is added
+
+$$\theta _i ' = \theta _i + g_{\theta}, \phi _i ' = \phi _i + g_{\phi}$$
+
+Natural selection is implemented using a function $v(\textbf{p})$ which indicates which pose is invalid and gives that pose a value of $-\infty$ making it unable to append it to the new generation. This function uses the prior angle constraints defined from ~\cite{Akhter_2015_CVPR}.
+
+\begin{figure}
+\includegraphics[height=5cm, width=8.5cm]{evolution.png}
+\caption{Examples of evolutionary operation. Crossover and mutation take two and one random samples respectively to synthesize novel human skeletons.  In this example the right arms are selected for crossover while the left leg is mutated., source ~\cite{Li_2020_CVPR}}
+\label{skeleton}
+\end{figure}
+
 \section{Evaluation}
 In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.
 
