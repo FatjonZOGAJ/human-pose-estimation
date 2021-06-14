@@ -15,11 +15,11 @@ If you have enough space, you may list hyperparameter values in an ``Implementat
 
 \subsection{Data augmentation}
 Despite the success of deep models, many of them are still data-hungry, thereofeore we have spent a fare amount of time trying to augment the dataset with synthetic data.
-The input picture is normalized to 284 x 284 dimension. Data augmentation includes rotation $\pm 30$ degrees, random horizontal flipping, scaling by a factor between $0.75$ and $1.25$, color scaling between $0.8$ and $1.2$.
+The input picture is normalized to 284 x 284 dimension TODO. Standard data augmentation includes rotation $\pm 30$ degrees, random horizontal flipping, scaling by a factor between $0.75$ and $1.25$, color scaling between $0.8$ and $1.2$.
 
-Furthermore, in order to improve the score and to make the network robust to occluded joints we use synthetic occlusion, since erasing objects or simply putting them in the picture improves results in image classification, object detection and person identification~\cite{DBLP:journals/corr/abs-1809-04987}. Using objects in the Pascal VOC dataset we filter out persons, segments with area below 500 px and segments labeled as \emph{difficult} or \emph{truncated}. Finally, with the defined probability $p_occ$ a random number between 1 and 8 of objects from the filtered VOC dataset are added to random locations of the frame. 
+Furthermore, in order to improve the score and to make the network robust to occluded joints we use synthetic occlusion, since erasing objects or simply putting them in the picture improves results in image classification, object detection and person identification~\cite{DBLP:journals/corr/abs-1809-04987}. Using objects in the Pascal VOC dataset we filter out persons, segments with area below 500 px and segments labeled as \emph{difficult} or \emph{truncated}. Finally, with the defined probability $p_{occ}$ a random number between 1 and 8 of objects from the filtered VOC dataset are added to random locations of the frame. 
 
-Finally. in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints or the human 3D skeleton is represented by a set of bones organized hierarchically in a kinematic tree, this way the the dependence of adjacent joints with tree edges is captured. This can be seen in Fig TODO. Assuming that $\textbf{p}^j$ is the \emph{j}th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as 
+Finally, in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints or the human 3D skeleton is represented by a set of bones organized hierarchically in a kinematic tree, this way the the dependence of adjacent joints with tree edges is captured. This can be seen in Fig. ~\ref{skeleton}. Assuming that $\textbf{p}^j$ is the \emph{j}th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as 
 
 $$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
 
@@ -29,7 +29,7 @@ $$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
 \label{skeleton}
 \end{figure}
 
-Every parent node has attached a local coordinate system which is seen in TODO FIG. For $\textbf{p}^{parent(i)}$ local coordinate system is represented by the rotation matrix $\textbf{R}^i = [\textbf{i}^i, \textbf{j}^i, \textbf{k}^i]$, which used to transform the bone vector into the local coordinate system 
+Every parent node has attached a local coordinate system which can be seen in Fig. ~\ref{skeleton}. For $\textbf{p}^{parent(i)}$ local coordinate system is represented by the rotation matrix $\textbf{R}^i = [\textbf{i}^i, \textbf{j}^i, \textbf{k}^i]$, which is used to transform the bone vector into the local coordinate system with the following equation:
 
 $$\textbf{b}_{local} ^{i} = \textbf{R}^{i\textbf{T}}(\textbf{p}^{child(i)}-\textbf{p}^{parent(i)})$$
 
@@ -55,20 +55,47 @@ The overall algorithm can be seen in ~\ref{alg1}.
     \label{alg1}
 \end{algorithm} 
 
-With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Since the data is represented as we mentioned in a hierarchical way crossover is intuitive to implement. Crossover is implemented as a random exchange of sub-trees. TODO: do we want the formal definition?. Mutation operator perturbates the local orientation of one bone vector, which can easily make a invalid pose. Bone vector $\textbf{b}_i = (r_i, \theta _i, \phi _i)$ is randomly selected and Gaussian noise $g ~ N(0, \sigma)$ is added
+With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Since the data is represented as we mentioned in a hierarchical way crossover is intuitive to implement. Crossover is implemented as a random exchange of sub-trees. TODO: do we want the formal definition?. Mutation operator pertubates the local orientation of one bone vector. Bone vector $\textbf{b}_i = (r_i, \theta _i, \phi _i)$ is randomly selected and Gaussian noise $g ~ N(0, \sigma)$ is added
 
 $$\theta _i ' = \theta _i + g_{\theta}, \phi _i ' = \phi _i + g_{\phi}$$
 
-Natural selection is implemented using a function $v(\textbf{p})$ which indicates which pose is invalid and gives that pose a value of $-\infty$ making it unable to append it to the new generation. This function uses the prior angle constraints defined from ~\cite{Akhter_2015_CVPR}.
+Mutation can easily make an invalid pose, therefore we use natural selection to remove invalid poses. Natural selection is implemented using a function $v(\textbf{p})$ which indicates which pose is invalid and gives that pose a value of $-\infty$ making it unable to be selected into the new generation. This function uses the prior angle constraints defined from ~\cite{Akhter_2015_CVPR}.
+Both mutation and crossover can be seen in Fig. ~\ref{evolved}
 
 \begin{figure}
 \includegraphics[height=5cm, width=8.5cm]{evolution.png}
 \caption{Examples of evolutionary operation. Crossover and mutation take two and one random samples respectively to synthesize novel human skeletons.  In this example the right arms are selected for crossover while the left leg is mutated., source ~\cite{Li_2020_CVPR}}
-\label{skeleton}
+\label{evolved}
 \end{figure}
 
 \section{Evaluation}
 In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.
+
+\begin{table}[h!]
+\caption{Ablation study}
+\label{tab:ablation}
+\centering
+ \begin{tabular}{|| c | c | c ||} 
+ \hline
+ \textbf{Backbone} & \textbf{Extension} & \textbf{MPJPE} \\ 
+ \hline\hline
+ AlexNet & - & 141.50  \\ 
+ \hline
+ AlexNet & Synthetic occlusion & $84.50_{\downarrow 40.28\%}$  \\
+ \hline
+ ResNet50 & - & $72.15_{\downarrow 49.01\%}$  \\
+ \hline
+ ResNet50 & Synthetic occlusion & $63.01_{\downarrow 12.69\%}$ \\
+ \hline
+ ResNext101 & Synthetic occlusion & $54.14_{\downarrow 14.08\%}$  \\ 
+ \hline
+ \end{tabular}
+\end{table}
+
+\textbf{Effect of synthetic occlusion}: TODO
+
+\textbf{Effect of model backbone}: TODO
+
 
 \section{Discussion}
 Sometimes you might have had a great idea, but it did not pan out. Since we want to encourage novelty, such failed attempts should also go into the report. This section is a suitable place to discuss this. If you can, do not just list failed attempts, but actually \emph{discuss} them, i.e., provide an intuition why you think they failed or what the problem is that prevented them from performing better. It is much better to describe one failed attempt and discuss it in-depth than just listing four failed models without any explanation.
