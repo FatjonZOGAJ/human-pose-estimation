@@ -3,8 +3,11 @@ In this section, introduce the task in a bit more detail. In the first paragraph
 
 In the second half of the introduction, describe your method. This should be more detailed than in the abstract. You can talk about how your method relates to existing work (e.g. it is a combination or extension of existing methods, what other papers were you inspired by, etc.). You should also state the central result here, and the key insight that made it possible to achieve this result.
 
+Human pose estimation from a single monocular image is an open challenge garnering significant attention in computer vision ~\cite{DBLP:journals/corr/PavlakosZDD16}. Estimating the full-body pose has been extensively studied both 3D and 2D ~\cite{DBLP:journals/corr/0001SLW17}. Thanks to the availability of large-scale 2D annotated human poses and the emergence of deep neural networks, the 2D human pose estimation problem is considered as solved. In contrast, the 3D human pose estimation remains an open problem. This is partially because of the ambiguity of recovering the 3D information from single images and also due to the lack of large-scale 3D pose annotated datasets. Methods for solving the 3D human pose estimation can roughly be divided into two categories: i) learning end-to-end networks that recover 2D input images to 3D poses directly, ii) extracting 2D human poses from input images and then lifting 2D poses to 3D spaces ~\cite{DBLP:journals/corr/abs-1710-06513}. 
+One of the drawbacks of learning end-to-end or regressing directly TOODOO check this, is that the per-joint location errors are minimized independently ignoring the internal structure. Decoupling *D human pose estimation into 2D and 3D part has some advantages. With decoupling one can make use of the existing large-scale pose estimation datasets, additionally infinite  2D-3D pairs can be generated using different projections and similar techniques ~\cite{DBLP:journals/corr/abs-1710-06513}. However, in order to optimize this models supervision in various forms is required, such as camera parameters in multiview settings ~\cite{DBLP:journals/corr/abs-1903-02330}. 
+
 \section{Related Work}
-This section is optional and it is fine to leave it out completely. While the most relevant papers should be discussed adequately somewhere (e.g. in the introduction), we do not expect you to give a complete overview of related work. Nonetheless, if you would like to do so, this would be the place to do it.
+This section is optional and it is fine to leave it out completely. While the most relevant papers should be discussed adequately somewhere (e.g. in the introduction), we do not expect you to give a complete overview of related work. Nonetheless, if you would like to do so, this would be the place to do it. 
 
 Generally, use the \texttt{{\char'134}cite} command to cite other works, e.g. \cite{Douglass98,Harel79}. To add a new reference, you need to add a bibtex entry to the bibliography file, in this case \texttt{bibliography.bib}.
 
@@ -24,7 +27,7 @@ Finally, in order to train the mapping of joints from 2D to 3D we have used an e
 $$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
 
 \begin{figure}
-\includegraphics[height=4cm, width=7cm]{skeleton}
+\includegraphics[height=4cm, width=7cm]{skeleton.png}
 \caption{Hierarchical human representation. Left: 3D key-points organized in a kinematic tree where red arrows point from parent joints to children joints.  Right: Zoom-in view of a local coordinate system, source ~\cite{Li_2020_CVPR}}
 \label{skeleton}
 \end{figure}
@@ -63,7 +66,7 @@ Mutation can easily make an invalid pose, therefore we use natural selection to 
 Both mutation and crossover can be seen in Fig. ~\ref{evolved}
 
 \begin{figure}
-\includegraphics[height=5cm, width=8.5cm]{evolution}
+\includegraphics[height=5cm, width=8.5cm]{evolution.png}
 \caption{Examples of evolutionary operation. Crossover and mutation take two and one random samples respectively to synthesize novel human skeletons.  In this example the right arms are selected for crossover while the left leg is mutated., source ~\cite{Li_2020_CVPR}}
 \label{evolved}
 \end{figure}
