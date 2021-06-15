@@ -208,3 +208,4 @@ venv.bak/
 /lib/models/pretrained_data/alexnet.pth
 /predictions/
 /lib/models/pretrained_data/*
+/report/mp-report.pdf
