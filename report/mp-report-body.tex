@@ -24,7 +24,7 @@ Finally, in order to train the mapping of joints from 2D to 3D we have used an e
 $$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
 
 \begin{figure}
-\includegraphics[height=4cm, width=7cm]{skeleton.png}
+\includegraphics[height=4cm, width=7cm]{skeleton}
 \caption{Hierarchical human representation. Left: 3D key-points organized in a kinematic tree where red arrows point from parent joints to children joints.  Right: Zoom-in view of a local coordinate system, source ~\cite{Li_2020_CVPR}}
 \label{skeleton}
 \end{figure}
@@ -63,7 +63,7 @@ Mutation can easily make an invalid pose, therefore we use natural selection to 
 Both mutation and crossover can be seen in Fig. ~\ref{evolved}
 
 \begin{figure}
-\includegraphics[height=5cm, width=8.5cm]{evolution.png}
+\includegraphics[height=5cm, width=8.5cm]{evolution}
 \caption{Examples of evolutionary operation. Crossover and mutation take two and one random samples respectively to synthesize novel human skeletons.  In this example the right arms are selected for crossover while the left leg is mutated., source ~\cite{Li_2020_CVPR}}
 \label{evolved}
 \end{figure}
