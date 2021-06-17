@@ -48,4 +48,4 @@ TEST:
   BATCH_SIZE: 32
 DEBUG:
   DEBUG: False # set this to true to visualize results in tensorboard
-CPU: False
+CPU: True

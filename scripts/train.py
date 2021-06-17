@@ -11,7 +11,7 @@ import _init_paths
 import torch
 
 # You can uncomment this line for reproducibility
-torch.manual_seed(3)
+torch.manual_seed(69)
 import torch.optim
 import torch.utils.data
 from tensorboardX import SummaryWriter
@@ -27,12 +27,12 @@ from lib.utils.utils import create_logger
 import lib.core.loss as loss
 import lib.dataset as dataset
 import lib.models as models
-from torch.utils.data import ConcatDataset
+from torch.utils.data import ConcatDataset, WeightedRandomSampler
 
 import numpy as np
 
 # You can uncomment this line for reproducibility
-np.random.seed(10)
+np.random.seed(69)
 
 # enable IDE debugging: set working directory to project root folder
 import sys  # sys.path.append('../')
@@ -208,6 +208,13 @@ def main():
                                                       config.DATASET.TEST_SET)
         train_dataset3, train_dataset4 = get_datasets(logger, eval('dataset.mpii'), 'mpii', config.DATASET.TRAIN_SET,
                                                       config.DATASET.TEST_SET)
+
+        len1 = len(train_dataset1) + len(train_dataset2)
+        len2 = len(train_dataset3) + len(train_dataset4)
+        # Sampling from MPII and H36M with same probability s.t. each batch is 50/50
+        weights = np.concatenate((np.full((1, len1), 1 / (len1 + len2), dtype=float),
+                                 np.full((1, len2), (1 / len1 + len2) * (len1 / len2))), axis=0)
+        sampler = WeightedRandomSampler(weights=weights, num_samples=len1 + len2, replacement=True)
         train_dataset = ConcatDataset([train_dataset1, train_dataset2, train_dataset3, train_dataset4])
         valid_dataset = train_dataset2
 
@@ -215,13 +222,15 @@ def main():
         train_dataset, valid_dataset = get_datasets(logger, eval('dataset.' + config.DATASET.DATASET),
                                                     config.DATASET.DATASET, config.DATASET.TRAIN_SET,
                                                     config.DATASET.TEST_SET)
+        sampler = None
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=config.TRAIN.BATCH_SIZE * len(gpus),
         shuffle=config.TRAIN.SHUFFLE,
         num_workers=config.WORKERS,
-        pin_memory=True
+        pin_memory=True,
+        sampler=sampler
     )
 
     valid_loader = torch.utils.data.DataLoader(
@@ -245,31 +254,33 @@ def main():
                        config.DEBUG.DEBUG,
                        writer_dict)
 
-        perf_indicator = 500. - acc if config.DATASET.DATASET == 'h36m' or 'mpii_3dhp' or 'jta' else acc
+        if not config.TRAIN.DEBUG_MODE:
+            perf_indicator = 500. - acc if config.DATASET.DATASET == 'h36m' or 'mpii_3dhp' or 'jta' else acc
 
-        if perf_indicator > best_perf:
-            best_perf = perf_indicator
-            best_model = True
-        else:
-            best_model = False
+            if perf_indicator > best_perf:
+                best_perf = perf_indicator
+                best_model = True
+            else:
+                best_model = False
 
-        logger.info('=> saving checkpoint to {}'.format(final_output_dir))
-        save_checkpoint({
-            'train_step': writer_dict['train_global_steps'],
-            'valid_step': writer_dict['valid_global_steps'],
-            'epoch': epoch + 1,
-            'model': get_model_name(config),
-            'state_dict': model.state_dict(),
-            'perf': perf_indicator,
-            'optimizer': optimizer.state_dict(),
-            'lr_scheduler': lr_scheduler.state_dict(),
-        }, best_model, final_output_dir)
+            logger.info('=> saving checkpoint to {}'.format(final_output_dir))
+            save_checkpoint({
+                'train_step': writer_dict['train_global_steps'],
+                'valid_step': writer_dict['valid_global_steps'],
+                'epoch': epoch + 1,
+                'model': get_model_name(config),
+                'state_dict': model.state_dict(),
+                'perf': perf_indicator,
+                'optimizer': optimizer.state_dict(),
+                'lr_scheduler': lr_scheduler.state_dict(),
+            }, best_model, final_output_dir)
 
-    final_model_state_file = os.path.join(final_output_dir,
-                                          'final_state.pth.tar')
-    logger.info('saving final model state to {}'.format(
-        final_model_state_file))
-    torch.save(model.module.state_dict(), final_model_state_file)
+    if not config.TRAIN.DEBUG_MODE:
+        final_model_state_file = os.path.join(final_output_dir,
+                                              'final_state.pth.tar')
+        logger.info('saving final model state to {}'.format(
+            final_model_state_file))
+        torch.save(model.module.state_dict(), final_model_state_file)
 
 
 def get_datasets(logger, ds, name, train, test):
