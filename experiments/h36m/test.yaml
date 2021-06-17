@@ -5,7 +5,7 @@ WORKERS: 0
 PRINT_FREQ: 100
 EXP_NAME: 'demo'
 DATASET:
-  DATASET: h36m
+  DATASET: both
   ROOT: 'data/h36m/'
   TEST_SET: test
 MODEL:
@@ -13,7 +13,7 @@ MODEL:
   BACKBONE: resnext101_32x8d
   TIME_STR: ''
   NUM_JOINTS: 17
-  DEPTH_RES: 64
+  DEPTH_RES: 72
   VOLUME:
       FINAL_CONV_KERNEL: 1
       DECONV_WITH_BIAS: false

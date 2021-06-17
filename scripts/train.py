@@ -258,7 +258,7 @@ def main():
                        config.DEBUG.DEBUG,
                        writer_dict)
 
-        if not config.TRAIN.DEBUG_MODE:
+        if not config.TRAIN.DEBUG_MODE or True:
             perf_indicator = 500. - acc if config.DATASET.DATASET == 'h36m' or 'mpii_3dhp' or 'jta' else acc
 
             if perf_indicator > best_perf:
@@ -279,7 +279,7 @@ def main():
                 'lr_scheduler': lr_scheduler.state_dict(),
             }, best_model, final_output_dir)
 
-    if not config.TRAIN.DEBUG_MODE:
+    if not config.TRAIN.DEBUG_MODE or True:
         final_model_state_file = os.path.join(final_output_dir,
                                               'final_state.pth.tar')
         logger.info('saving final model state to {}'.format(
