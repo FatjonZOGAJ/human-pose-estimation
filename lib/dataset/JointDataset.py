@@ -61,8 +61,8 @@ class JointDataset(Dataset):
         self.patch_width = cfg.MODEL.IMAGE_SIZE[0]
         self.patch_height = cfg.MODEL.IMAGE_SIZE[1]
 
-        self.rect_3d_width = 2000.
-        self.rect_3d_height = 2000.
+        self.rect_3d_width = cfg.DATASET.RECT_WIDTH
+        self.rect_3d_height = cfg.DATASET.RECT_HEIGHT
 
         self.mean = np.array([123.675, 116.280, 103.530])
         self.std = np.array([58.395, 57.120, 57.375])

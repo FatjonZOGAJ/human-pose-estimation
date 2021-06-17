@@ -48,7 +48,8 @@ config.DATASET.VOC = '/media/muhammed/Other/RESEARCH/datasets/VOCdevkit/VOC2012'
 config.DATASET.TRAIN_FRAME = 32
 config.DATASET.VAL_FRAME = 64
 config.DATASET.NUM_CAMS = 4
-config.DATASET.DEPTH_RANGE = 2000 # width, height of the area around the subject in mm
+config.DATASET.RECT_WIDTH = 1485.0 # width, height of the area around the subject in mm
+config.DATASET.RECT_HEIGHT = 1980.0 # width, height of the area around the subject in mm
 
 # training data augmentation
 config.DATASET.Z_WEIGHT = 1. # weighting parameter for z axis

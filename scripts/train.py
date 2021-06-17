@@ -212,26 +212,30 @@ def main():
         len1 = len(train_dataset1) + len(train_dataset2)
         len2 = len(train_dataset3) + len(train_dataset4)
         # Sampling from MPII and H36M with same probability s.t. each batch is 50/50
-        weights = np.concatenate((np.full((1, len1), 1 / (len1 + len2), dtype=float),
-                                 np.full((1, len2), (1 / len1 + len2) * (len1 / len2))), axis=0)
-        sampler = WeightedRandomSampler(weights=weights, num_samples=len1 + len2, replacement=True)
+        weights = np.concatenate((np.full((1, len1), 1, dtype=float),
+                                  np.full((1, len2), len1 / len2, dtype=float)), axis=1)
+        sampler = WeightedRandomSampler(weights=weights, num_samples=config.TRAIN.BATCH_SIZE * len(gpus),
+                                        replacement=True)
         train_dataset = ConcatDataset([train_dataset1, train_dataset2, train_dataset3, train_dataset4])
         valid_dataset = train_dataset2
-
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset,
+            batch_sampler=sampler,
+            num_workers=config.WORKERS,
+            pin_memory=True,
+        )
     else:
         train_dataset, valid_dataset = get_datasets(logger, eval('dataset.' + config.DATASET.DATASET),
                                                     config.DATASET.DATASET, config.DATASET.TRAIN_SET,
                                                     config.DATASET.TEST_SET)
-        sampler = None
 
-    train_loader = torch.utils.data.DataLoader(
-        train_dataset,
-        batch_size=config.TRAIN.BATCH_SIZE * len(gpus),
-        shuffle=config.TRAIN.SHUFFLE,
-        num_workers=config.WORKERS,
-        pin_memory=True,
-        sampler=sampler
-    )
+        train_loader = torch.utils.data.DataLoader(
+            train_dataset,
+            batch_size=config.TRAIN.BATCH_SIZE * len(gpus),
+            shuffle=config.TRAIN.SHUFFLE,
+            num_workers=config.WORKERS,
+            pin_memory=True,
+        )
 
     valid_loader = torch.utils.data.DataLoader(
         valid_dataset,

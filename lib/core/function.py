@@ -182,9 +182,10 @@ def evaluate(config, epoch, preds_in_patch_with_score, val_loader, final_output_
 
     return perf
 
-# TODO try different bounding box
+
 def get_preds_in_patch_with_score(config, imdb_list, n_sample, preds_in_patch_with_score):
     return trans_coords_from_patch_to_org_3d(preds_in_patch_with_score[n_sample], imdb_list[n_sample]['center_x'],
                                              imdb_list[n_sample]['center_y'], imdb_list[n_sample]['width'],
-                                             imdb_list[n_sample]['height'], config.MODEL.IMAGE_SIZE[0], config.MODEL.IMAGE_SIZE[1],
-                                             2000, 2000)
+                                             imdb_list[n_sample]['height'], config.MODEL.IMAGE_SIZE[0],
+                                             config.MODEL.IMAGE_SIZE[1],
+                                             config.DATASET.RECT_WIDTH, config.DATASET.RECT_HEIGHT)
