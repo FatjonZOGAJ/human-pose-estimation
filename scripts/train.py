@@ -188,7 +188,7 @@ def main():
                 config.TRAIN.BEGIN_EPOCH = checkpoint['epoch']
                 config.TRAIN.END_EPOCH = config.TRAIN.BEGIN_EPOCH + config.TRAIN.END_EPOCH
                 best_perf = checkpoint['perf']
-                model.load_state_dict(checkpoint['state_dict'])
+                incompat_keys = model.load_state_dict(checkpoint['state_dict'], strict=False)
                 optimizer.load_state_dict(checkpoint['optimizer'])
                 lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
                 if 'train_step' in checkpoint:
@@ -197,8 +197,10 @@ def main():
                     writer_dict['valid_global_steps'] = checkpoint['valid_step']
                 logger.info('=> resume from pretrained model {}'.format(config.MODEL.RESUME))
             else:
-                model.load_state_dict(checkpoint)
+                incompat_keys = model.load_state_dict(checkpoint, strict=False)
                 logger.info('=> resume from pretrained model {}'.format(config.MODEL.RESUME))
+            logger.warning('State loading, missing keys %s' % incompat_keys.missing_keys)
+            logger.warning('State loading, unexpected keys %s' % incompat_keys.unexpected_keys)
         else:
             logger.warning(f'WARN: MODEL.RESUME set, but no file found {config.MODEL.RESUME}')
 

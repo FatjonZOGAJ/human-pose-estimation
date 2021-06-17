@@ -48,10 +48,12 @@ def main():
     # Load model
     model_file = os.path.join(final_output_dir, 'model_best.pth.tar')
     checkpoint = torch.load(model_file)
-    model.load_state_dict(checkpoint)
+    incompat_keys = model.load_state_dict(checkpoint, strict=False)
+    logger.warning('State loading, missing keys %s' % incompat_keys.missing_keys)
+    logger.warning('State loading, unexpected keys %s' % incompat_keys.unexpected_keys)
     logger.info('=> resume from pretrained model {}'.format(model_file))
 
-    ds = eval('dataset.' + config.DATASET.DATASET)
+    ds = eval('dataset.h36m')# + config.DATASET.DATASET)
 
     # Data loading code
     logger.info('=> loading the valid/test dataset')

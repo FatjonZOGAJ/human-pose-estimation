@@ -26,6 +26,7 @@ MODEL:
     NUM_DECONV_LAYERS: 3
     NUM_DECONV_FILTERS: 256
     BN_MOMENTUM: 0.1
+  IMAGE_SIZE: [288, 384]  # width * height, ex: 192 * 256
 LOSS:
   FN: 'L1JointRegressionLoss'
 TRAIN:

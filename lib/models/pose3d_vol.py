@@ -59,8 +59,16 @@ class PoseResNetVol(nn.Module):
         self._make_backbone(is_pretrain, cfg.MODEL.BACKBONE)
         self._make_head(self.num_joints, self.depth_res)
         self._softmax = torch.nn.Softmax(dim=2)
-        self._rangexz = torch.nn.Parameter(torch.arange(72), requires_grad=False)
-        self._rangey = torch.nn.Parameter(torch.arange(96), requires_grad=False)
+        self._range = torch.nn.Parameter(torch.arange(1, cfg.MODEL.DEPTH_RES + 1), requires_grad=False)  # needed for old model loading
+
+        if cfg.MODEL.DEPTH_RES == 72:
+            self._rangexz = torch.nn.Parameter(torch.arange(72), requires_grad=False)
+            self._rangey = torch.nn.Parameter(torch.arange(96), requires_grad=False)
+        elif cfg.MODEL.DEPTH_RES == 64:
+            self._rangexz = self._range
+            self._rangey = self._range
+        else:
+            raise NotImplementedError('Set correct depth res')
 
     def _make_backbone(self, is_pretrain, model_backbone):
         self._backbone = CustomResNet(model_backbone)
