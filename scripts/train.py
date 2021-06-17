@@ -27,7 +27,7 @@ from lib.utils.utils import create_logger
 import lib.core.loss as loss
 import lib.dataset as dataset
 import lib.models as models
-from torch.utils.data import ConcatDataset, WeightedRandomSampler
+from torch.utils.data import ConcatDataset, WeightedRandomSampler, BatchSampler
 
 import numpy as np
 
@@ -212,15 +212,15 @@ def main():
         len1 = len(train_dataset1) + len(train_dataset2)
         len2 = len(train_dataset3) + len(train_dataset4)
         # Sampling from MPII and H36M with same probability s.t. each batch is 50/50
-        weights = np.concatenate((np.full((1, len1), 1, dtype=float),
-                                  np.full((1, len2), len1 / len2, dtype=float)), axis=1)
-        sampler = WeightedRandomSampler(weights=weights, num_samples=config.TRAIN.BATCH_SIZE * len(gpus),
+        weights = np.concatenate((np.full((len1), 1, dtype=float),
+                                  np.full((len2), len1 / len2, dtype=float)), axis=0)
+        sampler = WeightedRandomSampler(weights=weights, num_samples=weights.size,
                                         replacement=True)
         train_dataset = ConcatDataset([train_dataset1, train_dataset2, train_dataset3, train_dataset4])
         valid_dataset = train_dataset2
         train_loader = torch.utils.data.DataLoader(
             train_dataset,
-            batch_sampler=sampler,
+            batch_sampler=BatchSampler(sampler=sampler, batch_size=config.TRAIN.BATCH_SIZE * len(gpus), drop_last=True),
             num_workers=config.WORKERS,
             pin_memory=True,
         )
