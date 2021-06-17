@@ -20,6 +20,7 @@ import lib.dataset as dataset
 import lib.models as models
 from scripts.train import check_train_mode, parse_args, reset_config
 
+
 def main():
     args = parse_args()
     reset_config(config, args)
@@ -67,10 +68,11 @@ def main():
         pin_memory=True
     )
 
-    DEBUG_MODE_BREAK = False    # for prediction, do not break but predict all test samples
+    DEBUG_MODE_BREAK = False  # for prediction, do not break but predict all test samples
     # evaluate on validation set
-    preds_in_patch_with_score = validate(valid_loader, model, DEBUG_MODE_BREAK)
-    acc = evaluate(0, preds_in_patch_with_score, valid_loader, final_output_dir, DEBUG_MODE_BREAK, config.DEBUG.DEBUG,
+    preds_in_patch_with_score = validate(config, valid_loader, model, DEBUG_MODE_BREAK)
+    acc = evaluate(config, 0, preds_in_patch_with_score, valid_loader, final_output_dir, DEBUG_MODE_BREAK,
+                   config.DEBUG.DEBUG,
                    writer_dict, time_str)
 
 

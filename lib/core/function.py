@@ -14,6 +14,7 @@ DEBUG_MODE_MAX_ITER = 2
 
 logger = logging.getLogger(__name__)
 
+
 def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict):
     batch_time = AverageMeter()
     data_time = AverageMeter()
@@ -73,10 +74,14 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
 
         if config.TRAIN.DEBUG_MODE and i == 0:
             # Scale to transformed image size i.e. 256x256
-            preds_in_patch_with_score = [get_joint_regression_result(256, 256, preds[0].cpu().reshape([1, 17, 3]))]
+            preds_in_patch_with_score = [
+                get_joint_regression_result(config.MODEL.IMAGE_SIZE[0], config.MODEL.IMAGE_SIZE[1],
+                                            preds[0].cpu().reshape([1, 17, 3]))]
             preds = dirty_solution_for_partial_batches(preds_in_patch_with_score)[0]
 
-            gt_in_patch_with_score = [get_joint_regression_result(256, 256, batch_label[0].cpu().reshape([1, 17, 3]))]
+            gt_in_patch_with_score = [
+                get_joint_regression_result(config.MODEL.IMAGE_SIZE[0], config.MODEL.IMAGE_SIZE[1],
+                                            batch_label[0].cpu().reshape([1, 17, 3]))]
             gt = dirty_solution_for_partial_batches(gt_in_patch_with_score)[0]
 
             train_loader.dataset.plot_2d_images_with_coords(batch_data[0].cpu(), preds, gt)
@@ -87,7 +92,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             break
 
 
-def validate(val_loader, model, DEBUG_MODE_BREAK):
+def validate(config, val_loader, model, DEBUG_MODE_BREAK):
     print("Validation stage")
     result_func = get_result_func()
 
@@ -99,15 +104,15 @@ def validate(val_loader, model, DEBUG_MODE_BREAK):
         for i, data in enumerate(val_loader):
             batch_data, batch_label, batch_label_weight, meta = data
 
-            # if not config.CPU:
-            batch_data = batch_data.cuda()
+            if not config.CPU:
+                batch_data = batch_data.cuda()
 
             # compute output
             preds = model(batch_data)
             del batch_data, batch_label, batch_label_weight
 
             # Scale to transformed image size i.e. 256x256
-            preds_in_patch_with_score.append(result_func(256, 256, preds))
+            preds_in_patch_with_score.append(result_func(config.MODEL.IMAGE_SIZE[0], config.MODEL.IMAGE_SIZE[1], preds))
             del preds
             if DEBUG_MODE_BREAK and i == DEBUG_MODE_MAX_ITER:
                 break
@@ -141,7 +146,7 @@ def dirty_solution_for_partial_batches(preds_in_patch_with_score):
     return _p
 
 
-def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DEBUG_MODE_BREAK, debug=False,
+def evaluate(config, epoch, preds_in_patch_with_score, val_loader, final_output_path, DEBUG_MODE_BREAK, debug=False,
              writer_dict=None,
              time_str=''):
     print("Evaluation stage")
@@ -158,7 +163,7 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DE
     ):
         # Scale to original image size i.e. 1000x1002
         preds_in_img_with_score.append(
-            get_preds_in_patch_with_score(imdb_list, n_sample, preds_in_patch_with_score))
+            get_preds_in_patch_with_score(config, imdb_list, n_sample, preds_in_patch_with_score))
 
     preds_in_img_with_score = np.asarray(preds_in_img_with_score)
 
@@ -178,8 +183,8 @@ def evaluate(epoch, preds_in_patch_with_score, val_loader, final_output_path, DE
     return perf
 
 
-def get_preds_in_patch_with_score(imdb_list, n_sample, preds_in_patch_with_score):
+def get_preds_in_patch_with_score(config, imdb_list, n_sample, preds_in_patch_with_score):
     return trans_coords_from_patch_to_org_3d(preds_in_patch_with_score[n_sample], imdb_list[n_sample]['center_x'],
                                              imdb_list[n_sample]['center_y'], imdb_list[n_sample]['width'],
-                                             imdb_list[n_sample]['height'], 256, 256,
+                                             imdb_list[n_sample]['height'], config.MODEL.IMAGE_SIZE[0], config.MODEL.IMAGE_SIZE[1],
                                              2000, 2000)

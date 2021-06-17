@@ -24,7 +24,7 @@ config.MODEL.TIME_STR = ''
 config.MODEL.RESUME = ''
 config.MODEL.NUM_JOINTS = 17
 config.MODEL.DEPTH_RES = 64
-config.MODEL.IMAGE_SIZE = [256, 256]  # width * height, ex: 192 * 256
+config.MODEL.IMAGE_SIZE = [288, 384]  # width * height, ex: 192 * 256
 config.MODEL.VOLUME = {}
 
 # Loss function params

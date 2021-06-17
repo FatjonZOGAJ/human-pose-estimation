@@ -59,7 +59,8 @@ class PoseResNetVol(nn.Module):
         self._make_backbone(is_pretrain, cfg.MODEL.BACKBONE)
         self._make_head(self.num_joints, self.depth_res)
         self._softmax = torch.nn.Softmax(dim=2)
-        self._range = torch.nn.Parameter(torch.arange(1, 64 + 1), requires_grad=False)
+        self._rangexz = torch.nn.Parameter(torch.arange(72), requires_grad=False)
+        self._rangey = torch.nn.Parameter(torch.arange(96), requires_grad=False)
 
     def _make_backbone(self, is_pretrain, model_backbone):
         self._backbone = CustomResNet(model_backbone)
@@ -126,20 +127,20 @@ class PoseResNetVol(nn.Module):
 
         x = heatmaps.sum(dim=2)
         x = x.sum(dim=2)
-        x = x * self._range
+        x = x * self._rangexz
         x = x.sum(dim=2, keepdim=True)
         x = x / float(width) - 0.5
 
         y = heatmaps.sum(dim=2)
         y = y.sum(dim=3)
-        y = y * self._range
+        y = y * self._rangey
         y = y.sum(dim=2, keepdim=True)
         y = y / float(height) - 0.5
 
         if self.depth_res != 1:
             z = heatmaps.sum(dim=3)
             z = z.sum(dim=3)
-            z = z * self._range
+            z = z * self._rangexz
             z = z.sum(dim=2, keepdim=True)
             z = z / float(depth) - 0.5
         else:
