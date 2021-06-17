@@ -72,8 +72,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             writer.add_scalar('train_loss', losses.val, global_steps)
             writer_dict['train_global_steps'] = global_steps + 1
 
-        # TODO ONLY CALL IF H36M
-        if config.TRAIN.DEBUG_MODE and i == 0:
+        if config.TRAIN.DEBUG_MODE and i == 0 and config.DATASET.DATASET == 'h36m':
             # Scale to transformed image size i.e. 256x256
             preds_in_patch_with_score = [
                 get_joint_regression_result(config.MODEL.IMAGE_SIZE[0], config.MODEL.IMAGE_SIZE[1],

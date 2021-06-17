@@ -204,19 +204,12 @@ def main():
 
     if config.DATASET.DATASET == 'both':
         logger.info('=> using MPII and H36m for training')
-        train_dataset1, valid_dataset = get_datasets(logger, eval('dataset.h36m'), 'h36m', config.DATASET.TRAIN_SET,
-                                                     config.DATASET.TEST_SET)
-        # train_dataset2, train_dataset3 = get_datasets(logger, eval('dataset.mpii'), 'mpii', config.DATASET.TRAIN_SET,
-        #                                              config.DATASET.TEST_SET)
-        # train_dataset = ConcatDataset([train_dataset1, train_dataset2, train_dataset3])
-        ds = eval('dataset.h36m')
-        train_dataset2 = ds(
-            cfg=config,
-            root=f'data/h36m',
-            image_set=config.DATASET.TEST_SET,
-            is_train=True, always_flip=True
-        )
-        train_dataset = ConcatDataset([train_dataset1, train_dataset2])
+        train_dataset1, train_dataset2 = get_datasets(logger, eval('dataset.h36m'), 'h36m', config.DATASET.TRAIN_SET,
+                                                      config.DATASET.TEST_SET)
+        train_dataset3, train_dataset4 = get_datasets(logger, eval('dataset.mpii'), 'mpii', config.DATASET.TRAIN_SET,
+                                                      config.DATASET.TEST_SET)
+        train_dataset = ConcatDataset([train_dataset1, train_dataset2, train_dataset3, train_dataset4])
+        valid_dataset = train_dataset2
 
     else:
         train_dataset, valid_dataset = get_datasets(logger, eval('dataset.' + config.DATASET.DATASET),
@@ -230,6 +223,7 @@ def main():
         num_workers=config.WORKERS,
         pin_memory=True
     )
+
     valid_loader = torch.utils.data.DataLoader(
         valid_dataset,
         batch_size=config.TEST.BATCH_SIZE * len(gpus),

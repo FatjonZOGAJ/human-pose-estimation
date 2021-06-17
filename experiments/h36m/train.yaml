@@ -5,8 +5,7 @@ WORKERS: 8
 PRINT_FREQ: 100
 EXP_NAME: 'demo'
 DATASET:
-  DATASET: h36m
-  ROOT: 'data/h36m/'
+  DATASET: both
   TEST_SET: val
   TRAIN_SET: train
   NUM_CAMS: 4
