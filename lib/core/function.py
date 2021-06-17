@@ -72,6 +72,7 @@ def train(config, train_loader, model, criterion, optimizer, epoch, writer_dict)
             writer.add_scalar('train_loss', losses.val, global_steps)
             writer_dict['train_global_steps'] = global_steps + 1
 
+        # TODO ONLY CALL IF H36M
         if config.TRAIN.DEBUG_MODE and i == 0:
             # Scale to transformed image size i.e. 256x256
             preds_in_patch_with_score = [
@@ -182,7 +183,7 @@ def evaluate(config, epoch, preds_in_patch_with_score, val_loader, final_output_
 
     return perf
 
-
+# TODO try different bounding box
 def get_preds_in_patch_with_score(config, imdb_list, n_sample, preds_in_patch_with_score):
     return trans_coords_from_patch_to_org_3d(preds_in_patch_with_score[n_sample], imdb_list[n_sample]['center_x'],
                                              imdb_list[n_sample]['center_y'], imdb_list[n_sample]['width'],

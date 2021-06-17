@@ -42,7 +42,8 @@ def main():
     model = models.nets[config.MODEL.NAME].get_pose_net(config, False)
 
     gpus = [int(i) for i in config.GPUS.split(',')]
-    model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
+    if not config.CPU:
+        model = torch.nn.DataParallel(model, device_ids=gpus).cuda()
 
     # Load model
     model_file = os.path.join(final_output_dir, 'model_best.pth.tar')
@@ -56,7 +57,7 @@ def main():
     logger.info('=> loading the valid/test dataset')
     valid_dataset = ds(
         cfg=config,
-        root=config.DATASET.ROOT,
+        root='data/h36m',
         image_set=config.DATASET.TEST_SET,
         is_train=False
     )
