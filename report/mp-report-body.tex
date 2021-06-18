@@ -1,7 +1,7 @@
 \section{Introduction}
-In this section, introduce the task in a bit more detail. In the first paragraph, try to answer why the task is of interest at all and what makes it challenging. You may also discuss some related work here. For example, you can summarize how other researchers have addressed the problem and what might be the disadvantages of these works.
+%In this section, introduce the task in a bit more detail. In the first paragraph, try to answer why the task is of interest at all and what makes it challenging. You may also discuss some related work here. For example, you can summarize how other researchers have addressed the problem and what might be the disadvantages of these works.
 
-In the second half of the introduction, describe your method. This should be more detailed than in the abstract. You can talk about how your method relates to existing work (e.g. it is a combination or extension of existing methods, what other papers were you inspired by, etc.). You should also state the central result here, and the key insight that made it possible to achieve this result.
+%In the second half of the introduction, describe your method. This should be more detailed than in the abstract. You can talk about how your method relates to existing work (e.g. it is a combination or extension of existing methods, what other papers were you inspired by, etc.). You should also state the central result here, and the key insight that made it possible to achieve this result.
 
 Human pose estimation (HPE) from a single monocular image is an open challenge garnering significant attention in computer vision ~\cite{DBLP:journals/corr/PavlakosZDD16} as it offers a wide variety of useful applications in real-life.
 For instance, HPE is utilized in human tracking, human-computer interaction, sports motion analysis, and self-driving cars ~\cite{chen_monocular_2020}.
@@ -24,8 +24,8 @@ Generally, use the \texttt{{\char'134}cite} command to cite other works, e.g. \c
 
 
 \section{Method}
-This section should describe the method of your \emph{final} submission in detail. This includes things you did with the data (e.g. preprocessing, augmentations, changes of representation, etc.) and the actual definition of your model. Sometimes it is fine to describe a model in text or math only, sometimes it is better to create an overview figure. Either way, after reading this section, a reader should be able to implement your architecture.
-If you have enough space, you may list hyperparameter values in an ``Implementation Details'' paragraph. Otherwise list them in the README of your code repo.
+%This section should describe the method of your \emph{final} submission in detail. This includes things you did with the data (e.g. preprocessing, augmentations, changes of representation, etc.) and the actual definition of your model. Sometimes it is fine to describe a model in text or math only, sometimes it is better to create an overview figure. Either way, after reading this section, a reader should be able to implement your architecture.
+%If you have enough space, you may list hyperparameter values in an ``Implementation Details'' paragraph. Otherwise list them in the README of your code repo.
 
 \subsection{Data augmentation}
 Despite the success of deep models, many of them are still data-hungry, therefore we have spent a fare amount of time trying to augment the dataset with synthetic data.
@@ -39,17 +39,22 @@ Furthermore, in order to improve the score and to make the network robust to occ
 
 \subsection{Heatmap Regression}
 
+Another important development in the task of HME was the introduction of heat map representations where each location in the heat map represents the probability of the location being the joint ~\cite{sun_integral_2018-1}.
+This approach, despite its good performance, has some drawbacks, mainly its non-differentiability as it utilizes the maximum likelihood.
+\citeauthor{sun_integral_2018-1} alleviate this problem by modifying the joint calculation to "taking-expectation" instead of "taking-maximum".
+In our work, we make use of this integral heatmap regression approach which not only improved the score by XY \%, it also allowed us to train not only on the H36M data set but also simultaneously on the MPII data set.
+
 
 \section{Evaluation}
 In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.
 
 \begin{table}[h!]
-    \caption{Ablation study}
+    \caption{Ablation study. Data occlusion (O), Data augmentation (A), Integral Heatmap Regression (I), Extra Data (E)}
     \label{tab:ablation}
     \centering
     \begin{tabular}{|| c | c | c ||}
         \hline
-        \textbf{Backbone} & \textbf{Extension}  & \textbf{MPJPE}               \\
+        \textbf{Backbone} & \textbf{Extensions}  & \textbf{MPJPE}               \\
         \hline\hline
         AlexNet           & -                   & 141.50                       \\
         \hline
