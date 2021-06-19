@@ -42,22 +42,30 @@ Pre-trained model
 
 \subsection{Heatmap Regression}
 
-Another important development in the task of HPE was the introduction of heat map representations where each location in the heat map represents the probability of the location being the joint ~\cite{sun_integral_2018-1}.
-This approach, despite its good performance, has some drawbacks, mainly its non-differentiability as it utilizes the maximum likelihood.
-\citeauthor{sun_integral_2018-1} \todo{add nr citing as well} alleviate this problem by modifying the joint calculation to "taking-expectation" instead of "taking-maximum".
-In our work, we make use of this integral heatmap regression approach which not only improved the score by \todo{XY} \%, it also allowed us to train not only on the H36M data set but also simultaneously on the MPII data set.
+Another important development in the task of HPE was the introduction of heat map representations as an alternative to directly regressing the joint locations.
+In this representation each location in the heat map represents a probability of the joint being at this position ~\cite{sun_integral_2018-1}.
+Given such a heat map representation $H_k$ for the $k^{th}$ joint, the position of the joint $J_K$ is estimated by the maximum likelihood
+
+$$J_k=\underset{\mathbf{p}}{\text{argmax}}\ H_k(\mathbf{p})$$
+
+In our case, such a heat map representation is learnt by a shallow head from extracted convolutional features from our backbone.
+
+This approach yields good performance in HPE but has two clear drawbacks compared to directly regressing the join locations.
+The first one is the usage of the \textit{argmax} operator which makes the calculation of the maximum likelihood non-differentiable which hinders the possibility of training a neural network end-to-end.
+The second drawback is a quantization error which stems from down sampling steps performed by the backbone.
+\citeauthor{sun_integral_2018-1}{\cite{sun_integral_2018-1}} alleviate this problem by modifying the joint calculation to "taking-expectation" instead of "taking-maximum".
+With this, the above equation in the discrete case can be formulated as
+$$J_k = \sum_{p_x=1}^D\sum_{p_y=1}^H\sum_{p_x=1}^W\mathbf{p}H_k(\mathbf{p})$$
+which is also known as the \textit{soft argmax}
+
+This reformulation of the joint calculation solves the two mentioned problems and additionally provides the possibility to train on 2D and 3D data simultaneously and end-to-end.
+Given the fact that the first \cite{sarandi_synthetic_2018} and second \cite{sun_integral_2018} place of the 2018 ECCV PoseTrack Challenge made use of this heat map representation with the \textit{soft argmax}, we employed this technique as well.
 
 
 \section{Other Approaches}
 \todo{Maybe just move all of this to Discussion? 'failed attempts should also go into [...] discussion section'}
 In the following section we list different techniques which
 performed similarly or worse than the ones included in the presented best model.
-
-
-denoising autoencoder
-bone loss
-using mpii
-2d to 3d
 
 \subsection{Graph Neural Networks}
 \todo{remove results and move to evaluation}
@@ -99,7 +107,6 @@ freezing its last layer.
 Freezing the backbone completely achieved a validation error of 66, while having the last
 layer unfrozen gets a validation error of 54.
 
-
 \subsection{Evolutionary Training Data}
 Finally, in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints of the human 3D skeleton are represented by a set of bones organized hierarchically in a kinematic tree, this way the dependence of adjacent joints with tree edges is captured. This can be seen in Fig. ~\ref{skeleton}. Assuming that $\textbf{p}^j$ is the \emph{j}-th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}-th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as
 
@@ -126,15 +133,15 @@ The overall algorithm can be seen in ~\ref{alg1}.
     $D_{new} = D_{old}$
 
     \For{i=1:G}{
-        Parents=Sample($D_{new}$)
+    Parents=Sample($D_{new}$)
 
-        Children=NaturalSelection(Mutation(Crossover(Parents)))
+    Children=NaturalSelection(Mutation(Crossover(Parents)))
 
-        $D_{new} = D_{new} \cup Children$
+    $D_{new} = D_{new} \cup Children$
     }
-    return $D_{new}$
-    \caption{Data evolution}
-    \label{alg1}
+        return $D_{new}$
+        \caption{Data evolution}
+        \label{alg1}
 \end{algorithm}
 
 With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Since the data is represented as we mentioned in a hierarchical way crossover is intuitive to implement. Crossover is implemented as a random exchange of sub-trees. TODO: do we want the formal definition?. Mutation operator pertubates the local orientation of one bone vector. Bone vector $\textbf{b}_i = (r_i, \theta _i, \phi _i)$ is randomly selected and Gaussian noise $g ~ N(0, \sigma)$ is added
@@ -158,30 +165,44 @@ we have tried [0, 1]-normalization instead of the original z-standardization.
 Preliminary experiments showed that this does not improve the score, hinting at a slight decrease
 which is why it was not further used.
 
+
+denoising autoencoder
+bone loss
+2d to 3d
+
+
 \section{Evaluation}
 \todo{In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.}
 
+% 55 epochs on both 50/50 then smaller lr only on h36m
+
 \begin{table}[h!]
-    \caption{Ablation study showing validation and test scores.
+    \caption{Ablation study on the progression of the Mean Per Joint Position Error (MPJPE) metric. The score denotes the performance on the test set. Values with $*$  denote the performance on the validation set.
     Data occlusion (O), Data augmentation (A), Integral Heatmap Regression (I), Extra Data (E),
-        3D-Regression (R)}
+    3D-Regression (R), Higher Resolution (H), Bone Loss (B)}
     \label{tab:ablation}
     \centering
     \begin{tabular}{|| c | c | c | c ||}
         \hline
         \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}$_{valid}$ & \textbf{MPJPE}$_{test}$      \\
         \hline\hline
-        AlexNet           & -                   &                          & 141.50                       \\
+        AlexNet           & R                   &                          & 141.50                       \\
         \hline
-        AlexNet           & O &                          & $84.50_{\downarrow 40.28\%}$ \\
+        AlexNet           & O                   &                          & $84.50_{\downarrow 40.28\%}$ \\
         \hline
-        ResNet50          & -                   &                          & $72.15_{\downarrow 49.01\%}$ \\
+        ResNet50          & I                   &                          & $72.15_{\downarrow 49.01\%}$ \\
         \hline
-        ResNet50          & O &                          & $63.01_{\downarrow 12.69\%}$ \\
+        ResNet50          & I,O                 &                          & $63.01_{\downarrow 12.69\%}$ \\
         \hline
-        ResNext101        & O &                          & $54.14_{\downarrow 14.08\%}$ \\
+        ResNext101        & I,O,A               &                          & $54.14_{\downarrow 14.08\%}$ \\
         \hline
-        SemGCN        & O &                          &  \\
+        ResNet152         & I,O,A,H,E           &                          & $50.94$                      \\
+        \hline
+        ResNext101        & I,O,A,H,E           &                          & $48.95$                      \\
+        \hline
+        SemGCN            & O                   &                          &                              \\
+        \hline
+        ResNext101        & I,O,A,B             &                          & $54.6^*$                     \\
         \hline
     \end{tabular}
 \end{table}
