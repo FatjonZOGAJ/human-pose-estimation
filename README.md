@@ -24,7 +24,8 @@ Firstly, it is necessary to download:
 + staticPose.npy
 + template.npy  
 
-from the [here](https://drive.google.com/drive/folders/1MUcR9oBNUpTAJ7YUWdyVLKCQW874FszI).
+from the [here](https://drive.google.com/drive/folders/1MUcR9oBNUpTAJ7YUWdyVLKCQW874FszI) and put it into the folder 
+`${ROOT}/resources/constraints`.
 To evolve the dataset run script evolve.py using the same parameter for the train.yaml, example
 
 `python lib/evolution/evolve.py --cfg experiments/h36m/train.yaml`
@@ -62,3 +63,42 @@ Make sure to consider default values so that when no argument is passed, the con
 + `bjobs` list jobs (`-l` for details)
 + `bkill 0` kill all jobs
 + `bpeek` see output of jobs (`watch "bpeek | tail -n 30"` for continuous output)
+
+## Recreating score
+
+1. Clone this repo, and we will call the directory that you cloned as `${ROOT}`
+2. Install dependencies using `pip`.
+   
+    `pip install -r requirements.txt`
+
+### Training
+3. To train the model run the following command:
+
+
+    python scripts/train.py --cfg experiments/h36m/train.yaml
+    
+In order to train the model on Leonhard use:
+
+    bsub -n 4 -W 6:00 -R "rusage[mem=2048, ngpus_excl_p=1]" python scripts/train.py --cfg experiments/h36m/train.yaml
+
+All parameters that produce the score are already set in `experiments/h36m/train.yaml`
+
+To achieve the score we have trained the model for: TODO hours/stopped after TODO epochs
+
+In order to resume training, one should change the `MODEL.RESUME` in `train.yaml` to the name of the checkpoint 
+and run the model specifying the folder of the model. Model folder are named using timestamps. Possible call for 
+resuming the model would be:
+
+    python scripts/train.py --cfg experiments/h36m/train.yaml --model_time_str 2021-05-21-15-32-18
+
+### Validation
+4. To validate the model run the following command:
+
+
+    python scripts/valid.py --cfg experiments/h36m/test.yaml
+
+Or using Leonhard:
+
+    bsub -n 4 -W 6:00 -R "rusage[mem=2048, ngpus_excl_p=1]" python scripts/valid.py --cfg experiments/h36m/test.yaml
+
+All necessary parameters are set in `test.yaml`
