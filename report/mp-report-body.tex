@@ -24,6 +24,7 @@ However, in order to optimize these models, further supervision in various forms
 Generally, use the \texttt{{\char'134}cite} command to cite other works, e.g. \cite{Douglass98,Harel79}. To add a new reference, you need to add a bibtex entry to the bibliography file, in this case \texttt{bibliography.bib}.
 }
 
+
 \section{Method}
 %This section should describe the method of your \emph{final} submission in detail. This includes things you did with the data (e.g. preprocessing, augmentations, changes of representation, etc.) and the actual definition of your model. Sometimes it is fine to describe a model in text or math only, sometimes it is better to create an overview figure. Either way, after reading this section, a reader should be able to implement your architecture.
 %If you have enough space, you may list hyperparameter values in an ``Implementation Details'' paragraph. Otherwise list them in the README of your code repo.
@@ -47,25 +48,25 @@ In our work, we make use of this integral heatmap regression approach which not 
 
 
 \section{Evaluation}
-In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.
+\todo{In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.}
 
 \begin{table}[h!]
-    \caption{Ablation study. Data occlusion (O), Data augmentation (A), Integral Heatmap Regression (I), Extra Data (E)}
+    \caption{Ablation study showing validation and test scores. Data occlusion (O), Data augmentation (A), Integral Heatmap Regression (I), Extra Data (E)}
     \label{tab:ablation}
     \centering
-    \begin{tabular}{|| c | c | c ||}
+    \begin{tabular}{|| c | c | c | c ||}
         \hline
-        \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}               \\
+        \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}$_{valid}$ & \textbf{MPJPE}$_{test}$        \\
         \hline\hline
-        AlexNet           & -                   & 141.50                       \\
+        AlexNet           & -                   &                             & 141.50                       \\
         \hline
-        AlexNet           & Synthetic occlusion & $84.50_{\downarrow 40.28\%}$ \\
+        AlexNet           & Synthetic occlusion &                             & $84.50_{\downarrow 40.28\%}$ \\
         \hline
-        ResNet50          & -                   & $72.15_{\downarrow 49.01\%}$ \\
+        ResNet50          & -                   &                             & $72.15_{\downarrow 49.01\%}$ \\
         \hline
-        ResNet50          & Synthetic occlusion & $63.01_{\downarrow 12.69\%}$ \\
+        ResNet50          & Synthetic occlusion &                             & $63.01_{\downarrow 12.69\%}$ \\
         \hline
-        ResNext101        & Synthetic occlusion & $54.14_{\downarrow 14.08\%}$ \\
+        ResNext101        & Synthetic occlusion &                             & $54.14_{\downarrow 14.08\%}$ \\
         \hline
     \end{tabular}
 \end{table}
@@ -74,6 +75,9 @@ In the evaluation section you should describe the experiments that support the c
 
 \textbf{Effect of model backbone}: TODO
 
+\textbf{Effect of larger image size/depth resolution}: TODO
+
+\textbf{Effect of additional validation set}:
 
 \section{Other Approaches}
 denoising autoencoder
@@ -81,7 +85,10 @@ bone loss
 using mpii
 2d to 3d
 
-Finally, in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints or the human 3D skeleton is represented by a set of bones organized hierarchically in a kinematic tree, this way the the dependence of adjacent joints with tree edges is captured. This can be seen in Fig. ~\ref{skeleton}. Assuming that $\textbf{p}^j$ is the \emph{j}th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as
+\subsection{Graph Neural Networks}
+
+\subsection{Evolutionary Training Data}
+Finally, in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints of the human 3D skeleton are represented by a set of bones organized hierarchically in a kinematic tree, this way the dependence of adjacent joints with tree edges is captured. This can be seen in Fig. ~\ref{skeleton}. Assuming that $\textbf{p}^j$ is the \emph{j}-th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}-th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as
 
 $$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
 
@@ -132,7 +139,7 @@ Both mutation and crossover can be seen in Fig. ~\ref{evolved}
 
 
 \section{Discussion}
-Sometimes you might have had a great idea, but it did not pan out. Since we want to encourage novelty, such failed attempts should also go into the report. This section is a suitable place to discuss this. If you can, do not just list failed attempts, but actually \emph{discuss} them, i.e., provide an intuition why you think they failed or what the problem is that prevented them from performing better. It is much better to describe one failed attempt and discuss it in-depth than just listing four failed models without any explanation.
+\todo{Sometimes you might have had a great idea, but it did not pan out. Since we want to encourage novelty, such failed attempts should also go into the report. This section is a suitable place to discuss this. If you can, do not just list failed attempts, but actually \emph{discuss} them, i.e., provide an intuition why you think they failed or what the problem is that prevented them from performing better. It is much better to describe one failed attempt and discuss it in-depth than just listing four failed models without any explanation.}
 
 If you do not have failed attempts that would warrant their own section, this is perfectly fine. You may discuss the experiments from the previous section here, or if you prefer to have the discussion the evaluation section directly, feel free to omit this section entirely.
 
