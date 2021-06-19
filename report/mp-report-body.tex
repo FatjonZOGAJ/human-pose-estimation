@@ -6,7 +6,7 @@
 Human pose estimation (HPE) from a single monocular image is an open challenge garnering significant attention in computer vision ~\cite{DBLP:journals/corr/PavlakosZDD16} as it offers a wide variety of useful applications in real-life.
 For instance, HPE is utilized in human tracking, human-computer interaction, sports motion analysis, and self-driving cars ~\cite{chen_monocular_2020}.
 Estimating the full-body pose has been extensively studied in both 2D and 3D ~\cite{sun_compositional_2017}.
-Thanks to the availability of large-scale 2D annotated human poses and the emergence of deep neural networks achieving very low error rates, the 2D human pose estimation problem is considered as solved.
+Thanks to the availability of large-scale 2D annotated human poses and the emergence of deep neural networks achieving very low error rates~\cite{yang2020transpose, bulat2020skip, su2019multi}, the 2D human pose estimation problem is considered as nearly solved.
 In contrast, the 3D human pose estimation remains an open problem.
 This is partially because of the ambiguity of recovering the 3D information from single images and also due to the lack of large-scale 3D pose annotated datasets.
 Methods for solving the 3D human pose estimation can roughly be divided into two categories: i) learning end-to-end networks that recover 2D input images to 3D poses directly, ii) extracting 2D human poses from input images and then lifting 2D poses to 3D spaces ~\cite{DBLP:journals/corr/abs-1710-06513}.
@@ -52,7 +52,9 @@ In our work, we make use of this integral heatmap regression approach which not 
 \todo{In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.}
 
 \begin{table}[h!]
-    \caption{Ablation study showing validation and test scores. Data occlusion (O), Data augmentation (A), Integral Heatmap Regression (I), Extra Data (E)}
+    \caption{Ablation study showing validation and test scores.
+    Data occlusion (O), Data augmentation (A), Integral Heatmap Regression (I), Extra Data (E),
+        3D-Regression (R)}
     \label{tab:ablation}
     \centering
     \begin{tabular}{|| c | c | c | c ||}
@@ -61,13 +63,15 @@ In our work, we make use of this integral heatmap regression approach which not 
         \hline\hline
         AlexNet           & -                   &                          & 141.50                       \\
         \hline
-        AlexNet           & Synthetic occlusion &                          & $84.50_{\downarrow 40.28\%}$ \\
+        AlexNet           & O &                          & $84.50_{\downarrow 40.28\%}$ \\
         \hline
         ResNet50          & -                   &                          & $72.15_{\downarrow 49.01\%}$ \\
         \hline
-        ResNet50          & Synthetic occlusion &                          & $63.01_{\downarrow 12.69\%}$ \\
+        ResNet50          & O &                          & $63.01_{\downarrow 12.69\%}$ \\
         \hline
-        ResNext101        & Synthetic occlusion &                          & $54.14_{\downarrow 14.08\%}$ \\
+        ResNext101        & O &                          & $54.14_{\downarrow 14.08\%}$ \\
+        \hline
+        SemGCN        & O &                          &  \\
         \hline
     \end{tabular}
 \end{table}
@@ -82,6 +86,7 @@ In our work, we make use of this integral heatmap regression approach which not 
 
 
 \section{Other Approaches}
+\todo{Maybe just move all of this to Discussion? 'failed attempts should also go into [...] discussion section'}
 In the following section we list different techniques which
 performed similarly or worse than the ones included in the presented best model.
 
@@ -92,6 +97,44 @@ using mpii
 2d to 3d
 
 \subsection{Graph Neural Networks}
+As the task of 2D human pose estimation has been extensively studied, achieving very low
+error rates~\cite{yang2020transpose, bulat2020skip, su2019multi},
+also take a look at an architecture for 3D-joint regression based on 2D-joint input.
+A human skeleton follows the underlying structure of a graph which is why a
+Graph Convolutional Network (GCN) offers itself well to model this.
+We make use of \citeauthor{zhao2019gcn}'s Semantic GCN (SemGCN) model, which allows to capture semantic
+information in regard to global and local joint relations~\cite{zhao2019gcn}.
+
+As the original SemGCN model makes use of joint grouping (maxpool: 16 joints \textrightarrow ~8 joints), we adapt it for
+our use case of 17 joints.
+We have looked at a variety of ways on how to incorporate the missing joint (Neck/Nose).
+These options include:
+\begin{itemize}
+    \item simply concatenating the last joint input to the other grouped ones
+    \item removing grouping altogether
+    \item grouping the missing joint with itself
+    \item grouping the missing joint with other related joints
+\end{itemize}
+We also played around with reordering the joints to put more emphasis on one over another
+as max-pooling makes use of locality.
+Surprisingly all methods perform very similarly which might be explained due to the model's robustness
+and the possibility that few of the joints make up for most of the information lying underneath.
+
+We further analyzed two training approaches.
+In the first one the training of the SemGCN can be separated into two parts.
+We first train the SemGCN to predict the z-axis based on 2D ground truth input data.
+Afterwards we use this pre-trained model and stack it on top of our also pre-trained backbone,
+dropping the third dimension of the backbone output to feed it into the SemGCN.
+The second approach simply stacks the untrained SemGCN on top of the backbone and trains it
+together from scratch.
+The best variant making use of pre-training on ground-truth data achieves an error of 54,
+while not pre-training gets 66.
+
+We further differentiate between the case of freezing the backbone model completely, and only
+freezing its last layer.
+Freezing the backbone completely achieved a validation error of 66, while having the last
+layer unfrozen gets a validation error of 54.
+
 
 \subsection{Evolutionary Training Data}
 Finally, in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints of the human 3D skeleton are represented by a set of bones organized hierarchically in a kinematic tree, this way the dependence of adjacent joints with tree edges is captured. This can be seen in Fig. ~\ref{skeleton}. Assuming that $\textbf{p}^j$ is the \emph{j}-th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}-th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as
@@ -149,9 +192,14 @@ In addition to the approaches above, we have combined them with a variety of fur
 As the official PyTorch documentation recommends loading in the data in the range of [0, 1],
 we have tried [0, 1]-normalization instead of the original z-standardization.
 Preliminary experiments showed that this does not improve the score, hinting at a slight decrease
-which is why it was not further analyzed.
+which is why it was not further used.
+
 
 \section{Discussion}
+In this section we give possible explanations as to why some approaches fared better
+than the other and which mechanisms could lie behind.
+
+
 \todo{Sometimes you might have had a great idea, but it did not pan out. Since we want to encourage novelty, such failed attempts should also go into the report. This section is a suitable place to discuss this. If you can, do not just list failed attempts, but actually \emph{discuss} them, i.e., provide an intuition why you think they failed or what the problem is that prevented them from performing better. It is much better to describe one failed attempt and discuss it in-depth than just listing four failed models without any explanation.
 
 If you do not have failed attempts that would warrant their own section, this is perfectly fine. You may discuss the experiments from the previous section here, or if you prefer to have the discussion the evaluation section directly, feel free to omit this section entirely.}
@@ -160,7 +208,7 @@ If you do not have failed attempts that would warrant their own section, this is
 \section{Conclusion}
 Conclude your report with a brief summary. This can be very short, i.e. 2-3 sentences.
 
-\newpage
+\clearpage
 
 
 \section{Helpful \LaTeX~commands}
