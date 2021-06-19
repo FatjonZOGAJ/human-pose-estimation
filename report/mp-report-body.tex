@@ -38,6 +38,7 @@ The input picture is normalized to 284 x 284 dimension TODO. Standard data augme
 Furthermore, in order to improve the score and to make the network robust to occluded joints we use synthetic occlusion, since erasing objects or simply putting them in the picture improves results in image classification, object detection, and person identification~\cite{sarandi_synthetic_2018}. Using objects in the Pascal VOC dataset we filter out persons, segments with area below 500 px and segments labeled as \emph{difficult} or \emph{truncated}. Finally, with the defined probability $p_{occ}$ a random number between 1 and 8 of objects from the filtered VOC dataset are added to random locations of the frame.
 
 \subsection{Backbone Model}
+Pre-trained model
 
 \subsection{Heatmap Regression}
 
@@ -56,17 +57,17 @@ In our work, we make use of this integral heatmap regression approach which not 
     \centering
     \begin{tabular}{|| c | c | c | c ||}
         \hline
-        \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}$_{valid}$ & \textbf{MPJPE}$_{test}$        \\
+        \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}$_{valid}$ & \textbf{MPJPE}$_{test}$      \\
         \hline\hline
-        AlexNet           & -                   &                             & 141.50                       \\
+        AlexNet           & -                   &                          & 141.50                       \\
         \hline
-        AlexNet           & Synthetic occlusion &                             & $84.50_{\downarrow 40.28\%}$ \\
+        AlexNet           & Synthetic occlusion &                          & $84.50_{\downarrow 40.28\%}$ \\
         \hline
-        ResNet50          & -                   &                             & $72.15_{\downarrow 49.01\%}$ \\
+        ResNet50          & -                   &                          & $72.15_{\downarrow 49.01\%}$ \\
         \hline
-        ResNet50          & Synthetic occlusion &                             & $63.01_{\downarrow 12.69\%}$ \\
+        ResNet50          & Synthetic occlusion &                          & $63.01_{\downarrow 12.69\%}$ \\
         \hline
-        ResNext101        & Synthetic occlusion &                             & $54.14_{\downarrow 14.08\%}$ \\
+        ResNext101        & Synthetic occlusion &                          & $54.14_{\downarrow 14.08\%}$ \\
         \hline
     \end{tabular}
 \end{table}
@@ -79,7 +80,12 @@ In our work, we make use of this integral heatmap regression approach which not 
 
 \textbf{Effect of additional validation set}:
 
+
 \section{Other Approaches}
+In the following section we list different techniques which
+performed similarly or worse than the ones included in the presented best model.
+
+
 denoising autoencoder
 bone loss
 using mpii
@@ -137,11 +143,18 @@ Both mutation and crossover can be seen in Fig. ~\ref{evolved}
     \label{evolved}
 \end{figure}
 
+\subsection{Miscellaneous}
+
+In addition to the approaches above, we have combined them with a variety of further techniques.
+As the official PyTorch documentation recommends loading in the data in the range of [0, 1],
+we have tried [0, 1]-normalization instead of the original z-standardization.
+Preliminary experiments showed that this does not improve the score, hinting at a slight decrease
+which is why it was not further analyzed.
 
 \section{Discussion}
-\todo{Sometimes you might have had a great idea, but it did not pan out. Since we want to encourage novelty, such failed attempts should also go into the report. This section is a suitable place to discuss this. If you can, do not just list failed attempts, but actually \emph{discuss} them, i.e., provide an intuition why you think they failed or what the problem is that prevented them from performing better. It is much better to describe one failed attempt and discuss it in-depth than just listing four failed models without any explanation.}
+\todo{Sometimes you might have had a great idea, but it did not pan out. Since we want to encourage novelty, such failed attempts should also go into the report. This section is a suitable place to discuss this. If you can, do not just list failed attempts, but actually \emph{discuss} them, i.e., provide an intuition why you think they failed or what the problem is that prevented them from performing better. It is much better to describe one failed attempt and discuss it in-depth than just listing four failed models without any explanation.
 
-If you do not have failed attempts that would warrant their own section, this is perfectly fine. You may discuss the experiments from the previous section here, or if you prefer to have the discussion the evaluation section directly, feel free to omit this section entirely.
+If you do not have failed attempts that would warrant their own section, this is perfectly fine. You may discuss the experiments from the previous section here, or if you prefer to have the discussion the evaluation section directly, feel free to omit this section entirely.}
 
 
 \section{Conclusion}
