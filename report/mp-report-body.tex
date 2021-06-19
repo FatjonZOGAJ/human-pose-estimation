@@ -5,23 +5,24 @@
 
 Human pose estimation (HPE) from a single monocular image is an open challenge garnering significant attention in computer vision ~\cite{DBLP:journals/corr/PavlakosZDD16} as it offers a wide variety of useful applications in real-life.
 For instance, HPE is utilized in human tracking, human-computer interaction, sports motion analysis, and self-driving cars ~\cite{chen_monocular_2020}.
-Estimating the full-body pose has been extensively studied both 3D and 2D ~\cite{sun_compositional_2017}.
-Thanks to the availability of large-scale 2D annotated human poses and the emergence of deep neural networks, the 2D human pose estimation problem is considered as solved.
+Estimating the full-body pose has been extensively studied in both 2D and 3D ~\cite{sun_compositional_2017}.
+Thanks to the availability of large-scale 2D annotated human poses and the emergence of deep neural networks achieving very low error rates, the 2D human pose estimation problem is considered as solved.
 In contrast, the 3D human pose estimation remains an open problem.
 This is partially because of the ambiguity of recovering the 3D information from single images and also due to the lack of large-scale 3D pose annotated datasets.
 Methods for solving the 3D human pose estimation can roughly be divided into two categories: i) learning end-to-end networks that recover 2D input images to 3D poses directly, ii) extracting 2D human poses from input images and then lifting 2D poses to 3D spaces ~\cite{DBLP:journals/corr/abs-1710-06513}.
 
-One of the drawbacks of learning end-to-end or regressing directly TOODOO check this, is that the per-joint location errors are minimized independently ignoring the internal structure.
-Decoupling *D human pose estimation into 2D and 3D part has some advantages.
-With decoupling one can make use of the existing large-scale pose estimation datasets, additionally infinite 2D-3D pairs can be generated using different projections and similar techniques ~\cite{DBLP:journals/corr/abs-1710-06513}.
-However, in order to optimize this models supervision in various forms is required, such as camera parameters in multiview settings ~\cite{DBLP:journals/corr/abs-1903-02330}.
+One of the drawbacks of learning end-to-end or regressing directly \todo{check this}, is that the per-joint location errors are minimized independently ignoring the internal structure.
+Decoupling \todo{*D} human pose estimation into 2D and 3D part has some advantages.
+With decoupling one can make use of the existing large-scale 2D pose estimation datasets.
+Additionally infinite 2D-3D pairs can be generated using different projections and similar techniques ~\cite{DBLP:journals/corr/abs-1710-06513}.
+However, in order to optimize these models, further supervision in various forms is required, such as camera parameters in multiview settings ~\cite{DBLP:journals/corr/abs-1903-02330}.
 
 
 \section{Related Work}
-This section is optional and it is fine to leave it out completely. While the most relevant papers should be discussed adequately somewhere (e.g. in the introduction), we do not expect you to give a complete overview of related work. Nonetheless, if you would like to do so, this would be the place to do it.
+\todo{This section is optional and it is fine to leave it out completely. While the most relevant papers should be discussed adequately somewhere (e.g. in the introduction), we do not expect you to give a complete overview of related work. Nonetheless, if you would like to do so, this would be the place to do it.
 
 Generally, use the \texttt{{\char'134}cite} command to cite other works, e.g. \cite{Douglass98,Harel79}. To add a new reference, you need to add a bibtex entry to the bibliography file, in this case \texttt{bibliography.bib}.
-
+}
 
 \section{Method}
 %This section should describe the method of your \emph{final} submission in detail. This includes things you did with the data (e.g. preprocessing, augmentations, changes of representation, etc.) and the actual definition of your model. Sometimes it is fine to describe a model in text or math only, sometimes it is better to create an overview figure. Either way, after reading this section, a reader should be able to implement your architecture.
@@ -39,10 +40,10 @@ Furthermore, in order to improve the score and to make the network robust to occ
 
 \subsection{Heatmap Regression}
 
-Another important development in the task of HME was the introduction of heat map representations where each location in the heat map represents the probability of the location being the joint ~\cite{sun_integral_2018-1}.
+Another important development in the task of HPE was the introduction of heat map representations where each location in the heat map represents the probability of the location being the joint ~\cite{sun_integral_2018-1}.
 This approach, despite its good performance, has some drawbacks, mainly its non-differentiability as it utilizes the maximum likelihood.
-\citeauthor{sun_integral_2018-1} alleviate this problem by modifying the joint calculation to "taking-expectation" instead of "taking-maximum".
-In our work, we make use of this integral heatmap regression approach which not only improved the score by XY \%, it also allowed us to train not only on the H36M data set but also simultaneously on the MPII data set.
+\citeauthor{sun_integral_2018-1} \todo{add nr citing as well} alleviate this problem by modifying the joint calculation to "taking-expectation" instead of "taking-maximum".
+In our work, we make use of this integral heatmap regression approach which not only improved the score by \todo{XY} \%, it also allowed us to train not only on the H36M data set but also simultaneously on the MPII data set.
 
 
 \section{Evaluation}
@@ -54,7 +55,7 @@ In the evaluation section you should describe the experiments that support the c
     \centering
     \begin{tabular}{|| c | c | c ||}
         \hline
-        \textbf{Backbone} & \textbf{Extensions}  & \textbf{MPJPE}               \\
+        \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}               \\
         \hline\hline
         AlexNet           & -                   & 141.50                       \\
         \hline
@@ -105,15 +106,15 @@ The overall algorithm can be seen in ~\ref{alg1}.
     $D_{new} = D_{old}$
 
     \For{i=1:G}{
-    Parents=Sample($D_{new}$)
+        Parents=Sample($D_{new}$)
 
-    Children=NaturalSelection(Mutation(Crossover(Parents)))
+        Children=NaturalSelection(Mutation(Crossover(Parents)))
 
-    $D_{new} = D_{new} \cup Children$
+        $D_{new} = D_{new} \cup Children$
     }
-        return $D_{new}$
-        \caption{Data evolution}
-        \label{alg1}
+    return $D_{new}$
+    \caption{Data evolution}
+    \label{alg1}
 \end{algorithm}
 
 With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Since the data is represented as we mentioned in a hierarchical way crossover is intuitive to implement. Crossover is implemented as a random exchange of sub-trees. TODO: do we want the formal definition?. Mutation operator pertubates the local orientation of one bone vector. Bone vector $\textbf{b}_i = (r_i, \theta _i, \phi _i)$ is randomly selected and Gaussian noise $g ~ N(0, \sigma)$ is added
