@@ -60,7 +60,7 @@ Finally, between 1 and 8 objects from the filtered VOC dataset are added to rand
 The ever-increasing amount of available data has given rise to huge network architectures, and the effective
 use of transfer learning.
 As such we have experimented with various ResNet~\cite{DBLP:journals/corr/HeZRS15} and ResNext models and settled on
-the ResNext101~\cite{DBLP:journals/corr/XieGDTH16} architecture as it achieved the best training scores and times during our research.
+the ResNext101~\cite{DBLP:journals/corr/XieGDTH16} architecture as it achieved the best training scores and times during our runs.
 Instead of the last pooling and fully connected layers, we stack 3 deconvolution
 layers and a final convolutional layer on top of the ResNext101 backbone.
 This is described in more detail in the next section.
@@ -73,8 +73,10 @@ freezing the first 7 layers, leaving the last sequential block of the ResNext101
 \subsection{Heatmap Regression}
 
 Another important development in the task of HPE was the introduction of heat map representations as an alternative to directly regressing the joint locations.
-In this representation each location in the heat map represents a probability of the joint being at this position ~\cite{sun_integral_2018-1}.
-Given such a heat map representation $\mathbf{H}_k$ for the $k^{th}$ joint, the position of the joint $\mathbf{J}_k$ is estimated by the maximum likelihood
+In this representation each location in the heat map represents a probability of the joint
+being at a certain position ~\cite{sun_integral_2018-1}.
+Given such a heat map representation $\mathbf{H}_k$ for the $k^{th}$ joint,
+the position $p$ of the joint $\mathbf{J}_k$ is estimated by the maximum likelihood
 
 $$\mathbf{J}_k=\underset{\mathbf{p}}{\text{argmax}}\ \mathbf{H}_k(\mathbf{p})$$
 
@@ -99,8 +101,8 @@ performed similarly or worse than the ones included in the presented best model 
 
 \subsection{Graph Neural Networks}
 As the task of 2D human pose estimation has been extensively studied, achieving very low
-error rates~\cite{yang2020transpose, bulat2020skip, su2019multi}, we
-also took a look at an architecture for 3D-joints regression based on 2D-joint inputs.
+error rates~\cite{yang2020transpose, bulat2020skip, su2019multi},
+we also take a look at an architecture for 3D-joint regression based on 2D-joint input.
 A human skeleton follows the underlying structure of a graph which is why a
 Graph Convolutional Network (GCN) offers itself well to model this.
 Making use of \citeauthor{zhao2019gcn}'s Semantic GCN (SemGCN) model allows us to capture semantic
@@ -155,15 +157,15 @@ The overall algorithm can be seen in ~\ref{alg1}.
     $D_{new} = D_{old}$
 
     \For{i=1:G}{
-    Parents=Sample($D_{new}$)
+        Parents=Sample($D_{new}$)
 
-    Children=NaturalSelection(Mutation(Crossover(Parents)))
+        Children=NaturalSelection(Mutation(Crossover(Parents)))
 
-    $D_{new} = D_{new} \cup Children$
+        $D_{new} = D_{new} \cup Children$
     }
-        return $D_{new}$
-        \caption{Data evolution}
-        \label{alg1}
+    return $D_{new}$
+    \caption{Data evolution}
+    \label{alg1}
 \end{algorithm}
 
 With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Crossover is implemented as a random exchange of sub-trees of bones. Mutation operator perturbates the local orientation of one bone vector for a certain degree. Mutation can easily make an invalid pose, therefore we use natural selection to remove invalid poses. Natural selection is implemented using a function which indicates which pose is invalid and gives that pose a value of $-\infty$ making it unable to be selected into the new generation. This function uses the prior angle constraints defined from ~\cite{Akhter_2015_CVPR}.
