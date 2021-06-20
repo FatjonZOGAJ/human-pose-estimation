@@ -123,9 +123,7 @@ On top of that we differentiate between the case of freezing the backbone model 
 freezing its last layer and respective head.
 
 \subsection{Evolutionary Training Data}
-Finally, in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints of the human 3D skeleton are represented by a set of bones organized hierarchically in a kinematic tree, this way the dependence of adjacent joints with tree edges is captured. Assuming that $\textbf{p}^j$ is the \emph{j}-th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}-th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as
-
-$$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
+In order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. We represent the joints of the human 3D skeleton by a set of bones organized hierarchically in a kinematic tree, this way the dependence of adjacent joints with tree edges is captured.
 
 %\begin{figure}
 %    \includegraphics[height=4cm, width=7cm]{skeleton.png}
@@ -133,11 +131,11 @@ $$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
 %    \label{skeleton}
 %\end{figure}
 
-Every parent node has attached a local coordinate system. For $\textbf{p}^{parent(i)}$ local coordinate system is represented by the rotation matrix $\textbf{R}^i = [\textbf{i}^i, \textbf{j}^i, \textbf{k}^i]$, which is used to transform the bone vector into the local coordinate system with the following equation:
+%Every parent node has attached a local coordinate system. For $\textbf{p}^{parent(i)}$ local coordinate system is represented by the rotation matrix $\textbf{R}^i = [\textbf{i}^i, \textbf{j}^i, \textbf{k}^i]$, which is used to transform the bone vector into the local coordinate system with the following equation:
 
-$$\textbf{b}_{local} ^{i} = \textbf{R}^{i\textbf{T}}(\textbf{p}^{child(i)}-\textbf{p}^{parent(i)})$$
+%$$\textbf{b}_{local} ^{i} = \textbf{R}^{i\textbf{T}}(\textbf{p}^{child(i)}-\textbf{p}^{parent(i)})$$
 
-which is for convenience transformed into spherical coordinates $\textbf{b}_{local}^i = (r_i, \theta _i, \phi _i)$.
+%which is for convenience transformed into spherical coordinates $\textbf{b}_{local}^i = (r_i, \theta _i, \phi _i)$.
 
 The overall algorithm can be seen in ~\ref{alg1}.
 
@@ -159,11 +157,7 @@ The overall algorithm can be seen in ~\ref{alg1}.
     \label{alg1}
 \end{algorithm}
 
-With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Since the data is represented as we mentioned in a hierarchical way crossover is intuitive to implement. Crossover is implemented as a random exchange of sub-trees. Mutation operator pertubates the local orientation of one bone vector. Bone vector $\textbf{b}_i = (r_i, \theta _i, \phi _i)$ is randomly selected and Gaussian noise $g ~ N(0, \sigma)$ is added
-
-$$\theta _i ' = \theta _i + g_{\theta}, \phi _i ' = \phi _i + g_{\phi}$$
-
-Mutation can easily make an invalid pose, therefore we use natural selection to remove invalid poses. Natural selection is implemented using a function $v(\textbf{p})$ which indicates which pose is invalid and gives that pose a value of $-\infty$ making it unable to be selected into the new generation. This function uses the prior angle constraints defined from ~\cite{Akhter_2015_CVPR}.
+With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Crossover is implemented as a random exchange of sub-trees of bones. Mutation operator perturbates the local orientation of one bone vector for a certain degree. Mutation can easily make an invalid pose, therefore we use natural selection to remove invalid poses. Natural selection is implemented using a function which indicates which pose is invalid and gives that pose a value of $-\infty$ making it unable to be selected into the new generation. This function uses the prior angle constraints defined from ~\cite{Akhter_2015_CVPR}.
 Both mutation and crossover can be seen in Fig. ~\ref{evolved}
 
 \begin{figure}
