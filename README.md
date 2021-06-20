@@ -41,18 +41,17 @@ If you do not change the `train.yaml` file, this should have already been taken 
 In order to train the model on Leonhard make sure that `module load eth_proxy` is activated and then submit the job with the following command:
 
 
-    bsub -n 4 -W 6:00 -R "rusage[mem=2048, ngpus_excl_p=1]" python scripts/train.py --cfg experiments/h36m/train.yaml
+    bsub -n 4 -W 100:00 -R "rusage[mem=2048, ngpus_excl_p=1]" python scripts/train.py --cfg experiments/h36m/train.yaml
 
 All parameters that produce the score are already set in `experiments/h36m/train.yaml`
 
 During the training process, checkpoints are created which can be found under `output/both/pose3d_vol/demo/<TIME_STRING>`
 
-To achieve the score we have trained the model for: TODO hours/stopped after TODO epochs
-TODO add train.yaml for each training step (TODO: also change hours above)
-
 In order to resume training, one can change the `MODEL.RESUME` in `train.yaml` to the name of the checkpoint and run the following command:
 
     python scripts/train.py --cfg experiments/h36m/train.yaml --model_time_str <TIME_STRING>
+
+This, however, is not necessary to reproduce the results.
 
 ### Validation
 5. To validate the model run the following command and make sure your device supports CUDA:

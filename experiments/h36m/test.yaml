@@ -11,7 +11,7 @@ DATASET:
 MODEL:
   NAME: pose3d_vol
   BACKBONE: resnext101_32x8d
-  TIME_STR: ''
+  TIME_STR: '' # <-- ADD TIME_STRING HERE!
   NUM_JOINTS: 17
   DEPTH_RES: 72
   VOLUME:
@@ -20,8 +20,8 @@ MODEL:
       NUM_DECONV_LAYERS: 3
       NUM_DECONV_FILTERS: 256
       BN_MOMENTUM: 0.1
-  IMAGE_SIZE: [288, 384]  # width * height, ex: 192 * 256
+  IMAGE_SIZE: [288, 384]
 TEST:
   BATCH_SIZE: 32
 DEBUG:
-  DEBUG: false # set this to true to visualize results in tensorboard
+  DEBUG: false
