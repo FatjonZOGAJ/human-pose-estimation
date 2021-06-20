@@ -9,6 +9,7 @@ The project was tested on Leonhard with Python 3.7.4, PyTorch 1.8.1, CUDA 10.1 a
    
    
       mkvirtualenv "env-name"
+
       workon "env-name"
 
 
