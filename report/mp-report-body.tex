@@ -6,7 +6,10 @@
 Human pose estimation (HPE) from a single monocular image is an open challenge garnering significant attention in computer vision ~\cite{DBLP:journals/corr/PavlakosZDD16} as it offers a wide variety of useful applications in real-life.
 For instance, HPE is utilized in human tracking, human-computer interaction, sports motion analysis, and self-driving cars ~\cite{chen_monocular_2020}.
 Estimating the full-body pose has been extensively studied in both 2D and 3D ~\cite{sun_compositional_2017}.
-Thanks to the availability of large-scale 2D annotated human poses and the emergence of deep neural networks achieving very low error rates~\cite{yang2020transpose, bulat2020skip, su2019multi}, the 2D human pose estimation problem is considered as nearly solved.
+Thanks to the availability of large-scale 2D annotated human pose datasets and
+the emergence of deep neural networks achieving very low
+error rates ~\cite{yang2020transpose, bulat2020skip, su2019multi},
+the 2D human pose estimation problem can be considered as nearly solved.
 In contrast, the 3D human pose estimation remains an open problem.
 This is partially because of the ambiguity of recovering the 3D information from single images and also due to the lack of large-scale 3D pose annotated datasets.
 Methods for solving the 3D human pose estimation can roughly be divided into two categories:
@@ -17,8 +20,8 @@ spaces~\cite{DBLP:journals/corr/abs-1710-06513}.
 One of the drawbacks of learning end-to-end or regressing directly, is that the per-joint location errors are minimized independently ignoring the internal structure.
 Decoupling HPE into a 2D and a 3D part has some advantages.
 With decoupling one can make use of the existing large-scale 2D pose estimation datasets.
-Additionally, infinite 2D-3D pairs can be generated using different projections and similar techniques ~\cite{DBLP:journals/corr/abs-1710-06513}.
-However, in order to optimize these models, further supervision in various forms is required, such as camera parameters in multiview settings ~\cite{DBLP:journals/corr/abs-1903-02330}.
+Additionally, potentially infinite 2D-3D pairs can be generated using different projections and similar techniques ~\cite{DBLP:journals/corr/abs-1710-06513}.
+However, in order to optimize these models, further supervision in various forms is required (e.g. camera parameters in multiview settings ~\cite{DBLP:journals/corr/abs-1903-02330}).
 
 
 %\section{Related Work}
@@ -29,21 +32,29 @@ However, in order to optimize these models, further supervision in various forms
 
 
 \section{Method}
-This section describes the methods used in our final model which includes e.g. preprocessing steps, augmentations, changes of representation, parameters, and the architecture of the model.
+This section describes the methods used in our final model which includes
+preprocessing steps, augmentations, changes of representation, parameters, and the architecture of the model.
 %This section should describe the method of your \emph{final} submission in detail. This includes things you did with the data (e.g. preprocessing, augmentations, changes of representation, etc.) and the actual definition of your model. Sometimes it is fine to describe a model in text or math only, sometimes it is better to create an overview figure. Either way, after reading this section, a reader should be able to implement your architecture.
 %If you have enough space, you may list hyperparameter values in an ``Implementation Details'' paragraph. Otherwise list them in the README of your code repo.
 
 \subsection{Data augmentation}
-Despite the success of deep models, many of them are still data-hungry, therefore we augmented our given dataset to satisfy this hunger.
+Despite the recent success of deep models, many of them still require a
+large amount of data to perform well.
+Our provided dataset is limited in size, therefore we perform data augmentation as follows.
 The input pictures are normalized and patched to a size of 256 x 256.
 Standard data augmentation includes rotation $\pm 30$ degrees, horizontal flipping, scaling by a factor between $0.75$ and $1.25$, and color scaling between $0.8$ and $1.2$.
 Overall, frames are rotated with a probability of 60\% and flipped with a probability of 50\%.
 
 \subsection{Data occlusion}
 
-Furthermore, we use synthetic occlusion to make the network robust to occluded joints, since erasing objects or simply putting them in the picture improves results in image classification, object detection, and person identification~\cite{sarandi_synthetic_2018}.
-Using objects from the Pascal VOC dataset we filter out persons, segments with area below 500px and segments labeled as \emph{difficult} or \emph{truncated}.
-Finally, with a defined probability a random number between 1 and 8 of objects from the filtered VOC dataset are added to random locations of the frame.
+Furthermore, we use synthetic occlusion to make the network robust to occluded joints,
+since erasing objects or simply putting them in the picture
+has been shown to improve results in image classification, object detection,
+and person identification~\cite{sarandi_synthetic_2018}, \todo{cite}.
+Using objects from the Pascal VOC~\cite{Everingham2009ThePV} dataset we filter out persons,
+segments with area below 500px and segments labeled as \emph{difficult} or \emph{truncated}.
+Finally, a random number between 1 and 8 of
+objects from the filtered VOC dataset are added to random locations of the frame.
 
 \subsection{Backbone Model}
 The ever increasing amount of available data has given rise to huge network architectures and the effective
