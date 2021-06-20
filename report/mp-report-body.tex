@@ -14,8 +14,8 @@ i) learning end-to-end networks that recover 2D input images to 3D poses directl
 ii) extracting 2D human poses from input images and then lifting 2D poses to 3D
 spaces~\cite{DBLP:journals/corr/abs-1710-06513}.
 
-One of the drawbacks of learning end-to-end or regressing directly \todo{check this}, is that the per-joint location errors are minimized independently ignoring the internal structure.
-Decoupling \todo{*D} HPE into 2D and 3D part has some advantages.
+One of the drawbacks of learning end-to-end or regressing directly, is that the per-joint location errors are minimized independently ignoring the internal structure.
+Decoupling HPE into a 2D and a 3D part has some advantages.
 With decoupling one can make use of the existing large-scale 2D pose estimation datasets.
 Additionally, infinite 2D-3D pairs can be generated using different projections and similar techniques ~\cite{DBLP:journals/corr/abs-1710-06513}.
 However, in order to optimize these models, further supervision in various forms is required, such as camera parameters in multiview settings ~\cite{DBLP:journals/corr/abs-1903-02330}.
@@ -35,14 +35,15 @@ This section describes the methods used in our final model which includes e.g. p
 
 \subsection{Data augmentation}
 Despite the success of deep models, many of them are still data-hungry, therefore we augmented our given dataset to satisfy this hunger.
-The input pictures are normalized to 284 x 284 dimension \todo{and patched to a size of 256 x 256 dimensions/288 x 384 dimensions} TODO. Standard data augmentation includes rotation $\pm 30$ degrees, horizontal flipping, scaling by a factor between $0.75$ and $1.25$, and color scaling between $0.8$ and $1.2$.
+The input pictures are normalized and patched to a size of 256 x 256.
+Standard data augmentation includes rotation $\pm 30$ degrees, horizontal flipping, scaling by a factor between $0.75$ and $1.25$, and color scaling between $0.8$ and $1.2$.
 Overall, frames are rotated with a probability of 60\% and flipped with a probability of 50\%.
 
 \subsection{Data occlusion}
 
 Furthermore, we use synthetic occlusion to make the network robust to occluded joints, since erasing objects or simply putting them in the picture improves results in image classification, object detection, and person identification~\cite{sarandi_synthetic_2018}.
 Using objects from the Pascal VOC dataset we filter out persons, segments with area below 500px and segments labeled as \emph{difficult} or \emph{truncated}.
-Finally, with the defined probability \todo{$p_{occ}$} a random number between 1 and 8 of objects from the filtered VOC dataset are added to random locations of the frame.
+Finally, with a defined probability a random number between 1 and 8 of objects from the filtered VOC dataset are added to random locations of the frame.
 
 \subsection{Backbone Model}
 The ever increasing amount of available data has given rise to huge network architectures and the effective
@@ -50,14 +51,14 @@ use of transfer learning.
 As such we have experimented with various ResNet~\cite{DBLP:journals/corr/HeZRS15} models and settled on
 the ResNext101~\cite{DBLP:journals/corr/XieGDTH16} architecture as it achieved the best training scores
 and times during our research.
-Instead of the last pooling and fully connected layers, we stack 3 Deconvolution \todo{Rafi, anything else?}
-layers and a final Sequential layer on top of the ResNext101 backbone.
+Instead of the last pooling and fully connected layers, we stack 3 deconvolution
+layers and a final convolutional layer on top of the ResNext101 backbone.
 
 During training time we have tried freezing different components of the architecture and settled on
-freezing the first 7 layers, leaving the last Sequential layer of the ResNext101 backbone and our added head
+freezing the first 7 layers, leaving the last Sequential block of the ResNext101 backbone and our added head
 open to training.
-\todo{add architecture figure} \\
-\todo{Pre-trained model, ResNet and its variations in general, layer freezing, final head}
+%\todo{add architecture figure} \\
+%\todo{Pre-trained model, ResNet and its variations in general, layer freezing, final head}
 
 \subsection{Heatmap Regression}
 
@@ -147,15 +148,15 @@ The overall algorithm can be seen in ~\ref{alg1}.
     $D_{new} = D_{old}$
 
     \For{i=1:G}{
-    Parents=Sample($D_{new}$)
+        Parents=Sample($D_{new}$)
 
-    Children=NaturalSelection(Mutation(Crossover(Parents)))
+        Children=NaturalSelection(Mutation(Crossover(Parents)))
 
-    $D_{new} = D_{new} \cup Children$
+        $D_{new} = D_{new} \cup Children$
     }
-        return $D_{new}$
-        \caption{Data evolution}
-        \label{alg1}
+    return $D_{new}$
+    \caption{Data evolution}
+    \label{alg1}
 \end{algorithm}
 
 With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Since the data is represented as we mentioned in a hierarchical way crossover is intuitive to implement. Crossover is implemented as a random exchange of sub-trees. Mutation operator pertubates the local orientation of one bone vector. Bone vector $\textbf{b}_i = (r_i, \theta _i, \phi _i)$ is randomly selected and Gaussian noise $g ~ N(0, \sigma)$ is added
@@ -180,84 +181,88 @@ Preliminary experiments showed that this does not improve the score, hinting at 
 which is why it was not further used.
 
 Furthermore, although ensemble methods were not allowed, using dropout layer were an exception.
-Hence, we have experimented using a dropout layer after the heatmaps \todo{and after the freature extraction part}, however it did not \todo{improve our score} give a better score than our best model.
+Hence, we have experimented using a dropout layer after the heatmaps and the feature extraction part,
+however it did not improve our score compared to our best model.
 
 Before evaluating the SemGCN architecture to lift our 2D joint predictions to 3D, we explored the idea of utilizing a de-noising autoencoder as a refinement step to our 3D joint predictions.
 We borrowed this idea from the authors \citeauthor{ghosh_learning_2017} \cite{ghosh_learning_2017} which use this component to adjust unfeasible poses from human motion predictions.
 After some testing of this idea, we learned about the SemGCN architecture which seemed more promising and hence stopped further exploration.
 
-After initial test runs of the SemGCN architecture, we noticed a bottleneck stemming from our 2D joint predictions when compared to training on the ground truth 2D H36M data.
-As we previously simply dropped the last axis of our 3D predictions to create the 2D input, we thought if we train the backbone to predict 2D joint locations only, accuracy might improve.
-Having tried both methods with not improvement in accuracy, we conclude that there is no performance gain in varying these approaches.
+After initial test runs of the SemGCN architecture, we noticed a bottleneck stemming from our 2D joint predictions
+when compared to training on the ground truth 2D H36M data.
+As we previously simply dropped the last axis of our 3D predictions to create the 2D input,
+we thought if we train the backbone to predict 2D joint locations only, accuracy might improve.
+Having tried both methods with not improvement in accuracy, we conclude that there is no performance
+gain in varying these approaches.
+Exploiting GCN's resemblance to the human skeleton, a comparison is also made between using 2D and 3D joints
+as input data.
+In the latter case the SemGCN would act as a final refinement step.
 
 \todo{bone loss}
 Both of the just mentioned ideas focus more or less on capturing the overall human pose composition.
 
-\todo{whats up with this part?}
-Exploiting GCN's resemblance to the human skeleton, a comparison is also made between using 2D and 3D joints as input data.
-In the latter case the SemGCN would act as a final refinement step.
-
-
 
 \section{Evaluation}
 We evaluate models for 10 to 30+ hours, starting with a learning rate of 0.0001 and reducing it by 10
-after 90 and 120 epochs or manually after a 10 hour run if the loss seems to have converged. \todo{maybe move to Method?}
-\todo{In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.}
-
+after 90 and 120 epochs or manually after a 10 hour run if the loss seems to have converged.
 % 55 epochs on both 50/50 then smaller lr only on h36m
 
+%\todo{In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.}
+
+
 \begin{table}[h!]
-    \caption{Ablation study on the progression of the Mean Per Joint Position Error (MPJPE) metric. The score denotes the performance on the test set. Values with $*$  denote the performance on the validation set.
+    \caption{Ablation study on the progression of the Mean Per Joint Position Error (MPJPE) metric.
+    The score denotes the performance on the test set. Values with $*$  denote the performance on the validation set.
     Data augmentation (A), Bone Loss (B), %Backbone Completely Frozen (C),
-    Extra Data (E), Remove Joint Grouping (G), Higher Resolution (H),
-    Integral Heatmap Regression (I), Data occlusion (O), 
-    Ground Truth Pre-Training (P), 3D-Regression (R), SemGCN Head (S), 
-    Last Layer Unfrozen (U),  3D SemGCN Input (3)}
-    
-    \todo{order these by alphabet for easier finding\\ i would also have the first part of the ablation study be steadily decreasing in performance and move expereiments which were not submitted to the end}
+        Evolved Data (D), Extra Data (E), Remove Joint Grouping (G), Higher Resolution (H),
+        Integral Heatmap Regression (I), Data occlusion (O),
+        Ground Truth Pre-Training (P), 3D-Regression (R), SemGCN Head (S),
+        Last Layer Unfrozen (U),  3D SemGCN Input (3)}
 
     \label{tab:ablation}
     \centering
     \begin{tabular}{|| c | c | c ||}
         \hline
-        \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}$_{test}$      \\
+        \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}$_{test}$ \\
         \hline\hline
-        AlexNet           & R                   & 141.50                       \\
+        AlexNet           & R                   & 141.50                  \\
         \hline
-        AlexNet           & O                   & $84.50$ \\
+        AlexNet           & O                   & $84.50$                 \\
         \hline
-        ResNet50          & I                   & $72.15$ \\
+        ResNet50          & I                   & $72.15$                 \\
         \hline
-        ResNet50          & I,O                 & $63.01$ \\
+        ResNet50          & I,O                 & $63.01$                 \\
         \hline
-        ResNext101        & I,O,A               & $54.14$ \\
+        ResNext101        & I,O,A               & $54.14$                 \\
         \hline
-        ResNext101        & I, O, A, S, 3       & $57.43$                      \\
+        ResNext101        & I, O, A, S, 3       & $57.43$                 \\
         \hline
-        ResNet152         & I,O,A,H,E           & $50.94$                      \\
+        ResNet152         & I,O,A,H,E           & $50.94$                 \\
         \hline
-        ResNext101        & I,O,A,H,E           & $48.95$                      \\
+        ResNext101        & I,O,A,H,E           & $48.95$                 \\
         \hline
-        ResNext101        & I,O,A,B             & $54.60^*$                    \\
+        ResNext101        & I,O,A,B             & $54.60^*$               \\
         \hline
-        SemGCN            &                     & $66.87^*$                    \\
         \hline
-        SemGCN            & P                   & $60.08^*$                    \\
+        SemGCN            &                     & $66.87^*$               \\
         \hline
-        SemGCN            & P, U                & $54.12^*$                    \\
+        SemGCN            & P                   & $60.08^*$               \\
         \hline
-        SemGCN            & P, U, G             & $46.05^*$                    \\
+        SemGCN            & P, U                & $54.12^*$               \\
+        \hline
+        SemGCN            & P, U, G             & $46.05^*$               \\
+        \hline
+        SemGCN            & P, U, G, D          & $45.68^*$               \\
         \hline
     \end{tabular}
 \end{table}
 
-\textbf{Effect of synthetic occlusion}: using the given sample code with the AlexNet as the backbone of the model synthetic occlusion gives an impressive improvement to the score lowering it for 40.28\%.
+\subsubsection*{Synthetic occlusion} Using the given sample code with the AlexNet as the backbone of the model synthetic occlusion gives an impressive improvement to the score lowering it for 40.28\%.
 
-\textbf{Effect of model backbone}: stronger backbone plays a significant role when it comes to improving the score. Using the ResNet50 with integral heatmap regression improved the score from the initial model for 49.01\% adding synthetic occlusion to that gives a score which has 12.69\% lower MPJPE on the test set. Furthermore, using even more powerful backbone such as ResNext101 with integral heatmap regression, synthetic occlusion and standard augmentation improved the model to a score of 54.14 MPJPE. One can compare using ResNext101 to ResNext152 with identical extensions as shown in ~\ref{tab:ablation} to see that ResNext101 gets a score better for 3.91\%, this can be explained : \todo{explain}
+\subsubsection*{Model backbone} Stronger backbone plays a significant role when it comes to improving the score. Using the ResNet50 with integral heatmap regression improved the score from the initial model for 49.01\% adding synthetic occlusion to that gives a score which has 12.69\% lower MPJPE on the test set. Furthermore, using even more powerful backbone such as ResNext101 with integral heatmap regression, synthetic occlusion and standard augmentation improved the model to a score of 54.14 MPJPE. One can compare using ResNext101 to ResNext152 with identical extensions as shown in ~\ref{tab:ablation} to see that ResNext101 gets a score better for 3.91\%, this can be explained : \todo{explain}
 
-\textbf{Effect of larger image size/depth resolution}: \todo{larger image and additionaö set into one category? not separated in the scores?}
-
-\textbf{Effect of additional validation set}:
+\subsubsection*{Larger image size/depth resolution/dataset}
+\todo{larger image and valid dataset}
 
 \subsubsection*{SemGCN}
 \todo{change everything to stringent flow of End-to-End or SemGCN only}
@@ -290,10 +295,10 @@ we simply change the group size to 1 instead of 2.
 This might be explained due to the model's robustness
 and the possibility that few of the joints make up for most of the information lying underneath.
 
-\todo{I'd just leave out going into detail for End to End Models selling it as the same thing for both
-and maybe in passing mention that we did not
-validate them all too much as the SemGCN didn't perform too well already.
-Or we can have SemGCN (S) as an extension for the ablation study and add it under ResNext}
+%\todo{I'd just leave out going into detail for End to End Models selling it as the same thing for both
+%and maybe in passing mention that we did not
+%validate them all too much as the SemGCN didn't perform too well already.
+%Or we can have SemGCN (S) as an extension for the ablation study and add it under ResNext}
 
 
 \section{Discussion}
@@ -301,9 +306,13 @@ In this section we give possible explanations as to why some approaches fared be
 than the other and which mechanisms could lie behind.
 
 
-\todo{Sometimes you might have had a great idea, but it did not pan out. Since we want to encourage novelty, such failed attempts should also go into the report. This section is a suitable place to discuss this. If you can, do not just list failed attempts, but actually \emph{discuss} them, i.e., provide an intuition why you think they failed or what the problem is that prevented them from performing better. It is much better to describe one failed attempt and discuss it in-depth than just listing four failed models without any explanation.
-
-If you do not have failed attempts that would warrant their own section, this is perfectly fine. You may discuss the experiments from the previous section here, or if you prefer to have the discussion the evaluation section directly, feel free to omit this section entirely.}
+%\todo{Sometimes you might have had a great idea, but it did not pan out.
+%Since we want to encourage novelty, such failed attempts should also go into the report.
+%This section is a suitable place to discuss this.
+%If you can, do not just list failed attempts, but actually \emph{discuss} them, i.e.,
+%    provide an intuition why you think they failed or what the problem is that prevented them from performing better.
+%    It is much better to describe one failed attempt and discuss it in-depth than just listing four failed models without any explanation.
+%    If you do not have failed attempts that would warrant their own section, this is perfectly fine. You may discuss the experiments from the previous section here, or if you prefer to have the discussion the evaluation section directly, feel free to omit this section entirely.}
 
 
 \section{Conclusion}
@@ -318,5 +327,5 @@ a pretrained ResNext101 backbone and is able to beat the state of the art in the
 
 % maybe add another sentence about our best 3D regressor SemGCN model
 
-\clearpage
+%\clearpage
 
