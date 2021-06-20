@@ -269,13 +269,20 @@ after 90 and 120 epochs or manually after a 10 hour run if the loss seems to hav
     \end{tabular}
 \end{table}
 
-\subsubsection*{Synthetic occlusion} Using the given sample code with the AlexNet as the backbone of the model synthetic occlusion gives an impressive improvement to the score lowering it for 40.28\%.
+\subsubsection*{Synthetic occlusion}
+Using the given sample code with the AlexNet as the backbone of the model synthetic occlusion
+gives an impressive improvement to the score lowering it by 40.28\%.
 
-\subsubsection*{Model backbone} A stronger backbone plays a significant role when it comes to improving the score. Using the ResNet50 with integral heatmap regression improved the score from the initial model for 49.01\%.
-Adding synthetic occlusion to that gives a score which has 12.69\% lower MPJPE on the test set. Furthermore, using even more powerful backbone such as ResNext101 with integral heatmap regression, synthetic occlusion and standard augmentation improved the model to a score of 54.14 MPJPE. One can compare using ResNext101 to ResNe\todo{x}t152 with identical extensions as shown in ~\ref{tab:ablation} to see that ResNext101 gets a score better for 3.91\%, this can be explained : \todo{explain}
+\subsubsection*{Model backbone}
+A stronger backbone plays a significant role when it comes to improving the score.
+Using the ResNet50 with integral heatmap regression improved the score from the initial model by 49.01\%.
+Adding synthetic occlusion to that gives a score which has 12.69\% lower MPJPE on the test set.
+Furthermore, using an even more powerful backbone such as ResNext101 with integral heatmap regression, synthetic occlusion and standard augmentation improved the model to a score of 54.14 MPJPE.
+One can compare using ResNext101 to ResNet152 with identical extensions
+as shown in ~\ref{tab:ablation} to see that ResNext101 improves the score by 3.91\%.
 
-\subsubsection*{Larger image size/depth resolution/dataset} These three extension where added simultaneously and, thus it is difficult to tell which one impacted the score by how much.
-However, is was clear that these extensions will have a positive impact \cite{sun_integral_2018-1}.
+\subsubsection*{Larger image size/depth resolution/dataset} These three extension were added simultaneously and, thus it is difficult to tell which one impacted the score by how much.
+However, is was clear that these extensions have a positive impact \cite{sun_integral_2018-1}.
 In our case, we could improve our performance on the MPJPE from 54.14 to 46.50 which is a decrease by around 14\%.
 Regarding the changes to the image size, the resolution was increased from 256 x 256 to 288 x 384.
 For the depth resolution/the amount of heat maps produced per joint, the value was increased from 64 to 72.
@@ -283,16 +290,12 @@ As we wanted to utilize all the resources available to us, the final model was t
 
 
 \subsubsection*{SemGCN}
-\todo{change everything to stringent flow of End-to-End or SemGCN only}
 In regards to the SemGCN model, only the scores of the z-axis matter as the other 2D input is the ground truth.
-Thus, the following error scores for the SemGCN are not directly comparable to the others.
-
-Our first experiments showed that when not pre-training the SemGCN model on ground truth data,
+Thus, the following error scores for the SemGCN are not directly comparable to the others. Our first experiments showed that when not pre-training the SemGCN model on ground truth data,
 it is able to achieve a validation score of 66.87.
 This can be brought down to 60.08 by incorporating pre-training.
 %The best variant making use of pre-training on ground-truth data achieves a validation error of 54,
 %while not pre-training achieves 66.
-
 As a next step we then analyzed the effect of unfreezing the last layer of the backbone which
 achieves a score of 54.12.
 Unfreezing the SemGCN without any pre-training on the other hand got an error of around 65.5.
@@ -300,18 +303,15 @@ This could be explained due to the fact that we stop training the model if it se
 early on, which is the case for non-pre-trained models as these take longer to train.
 %This best pre-trained SemGCN leaves the last layer unfrozen, while freezing
 %the backbone completely achieved a validation error of 60.08 when using a pre-trained model.
-\todo{maybe shorten text here}
-Like previously mentioned, we compare different ways of adding the missing 17th joint,
-ranging from simple concatenation and group removing
-to more sophisticated grouping with other joints and reordering.
+Like previously mentioned, we compare different ways of adding the missing 17th joint.
+%ranging from simple concatenation and group removing
+%to more sophisticated grouping with other joints and reordering.
 Surprisingly the grouping methods even in combination with joint reordering perform similarly bad
-with scores around 60 using pre-trained models.
-
-Removing the grouping altogether seems to prove most useful, being able to get a validation error of 46.05.
-This holds for the case where we change the architecture to not consider grouping as well as when
-we simply change the group size to 1 instead of 2.
-This might be explained due to the model's robustness
-and the possibility that few of the joints make up for most of the information lying underneath.
+with scores around 60 using pre-trained models. Removing the grouping altogether seems to prove most useful, being able to get a validation error of 46.05.
+%This holds for the case where we change the architecture to not consider grouping as well as when
+%we simply change the group size to 1 instead of 2.
+%This might be explained due to the model's robustness
+%and the possibility that few of the joints make up for most of the information lying underneath.
 
 %\todo{I'd just leave out going into detail for End to End Models selling it as the same thing for both
 %and maybe in passing mention that we did not
