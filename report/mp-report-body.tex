@@ -77,9 +77,7 @@ In this representation each location in the heat map represents a probability of
 being at a certain position ~\cite{sun_integral_2018-1}.
 Given such a heat map representation $\mathbf{H}_k$ for the $k^{th}$ joint,
 the position $p$ of the joint $\mathbf{J}_k$ is estimated by the maximum likelihood
-
-$$\mathbf{J}_k=\underset{\mathbf{p}}{\text{argmax}}\ \mathbf{H}_k(\mathbf{p})$$
-
+$\mathbf{J}_k=\underset{\mathbf{p}}{\text{argmax}}\ \mathbf{H}_k(\mathbf{p})$.
 In our case, such a heat map representation is learnt by a shallow head which has been described in the previous section.
 This head network first upsamples the extracted features to a certain resolution (64 x 64 by default) and then produces $K$ heat maps.
 For almost all of our experiments we used 64 heat maps per joint, however, as this value directly corresponds to the granularity of the z-dimension, we later increased this value to 72.
@@ -87,7 +85,7 @@ For almost all of our experiments we used 64 heat maps per joint, however, as th
 This approach yields good performance in HPE but has some drawbacks, mainly the usage of the \textit{argmax} operator that makes the calculation of the maximum likelihood non-differentiable and, thus hinders the possibility of training a neural network end-to-end.
 \citeauthor{sun_integral_2018-1} {\cite{sun_integral_2018-1}} alleviate these problems by modifying the joint calculation to "taking-expectation" instead of "taking-maximum".
 With this, the above equation in the discrete case can be formulated as
-$$\mathbf{J}_k = \sum_{p_x=1}^D\sum_{p_y=1}^H\sum_{p_x=1}^W\mathbf{p}\cdot \mathbf{H}_k(\mathbf{p})$$
+$\mathbf{J}_k = \sum_{p_x=1}^D\sum_{p_y=1}^H\sum_{p_x=1}^W\mathbf{p}\cdot \mathbf{H}_k(\mathbf{p})$
 which is also known as the \textit{soft argmax}.
 This formulation can further be modified which then allows to calculate the expected joint position in each dimension separately.
 A benefit from this is the additional option to train on 2D (MPII) and 3D (H36M) data simultaneously and end-to-end.
@@ -97,7 +95,7 @@ Given the fact that the first \cite{sarandi_synthetic_2018} and second \cite{sun
 
 \section{Other Approaches}\label{approach}
 In the following section we list different techniques which
-performed similarly or worse than the ones included in the presented best model but have been added for entirety.
+performed worse than the ones included in our best one.% but have been added for entirety.
 
 \subsection{Graph Neural Networks}
 As the task of 2D human pose estimation has been extensively studied, achieving very low
@@ -182,13 +180,13 @@ Both mutation and crossover can be seen in Fig. ~\ref{evolved}
 
 \subsection{Miscellaneous}
 
-In addition to the approaches above, we have combined them with a variety of further techniques.
-As the official PyTorch documentation recommends loading in the data in the range of [0, 1],
-we have tried [0, 1]-normalization instead of the original z-standardization.
-Preliminary experiments showed that this does not improve the score, hinting at a slight decrease
-which is why it was not further used.
+%In addition to the approaches above, we have combined them with a variety of further techniques.
+%As the official PyTorch documentation recommends loading in the data in the range of [0, 1],
+%we have tried [0, 1]-normalization instead of the original z-standardization.
+%Preliminary experiments showed that this does not improve the score, hinting at a slight decrease
+%which is why it was not further used.
 
-Furthermore, although ensemble methods were not allowed, using dropout layer were an exception.
+Although ensemble methods were not allowed, using dropout layer were an exception.
 Hence, we have experimented using a dropout layer after the heatmaps and the feature extraction part,
 however it did not improve our score compared to our best model.
 
@@ -196,12 +194,12 @@ Before evaluating the SemGCN architecture to lift our 2D joint predictions to 3D
 We borrowed this idea from the authors \citeauthor{ghosh_learning_2017} \cite{ghosh_learning_2017} which use this component to adjust unfeasible poses from human motion predictions.
 After some testing of this idea, we learned about the SemGCN architecture which seemed more promising and hence stopped further exploration.
 
-After initial test runs of the SemGCN architecture, we noticed a bottleneck stemming from our 2D joint predictions
-when compared to training on the ground truth 2D H36M data.
-As we previously simply dropped the last axis of our 3D predictions to create the 2D input,
-we thought if we train the backbone to predict 2D joint locations only, accuracy might improve.
-Having tried both methods with no improvement, we concluded that there is no performance
-gain in varying these two approaches.
+%After initial test runs of the SemGCN architecture, we noticed a bottleneck stemming from our 2D joint predictions
+%when compared to training on the ground truth 2D H36M data.
+%As we previously simply dropped the last axis of our 3D predictions to create the 2D input,
+%we thought if we train the backbone to predict 2D joint locations only, accuracy might improve.
+%Having tried both methods with no improvement, we concluded that there is no performance
+%gain in varying these two approaches.
 %Exploiting SemGCN's resemblance to the human skeleton, a comparison is also made between using 2D and 3D joints
 %as input data.
 %In the latter case the SemGCN would act as a final refinement step.
@@ -250,7 +248,7 @@ For our final model we trained for 65 epochs on both the MPII and the H36M datas
         \hline
         ResNet152         & I,O,A,H,E           & $50.94$                 \\
         \hline
-        ResNext101        & I,O,A,H,E           & $46.50$                 \\
+        ResNext101        & I,O,A,H,E           & $46.48$                 \\
         \hline
         ResNext101        & I,O,A,B             & $54.60^*$               \\
         \hline
@@ -282,7 +280,7 @@ as shown in ~\ref{tab:ablation} to see that ResNext101 improves the score by 3.9
 
 \subsubsection*{Larger image size/depth resolution/dataset} These three extension were added simultaneously and, thus it is difficult to tell which one impacted the score by how much.
 However, is was clear that these extensions have a positive impact \cite{sun_integral_2018-1}.
-In our case, we could improve our performance on the MPJPE from 54.14 to 46.50 which is a decrease by around 14\%.
+In our case, we could improve our performance on the MPJPE from 54.14 to 46.48 which is a decrease by around 14\%.
 Regarding the changes to the image size, the resolution was increased from 256 x 256 to 288 x 384.
 For the depth resolution/the amount of heat maps produced per joint, the value was increased from 64 to 72.
 As we wanted to utilize all the resources available to us, the final model was trained on the training and validation set of both the MPII and the H36M.
@@ -327,7 +325,7 @@ with scores around 60 using pre-trained models. Removing the grouping altogether
 
 \section{Discussion}
 In section \ref{method} and \ref{approach} we showcased that we explored a wide variety of approaches in order to solve the task of HPE.
-In comparison to section \ref{method}, section \ref{approach} presented approaches which performed worse or did not improve upon our best model.
+In comparison to section \ref{method}, section \ref{approach} presented approaches which performed worse than our best model.
 We think that the main reason for this was the inability of our backbone to predict close to the 2D ground truth which hindered the presented methods to show their full potential.
 
 
