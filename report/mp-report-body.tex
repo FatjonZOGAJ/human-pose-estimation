@@ -45,6 +45,18 @@ Using objects from the Pascal VOC dataset we filter out persons, segments with a
 Finally, with the defined probability \todo{$p_{occ}$} a random number between 1 and 8 of objects from the filtered VOC dataset are added to random locations of the frame.
 
 \subsection{Backbone Model}
+The ever increasing amount of available data has given rise to huge network architectures and the effective
+use of transfer learning.
+As such we have experimented with various ResNet~\cite{DBLP:journals/corr/HeZRS15} models and settled on
+the ResNext101~\cite{DBLP:journals/corr/XieGDTH16} architecture as it achieved the best training scores
+and times during our research.
+Instead of the last pooling and fully connected layers, we stack 3 Deconvolution \todo{Rafi, anything else?}
+layers and a final Sequential layer on top of the ResNext101 backbone.
+
+During training time we have tried freezing different components of the architecture and settled on
+freezing the first 7 layers, leaving the last Sequential layer of the ResNext101 backbone and our added head
+open to training.
+\todo{add architecture figure} \\
 \todo{Pre-trained model, ResNet and its variations in general, layer freezing, final head}
 
 \subsection{Heatmap Regression}
@@ -300,7 +312,7 @@ We provide an extensive benchmark study analyzing direct image-to-3D-joint predi
 as well as image-to-2D-joint prediction with a final 3D regression.
 
 Our best model makes use of augmentation and occlusion, volumetric heatmap regression in combination with
-a pretrained ResNext101 backbone and is able to beat the state of the art in the monocular, single frame H36M benchmark~\cite{h36msinglecam}. \todo{reference for score?}
+a pretrained ResNext101 backbone and is able to beat the state of the art in the monocular, single frame H36M benchmark~\cite{h36msinglecam, Li_2020_CVPR}. % \todo{reference for score? }
 
 % maybe add another sentence about our best 3D regressor SemGCN model
 
