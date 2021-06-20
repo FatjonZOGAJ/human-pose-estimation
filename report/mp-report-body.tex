@@ -122,7 +122,7 @@ On top of that we differentiate between the case of freezing the backbone model 
 freezing its last layer and respective head.
 
 \subsection{Evolutionary Training Data}
-Finally, in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints of the human 3D skeleton are represented by a set of bones organized hierarchically in a kinematic tree, this way the dependence of adjacent joints with tree edges is captured. This can be seen in Fig. ~\ref{skeleton}. Assuming that $\textbf{p}^j$ is the \emph{j}-th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}-th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as
+Finally, in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints of the human 3D skeleton are represented by a set of bones organized hierarchically in a kinematic tree, this way the dependence of adjacent joints with tree edges is captured. Assuming that $\textbf{p}^j$ is the \emph{j}-th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}-th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as
 
 $$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
 
@@ -132,7 +132,7 @@ $$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
 %    \label{skeleton}
 %\end{figure}
 
-Every parent node has attached a local coordinate system which can be seen in Fig. ~\ref{skeleton}. For $\textbf{p}^{parent(i)}$ local coordinate system is represented by the rotation matrix $\textbf{R}^i = [\textbf{i}^i, \textbf{j}^i, \textbf{k}^i]$, which is used to transform the bone vector into the local coordinate system with the following equation:
+Every parent node has attached a local coordinate system. For $\textbf{p}^{parent(i)}$ local coordinate system is represented by the rotation matrix $\textbf{R}^i = [\textbf{i}^i, \textbf{j}^i, \textbf{k}^i]$, which is used to transform the bone vector into the local coordinate system with the following equation:
 
 $$\textbf{b}_{local} ^{i} = \textbf{R}^{i\textbf{T}}(\textbf{p}^{child(i)}-\textbf{p}^{parent(i)})$$
 
@@ -158,7 +158,7 @@ The overall algorithm can be seen in ~\ref{alg1}.
         \label{alg1}
 \end{algorithm}
 
-With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Since the data is represented as we mentioned in a hierarchical way crossover is intuitive to implement. Crossover is implemented as a random exchange of sub-trees. TODO: do we want the formal definition?. Mutation operator pertubates the local orientation of one bone vector. Bone vector $\textbf{b}_i = (r_i, \theta _i, \phi _i)$ is randomly selected and Gaussian noise $g ~ N(0, \sigma)$ is added
+With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Since the data is represented as we mentioned in a hierarchical way crossover is intuitive to implement. Crossover is implemented as a random exchange of sub-trees. Mutation operator pertubates the local orientation of one bone vector. Bone vector $\textbf{b}_i = (r_i, \theta _i, \phi _i)$ is randomly selected and Gaussian noise $g ~ N(0, \sigma)$ is added
 
 $$\theta _i ' = \theta _i + g_{\theta}, \phi _i ' = \phi _i + g_{\phi}$$
 
@@ -208,12 +208,14 @@ after 90 and 120 epochs or manually after a 10 hour run if the loss seems to hav
 
 \begin{table}[h!]
     \caption{Ablation study on the progression of the Mean Per Joint Position Error (MPJPE) metric. The score denotes the performance on the test set. Values with $*$  denote the performance on the validation set.
-    Data occlusion (O), Data augmentation (A), Integral Heatmap Regression (I), Extra Data (E),
-    3D-Regression (R), Higher Resolution (H), Bone Loss (B), %Backbone Completely Frozen (C),
-    Last Layer Unfrozen (U), Remove Joint Grouping (G), 3D SemGCN Input (3), Ground Truth Pre-Training (P),
-    SemGCN Head (S)
+    Data augmentation (A), Bone Loss (B), %Backbone Completely Frozen (C),
+    Extra Data (E), Remove Joint Grouping (G), Higher Resolution (H),
+    Integral Heatmap Regression (I), Data occlusion (O), 
+    Ground Truth Pre-Training (P), 3D-Regression (R), SemGCN Head (S), 
+    Last Layer Unfrozen (U),  3D SemGCN Input (3)}
+    
     \todo{order these by alphabet for easier finding\\ i would also have the first part of the ablation study be steadily decreasing in performance and move expereiments which were not submitted to the end}
-    }
+
     \label{tab:ablation}
     \centering
     \begin{tabular}{|| c | c | c ||}
@@ -222,13 +224,13 @@ after 90 and 120 epochs or manually after a 10 hour run if the loss seems to hav
         \hline\hline
         AlexNet           & R                   & 141.50                       \\
         \hline
-        AlexNet           & O                   & $84.50_{\downarrow 40.28\%}$ \\
+        AlexNet           & O                   & $84.50$ \\
         \hline
-        ResNet50          & I                   & $72.15_{\downarrow 49.01\%}$ \\
+        ResNet50          & I                   & $72.15$ \\
         \hline
-        ResNet50          & I,O                 & $63.01_{\downarrow 12.69\%}$ \\
+        ResNet50          & I,O                 & $63.01$ \\
         \hline
-        ResNext101        & I,O,A               & $54.14_{\downarrow 14.08\%}$ \\
+        ResNext101        & I,O,A               & $54.14$ \\
         \hline
         ResNext101        & I, O, A, S, 3       & $57.43$                      \\
         \hline
@@ -317,89 +319,4 @@ a pretrained ResNext101 backbone and is able to beat the state of the art in the
 % maybe add another sentence about our best 3D regressor SemGCN model
 
 \clearpage
-
-
-\section{Helpful \LaTeX~commands}
-In the following we include some helpful \LaTeX~commands that demonstrate how to write formulas or include figures and tables.
-
-\subsection{Type Changes and {\itshape Special} Characters}
-
-You can indicate \textit{italicized} words or phrases in your text with the command
-\texttt{{\char'134}textit}; \textbf{emboldening} with the command
-\texttt{{\char'134}textbf} and typewriter-style (for instance, for \texttt{computer code}) with \texttt{{\char'134}texttt}.
-
-\subsection{Math Equations}
-You may want to display math equations in three distinct styles:
-inline, numbered or non-numbered display. Each of
-the three are discussed in the next sections.
-
-\subsubsection{Inline (In-text) Equations}
-A formula that appears in the running text is called an inline or in-text formula. It is produced by the \textbf{math} environment, which can be
-invoked with the usual \texttt{{\char'134}begin\,\ldots{\char'134}end}
-construction or with the short form \texttt{\$\,\ldots\$}. You
-can use any of the symbols and structures,
-from $\alpha$ to $\omega$, available in
-\LaTeX~\cite{Lamport:LaTeX}; this section will simply show a
-few examples of in-text equations in context. Notice how
-this equation:
-\begin{math}
-    \lim_{n\rightarrow \infty}x=0
-\end{math},
-set here in in-line math style, looks slightly different when
-set in display style.  (See next section).
-
-\subsubsection{Display Equations}
-A numbered display equation---one set off by vertical space from the
-text and centered horizontally---is produced by the \textbf{equation}
-environment. An unnumbered display equation is produced by the
-\textbf{displaymath} environment.
-
-In either environment, you can use any of the symbols
-and structures available in \LaTeX\@; this section will just
-give a couple of examples of display equations in context.
-First, consider the equation, shown as an inline equation above:
-\begin{equation}
-    \lim_{n\rightarrow \infty}x=0
-\end{equation}
-Notice how it is formatted somewhat differently in
-the \textbf{displaymath}
-environment. The following is an unnumbered equation:
-\begin{displaymath}
-    \sum_{i=0}^{\infty} x + 1
-\end{displaymath}
-
-\subsection{Tables}
-Take a look at Table \ref{tab:freq} for an example of single-column table.
-\LaTeX will automatically place the tables at a desired position.
-With a \texttt{[t]} or \texttt{[b]} right after the \texttt{{\char'134}begin\{table\}} command, you can indicate whether you want that table on the top or bottom of a page.
-
-\subsection{Figures}
-This sample document contains examples of \texttt{.eps} files to be
-displayable with \LaTeX, but you can also just include \texttt{.png}s.
-
-
-\begin{table}
-    \caption{Frequency of Special Characters}
-    \label{tab:freq}
-    \begin{tabular}{ccl}
-        \toprule
-        Non-English or Math & Frequency   & Comments          \\
-        \midrule
-        \O                  & 1 in 1,000  & For Swedish names \\
-        $\pi$               & 1 in 5      & Common in math    \\
-        \$                  & 4 in 5      & Used in business  \\
-        $\Psi^2_1$          & 1 in 40,000 & Unexplained usage \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-\begin{figure}
-    \includegraphics[height=3cm, width=3cm]{fly}
-    \caption{A sample black and white graphic
-    that has been resized with the \texttt{includegraphics} command.}
-\end{figure}
-
-
-
-
 
