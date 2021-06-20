@@ -111,13 +111,10 @@ information in regard to global and local joint relations~\cite{zhao2019gcn}.
 As the original SemGCN model utilizes joint grouping (maxpool: 16 joints \textrightarrow ~8 joints), we adapt it for
 our use case of 17 joints.
 We have looked at a variety of ways on how to incorporate the missing joint (Neck/Nose).
-These options include:
-\begin{itemize}
-    \item simply concatenating the missing joint to the other grouped ones
-    \item grouping the missing joint with itself
-    \item grouping the missing joint with other related joints
-    \item removing grouping altogether
-\end{itemize}
+These options include i) simply concatenating the missing joint to the other grouped ones,
+    ii) grouping the missing joint with itself,
+    iii) grouping the missing joint with other related joints and
+    iv) removing grouping altogether.
 We also played around with reordering the joints to put more emphasis on one over another
 as max-pooling makes use of locality.
 
@@ -168,7 +165,13 @@ The overall algorithm can be seen in ~\ref{alg1}.
     \label{alg1}
 \end{algorithm}
 
-With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Crossover is implemented as a random exchange of sub-trees of bones. Mutation operator perturbates the local orientation of one bone vector for a certain degree. Mutation can easily make an invalid pose, therefore we use natural selection to remove invalid poses. Natural selection is implemented using a function which indicates which pose is invalid and gives that pose a value of $-\infty$ making it unable to be selected into the new generation. This function uses the prior angle constraints defined from ~\cite{Akhter_2015_CVPR}.
+With algorithm ~\ref{alg1} we create 2D-3D pairs for teaching the model to map from 2D to 3D.
+Crossover is implemented as a random exchange of sub-trees of bones.
+The mutation operator perturbates the local orientation of one bone vector for a certain degree.
+Mutation can easily make an invalid pose, therefore we use natural selection to remove invalid poses.
+Natural selection is implemented using a function which indicates which pose is invalid
+and gives that pose a value of $-\infty$ making it unable to be selected into the new generation.
+This function uses the prior angle constraints defined from ~\cite{Akhter_2015_CVPR}.
 Both mutation and crossover can be seen in Fig. ~\ref{evolved}
 
 \begin{figure}
@@ -197,15 +200,15 @@ After initial test runs of the SemGCN architecture, we noticed a bottleneck stem
 when compared to training on the ground truth 2D H36M data.
 As we previously simply dropped the last axis of our 3D predictions to create the 2D input,
 we thought if we train the backbone to predict 2D joint locations only, accuracy might improve.
-Having tried both methods with not improvement, we concluded that there is no performance
+Having tried both methods with no improvement, we concluded that there is no performance
 gain in varying these two approaches.
-\todo{jon überleg dir da was wie das zusammen passt}
-Exploiting SemGCN's resemblance to the human skeleton, a comparison is also made between using 2D and 3D joints
-as input data.
-In the latter case the SemGCN would act as a final refinement step.
+%Exploiting SemGCN's resemblance to the human skeleton, a comparison is also made between using 2D and 3D joints
+%as input data.
+%In the latter case the SemGCN would act as a final refinement step.
 
 Both, the de-noising autoencoder and the SemGCN, focus more or less on capturing the overall human pose composition.
-This idea was already explored in a different way by \citeauthor{sun_compositional_2017} \cite{sun_compositional_2017} were they proposed a loss function which incorporates information on the skeleton.
+This idea was already explored in a different way by \citeauthor{sun_compositional_2017} \cite{sun_compositional_2017}
+where they proposed a loss function which incorporates information of the skeleton.
 Instead of calculating the loss as $\sum_{k=1}^K ||\tilde{\mathbf{J}}_k-\mathbf{J}_k||_1$ which only considers the joint position they proposed a loss which incorporates bone lengths.
 Given a bone, $\mathbf{B}_k=\mathbf{J}_{parent(k)}-\mathbf{J}_k$, the loss is formulated as $\sum_{k=1}^K ||\tilde{\mathbf{B}}_k-\mathbf{B}_k||_1$.
 Even tough this should e.g. avoid unrealistic poses, incorporating this loss did not improve our score.
