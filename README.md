@@ -4,7 +4,14 @@ The project was tested on Leonhard with Python 3.7.4, PyTorch 1.8.1, CUDA 10.1 a
 
 ## Recreating final score
 
-1. Clone this repo (directory that you cloned from now on denoted by `${ROOT}`)
+1. Clone this repo (directory that you cloned from now on denoted by `${ROOT}`) and create the virtual 
+   environment:
+   
+   
+      mkvirtualenv "env-name"
+      workon "env-name"
+
+
 2. Install dependencies using `pip`.
 
    `pip install -r requirements.txt`
