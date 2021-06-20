@@ -59,7 +59,7 @@ def main():
     logger.info('=> loading the valid/test dataset')
     valid_dataset = ds(
         cfg=config,
-        root='data/h36m',
+        root='data/h36m/',
         image_set=config.DATASET.TEST_SET,
         is_train=False
     )

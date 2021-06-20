@@ -294,14 +294,14 @@ def get_datasets(logger, ds, name, train, test):
     logger.info('=> loading the train dataset')
     train_dataset = ds(
         cfg=config,
-        root=f'data/{name}',
+        root=f'data/{name}/',
         image_set=train,
         is_train=True
     )
     logger.info('=> loading the valid dataset')
     valid_dataset = ds(
         cfg=config,
-        root=f'data/{name}',
+        root=f'data/{name}/',
         image_set=test if name == 'h36m' else 'valid',
         is_train=False
     )
