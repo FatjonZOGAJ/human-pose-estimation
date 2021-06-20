@@ -17,6 +17,7 @@ The project was tested on Leonhard with Python 3.7.4, PyTorch 1.8.1, CUDA 10.1 a
 
    `pip install -r requirements.txt`
 
+Note: if one works on Leonhard script `create_sym_link.sh` can be used to set the data folder.
 ### Data augmentation
 3. To download the VOC dataset which is needed for occlusion, run the following commands:
 
