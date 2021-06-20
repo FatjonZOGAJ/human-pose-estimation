@@ -72,15 +72,15 @@ freezing the first 7 layers, leaving the last sequential block of the ResNext101
 
 \subsection{Heatmap Regression}
 
-Another important development in the task of HPE was the introduction of heat map representations as an alternative to directly regressing the joint locations.
-In this representation each location in the heat map represents a probability of the joint
+Another important development in the task of HPE was the introduction of heatmap representations as an alternative to directly regressing the joint locations.
+In this representation each location in the heatmap represents a probability of the joint
 being at a certain position ~\cite{sun_integral_2018-1}.
-Given such a heat map representation $\mathbf{H}_k$ for the $k^{th}$ joint,
+Given such a heatmap representation $\mathbf{H}_k$ for the $k^{th}$ joint,
 the position $p$ of the joint $\mathbf{J}_k$ is estimated by the maximum likelihood
 $\mathbf{J}_k=\underset{\mathbf{p}}{\text{argmax}}\ \mathbf{H}_k(\mathbf{p})$.
-In our case, such a heat map representation is learnt by a shallow head which has been described in the previous section.
-This head network first upsamples the extracted features to a certain resolution (64 x 64 by default) and then produces $K$ heat maps.
-For almost all of our experiments we used 64 heat maps per joint, however, as this value directly corresponds to the granularity of the z-dimension, we later increased this value to 72.
+In our case, such a heatmap representation is learnt by a shallow head which has been described in the previous section.
+This head network first upsamples the extracted features to a certain resolution (64 x 64 by default) and then produces $K$ heatmaps.
+For almost all of our experiments we used 64 heatmaps per joint, however, as this value directly corresponds to the granularity of the z-dimension, we later increased this value to 72.
 
 This approach yields good performance in HPE but has some drawbacks, mainly the usage of the \textit{argmax} operator that makes the calculation of the maximum likelihood non-differentiable and, thus hinders the possibility of training a neural network end-to-end.
 \citeauthor{sun_integral_2018-1} {\cite{sun_integral_2018-1}} alleviate these problems by modifying the joint calculation to "taking-expectation" instead of "taking-maximum".
@@ -90,12 +90,12 @@ which is also known as the \textit{soft argmax}.
 This formulation can further be modified which then allows to calculate the expected joint position in each dimension separately.
 A benefit from this is the additional option to train on 2D (MPII) and 3D (H36M) data simultaneously and end-to-end.
 
-Given the fact that the first \cite{sarandi_synthetic_2018} and second \cite{sun_integral_2018} place of the 2018 ECCV PoseTrack Challenge made use of this heat map representation with the \textit{soft argmax}, we employed this technique as well.
+Given the fact that the first \cite{sarandi_synthetic_2018} and second \cite{sun_integral_2018} place of the 2018 ECCV PoseTrack Challenge made use of this heatmap representation with the \textit{soft argmax}, we employed this technique as well.
 
 
 \section{Other Approaches}\label{approach}
 In the following section we list different techniques which
-performed worse than the ones included in our best one.% but have been added for entirety.
+performed worse than the ones included in our best model.% but have been added for entirety.
 
 \subsection{Graph Neural Networks}
 As the task of 2D human pose estimation has been extensively studied, achieving very low
@@ -282,7 +282,7 @@ as shown in ~\ref{tab:ablation} to see that ResNext101 improves the score by 3.9
 However, is was clear that these extensions have a positive impact \cite{sun_integral_2018-1}.
 In our case, we could improve our performance on the MPJPE from 54.14 to 46.48 which is a decrease by around 14\%.
 Regarding the changes to the image size, the resolution was increased from 256 x 256 to 288 x 384.
-For the depth resolution/the amount of heat maps produced per joint, the value was increased from 64 to 72.
+For the depth resolution/the amount of heatmaps produced per joint, the value was increased from 64 to 72.
 As we wanted to utilize all the resources available to us, the final model was trained on the training and validation set of both the MPII and the H36M.
 
 
