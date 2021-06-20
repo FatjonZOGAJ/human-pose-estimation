@@ -215,9 +215,8 @@ Even tough this should e.g. avoid unrealistic poses, incorporating this loss did
 
 
 \section{Evaluation}
-We evaluate models for 10 to 30+ hours, starting with a learning rate of 0.0001 and reducing it by 10
-after 90 and 120 epochs or manually after a 10 hour run if the loss seems to have converged.
-% 55 epochs on both 50/50 then smaller lr only on h36m
+We evaluate models for 10 to 30+ hours, starting with a learning rate of 0.0001 and decaying it once the loss seems to have converge.
+For our final model we trained for 65 epochs on both the MPII and the H36M dataset simultaneously with a batch size of 16. Here, the learning rate was decayed by 0.1 after 55, 60, and 65 epochs.
 
 %\todo{In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.}
 
