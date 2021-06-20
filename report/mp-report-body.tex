@@ -31,7 +31,7 @@ However, in order to optimize these models, further supervision in various forms
 %}
 
 
-\section{Method}
+\section{Method}\label{method}
 This section describes the methods used in our final model which includes
 preprocessing steps, augmentations, changes of representation, parameters, and the architecture of the model.
 %This section should describe the method of your \emph{final} submission in detail. This includes things you did with the data (e.g. preprocessing, augmentations, changes of representation, etc.) and the actual definition of your model. Sometimes it is fine to describe a model in text or math only, sometimes it is better to create an overview figure. Either way, after reading this section, a reader should be able to implement your architecture.
@@ -95,7 +95,7 @@ A benefit from this is the additional option to train on 2D (MPII) and 3D (H36M)
 Given the fact that the first \cite{sarandi_synthetic_2018} and second \cite{sun_integral_2018} place of the 2018 ECCV PoseTrack Challenge made use of this heat map representation with the \textit{soft argmax}, we employed this technique as well.
 
 
-\section{Other Approaches}
+\section{Other Approaches}\label{approach}
 In the following section we list different techniques which
 performed similarly or worse than the ones included in the presented best model but have been added for entirety.
 
@@ -273,7 +273,7 @@ Adding synthetic occlusion to that gives a score which has 12.69\% lower MPJPE o
 
 \subsubsection*{Larger image size/depth resolution/dataset} These three extension where added simultaneously and, thus it is difficult to tell which one impacted the score by how much.
 However, is was clear that these extensions will have a positive impact \cite{sun_integral_2018-1}.
-In our case, we could improve our performance on the MPJPE from 54.14 to 46.50 which is a decrease by 14\%.
+In our case, we could improve our performance on the MPJPE from 54.14 to 46.50 which is a decrease by around 14\%.
 Regarding the changes to the image size, the resolution was increased from 256 x 256 to 288 x 384.
 For the depth resolution/the amount of heat maps produced per joint, the value was increased from 64 to 72.
 As we wanted to utilize all the resources available to us, the final model was trained on the training and validation set of both the MPII and the H36M.
@@ -317,17 +317,10 @@ and the possibility that few of the joints make up for most of the information l
 
 
 \section{Discussion}
-In this section we give possible explanations as to why some approaches fared better
-than the other and which mechanisms could lie behind.
+In section \ref{method} and \ref{approach} we showcased that we explored a wide variety of approaches in order to solve the task of HPE.
+In comparison to section \ref{method}, section \ref{approach} presented approaches which performed worse or did not improve upon our best model.
+We think that the main reason for this was the inability of our backbone to predict close to the 2D ground truth which hindered the presented methods to show their full potential.
 
-
-%\todo{Sometimes you might have had a great idea, but it did not pan out.
-%Since we want to encourage novelty, such failed attempts should also go into the report.
-%This section is a suitable place to discuss this.
-%If you can, do not just list failed attempts, but actually \emph{discuss} them, i.e.,
-%    provide an intuition why you think they failed or what the problem is that prevented them from performing better.
-%    It is much better to describe one failed attempt and discuss it in-depth than just listing four failed models without any explanation.
-%    If you do not have failed attempts that would warrant their own section, this is perfectly fine. You may discuss the experiments from the previous section here, or if you prefer to have the discussion the evaluation section directly, feel free to omit this section entirely.}
 
 
 \section{Conclusion}
