@@ -41,7 +41,7 @@ The input picture is normalized to 284 x 284 dimension TODO. Standard data augme
 Furthermore, in order to improve the score and to make the network robust to occluded joints we use synthetic occlusion, since erasing objects or simply putting them in the picture improves results in image classification, object detection, and person identification~\cite{sarandi_synthetic_2018}. Using objects in the Pascal VOC dataset we filter out persons, segments with area below 500 px and segments labeled as \emph{difficult} or \emph{truncated}. Finally, with the defined probability $p_{occ}$ a random number between 1 and 8 of objects from the filtered VOC dataset are added to random locations of the frame.
 
 \subsection{Backbone Model}
-Pre-trained model
+\todo{Pre-trained model, ResNet and its variations in general, layer freezing, final head}
 
 \subsection{Heatmap Regression}
 
@@ -128,15 +128,15 @@ The overall algorithm can be seen in ~\ref{alg1}.
     $D_{new} = D_{old}$
 
     \For{i=1:G}{
-    Parents=Sample($D_{new}$)
+        Parents=Sample($D_{new}$)
 
-    Children=NaturalSelection(Mutation(Crossover(Parents)))
+        Children=NaturalSelection(Mutation(Crossover(Parents)))
 
-    $D_{new} = D_{new} \cup Children$
+        $D_{new} = D_{new} \cup Children$
     }
-        return $D_{new}$
-        \caption{Data evolution}
-        \label{alg1}
+    return $D_{new}$
+    \caption{Data evolution}
+    \label{alg1}
 \end{algorithm}
 
 With algorithm ~\ref{alg1} we create 2D-3D pairs for learning the model to map from 2D to 3D. Since the data is represented as we mentioned in a hierarchical way crossover is intuitive to implement. Crossover is implemented as a random exchange of sub-trees. TODO: do we want the formal definition?. Mutation operator pertubates the local orientation of one bone vector. Bone vector $\textbf{b}_i = (r_i, \theta _i, \phi _i)$ is randomly selected and Gaussian noise $g ~ N(0, \sigma)$ is added
@@ -170,6 +170,8 @@ bone loss
 
 
 \section{Evaluation}
+We evaluate models for 10 to 30+ hours, starting with a learning rate of 0.0001 and reducing it by 10
+after 90 and 120 epochs or manually after a 10 hour run if the loss seems to have converged. \todo{maybe move to Method?}
 \todo{In the evaluation section you should describe the experiments that support the claims of the story of your report. For example, if you previously said ``We propose to combine model A with component B which leads to improved accuracy.'' you should back this up with experimental evidence here. Typically, this means that you should show the performance of model A with and without component B. May be your method warrants other kinds of such ablation studies, which you might include and describe here.}
 
 % 55 epochs on both 50/50 then smaller lr only on h36m
@@ -177,30 +179,42 @@ bone loss
 \begin{table}[h!]
     \caption{Ablation study on the progression of the Mean Per Joint Position Error (MPJPE) metric. The score denotes the performance on the test set. Values with $*$  denote the performance on the validation set.
     Data occlusion (O), Data augmentation (A), Integral Heatmap Regression (I), Extra Data (E),
-    3D-Regression (R), Higher Resolution (H), Bone Loss (B)}
+        3D-Regression (R), Higher Resolution (H), Bone Loss (B), %Backbone Completely Frozen (C),
+        Last Layer Unfrozen (U), Remove Joint Grouping (G), 3D SemGCN Input (3), Ground Truth Pre-Training (P),
+        SemGCN Head (S)
+        \todo{order these by alphabet for easier finding}
+    }
     \label{tab:ablation}
     \centering
     \begin{tabular}{|| c | c | c ||}
         \hline
         \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}$_{test}$      \\
         \hline\hline
-        AlexNet           & R                   &   141.50                       \\
+        AlexNet           & R                   & 141.50                       \\
         \hline
-        AlexNet           & O                   &   $84.50_{\downarrow 40.28\%}$ \\
+        AlexNet           & O                   & $84.50_{\downarrow 40.28\%}$ \\
         \hline
-        ResNet50          & I                   &   $72.15_{\downarrow 49.01\%}$ \\
+        ResNet50          & I                   & $72.15_{\downarrow 49.01\%}$ \\
         \hline
-        ResNet50          & I,O                 &   $63.01_{\downarrow 12.69\%}$ \\
+        ResNet50          & I,O                 & $63.01_{\downarrow 12.69\%}$ \\
         \hline
-        ResNext101        & I,O,A               &   $54.14_{\downarrow 14.08\%}$ \\
+        ResNext101        & I,O,A               & $54.14_{\downarrow 14.08\%}$ \\
         \hline
-        ResNet152         & I,O,A,H,E           &   $50.94$                      \\
+        ResNext101        & I, O, A, S, 3       & $57.43$                      \\
         \hline
-        ResNext101        & I,O,A,H,E           &   $48.95$                      \\
+        ResNet152         & I,O,A,H,E           & $50.94$                      \\
         \hline
-        SemGCN            & O                   &                              \\
+        ResNext101        & I,O,A,H,E           & $48.95$                      \\
         \hline
-        ResNext101        & I,O,A,B             &   $54.6^*$                     \\
+        ResNext101        & I,O,A,B             & $54.60^*$                    \\
+        \hline
+        SemGCN            &                     & $66.87^*$                    \\
+        \hline
+        SemGCN            & P                   & $60.08^*$                    \\
+        \hline
+        SemGCN            & P, U                & $54.12^*$                    \\
+        \hline
+        SemGCN            & P, U, G             & $46.05^*$                    \\
         \hline
     \end{tabular}
 \end{table}
@@ -214,25 +228,41 @@ bone loss
 \textbf{Effect of additional validation set}:
 
 \subsubsection*{SemGCN}
+\todo{change everything to stringent flow of End-to-End or SemGCN only}
 In regards to the SemGCN model, only the scores of the z-axis matter as the other 2D input is the ground truth.
 Thus, the following error scores for the SemGCN are not directly comparable to the others.
 
-The best variant making use of pre-training on ground-truth data achieves a validation error of 54,
-while not pre-training achieves 66.
-This best pre-trained SemGCN on top leaves the last layer unfrozen, while freezing
-the backbone completely achieved a validation error of 66 when using a pre-trained model.
+Our first experiments showed that when not pre-training the SemGCN model on ground truth data,
+it is able to achieve a validation score of 66.87.
+This can be brought down to 60.08 by incorporating pre-training.
+%The best variant making use of pre-training on ground-truth data achieves a validation error of 54,
+%while not pre-training achieves 66.
 
-As mentioned above, we compare different ways of adding the missing 17th joint,
+As a next step we then analyzed the effect of unfreezing the last layer of the backbone which
+achieves a score of 54.12.
+Unfreezing the SemGCN without any pre-training on the other hand got an error of around 65.5.
+This could be explained due to the fact that we stop training the model if it seems to perform badly
+early on, which is the case for non-pre-trained models as these take longer to train.
+%This best pre-trained SemGCN leaves the last layer unfrozen, while freezing
+%the backbone completely achieved a validation error of 60.08 when using a pre-trained model.
+
+Like previously mentioned, we compare different ways of adding the missing 17th joint,
 ranging from simple concatenation and group removing
 to more sophisticated grouping with other joints and reordering.
 Surprisingly the grouping methods even in combination with joint reordering perform similarly bad
 with scores around 60 using pre-trained models.
 
-Removing the grouping altogether seems to prove most useful, being able to get a validation error of 46.
+Removing the grouping altogether seems to prove most useful, being able to get a validation error of 46.05.
 This holds for the case where we change the architecture to not consider grouping as well as when
 we simply change the group size to 1 instead of 2.
 This might be explained due to the model's robustness
 and the possibility that few of the joints make up for most of the information lying underneath.
+
+\todo{I'd just leave out going into detail for End to End Models selling it as the same thing for both
+and maybe in passing mention that we did not
+validate them all too much as the SemGCN didn't perform too well already.
+Or we can have SemGCN (S) as an extension for the ablation study and add it under ResNext}
+
 
 \section{Discussion}
 In this section we give possible explanations as to why some approaches fared better
