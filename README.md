@@ -38,7 +38,7 @@ If you do not change the `train.yaml` file, this should have already been taken 
 
     python scripts/train.py --cfg experiments/h36m/train.yaml
 
-In order to train the model on Leonhard make sure that `module load eth_proxy` is activated and submit the job with the following command:
+In order to train the model on Leonhard make sure that `module load eth_proxy` is activated and then submit the job with the following command:
 
 
     bsub -n 4 -W 6:00 -R "rusage[mem=2048, ngpus_excl_p=1]" python scripts/train.py --cfg experiments/h36m/train.yaml
