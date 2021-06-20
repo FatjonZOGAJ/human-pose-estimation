@@ -9,7 +9,10 @@ Estimating the full-body pose has been extensively studied in both 2D and 3D ~\c
 Thanks to the availability of large-scale 2D annotated human poses and the emergence of deep neural networks achieving very low error rates~\cite{yang2020transpose, bulat2020skip, su2019multi}, the 2D human pose estimation problem is considered as nearly solved.
 In contrast, the 3D human pose estimation remains an open problem.
 This is partially because of the ambiguity of recovering the 3D information from single images and also due to the lack of large-scale 3D pose annotated datasets.
-Methods for solving the 3D human pose estimation can roughly be divided into two categories: i) learning end-to-end networks that recover 2D input images to 3D poses directly, ii) extracting 2D human poses from input images and then lifting 2D poses to 3D spaces ~\cite{DBLP:journals/corr/abs-1710-06513}.
+Methods for solving the 3D human pose estimation can roughly be divided into two categories:
+i) learning end-to-end networks that recover 2D input images to 3D poses directly,
+ii) extracting 2D human poses from input images and then lifting 2D poses to 3D
+spaces~\cite{DBLP:journals/corr/abs-1710-06513}.
 
 One of the drawbacks of learning end-to-end or regressing directly \todo{check this}, is that the per-joint location errors are minimized independently ignoring the internal structure.
 Decoupling \todo{*D} human pose estimation into 2D and 3D part has some advantages.
@@ -63,60 +66,52 @@ Given the fact that the first \cite{sarandi_synthetic_2018} and second \cite{sun
 
 
 \section{Other Approaches}
-\todo{Maybe just move all of this to Discussion? 'failed attempts should also go into [...] discussion section'}
 In the following section we list different techniques which
 performed similarly or worse than the ones included in the presented best model.
 
 \subsection{Graph Neural Networks}
-\todo{remove results and move to evaluation}
 As the task of 2D human pose estimation has been extensively studied, achieving very low
 error rates~\cite{yang2020transpose, bulat2020skip, su2019multi},
 also take a look at an architecture for 3D-joint regression based on 2D-joint input.
 A human skeleton follows the underlying structure of a graph which is why a
 Graph Convolutional Network (GCN) offers itself well to model this.
-We make use of \citeauthor{zhao2019gcn}'s Semantic GCN (SemGCN) model, which allows to capture semantic
+Making use of \citeauthor{zhao2019gcn}'s Semantic GCN (SemGCN) model allows us to capture semantic
 information in regard to global and local joint relations~\cite{zhao2019gcn}.
 
-As the original SemGCN model makes use of joint grouping (maxpool: 16 joints \textrightarrow ~8 joints), we adapt it for
+As the original SemGCN model utilizes joint grouping (maxpool: 16 joints \textrightarrow ~8 joints), we adapt it for
 our use case of 17 joints.
 We have looked at a variety of ways on how to incorporate the missing joint (Neck/Nose).
 These options include:
 \begin{itemize}
-    \item simply concatenating the last joint input to the other grouped ones
-    \item removing grouping altogether
+    \item simply concatenating the missing joint to the other grouped ones
     \item grouping the missing joint with itself
     \item grouping the missing joint with other related joints
+    \item removing grouping altogether
 \end{itemize}
 We also played around with reordering the joints to put more emphasis on one over another
 as max-pooling makes use of locality.
-Surprisingly all methods perform very similarly which might be explained due to the model's robustness
-and the possibility that few of the joints make up for most of the information lying underneath.
 
-We further analyzed two training approaches.
+Two different training approaches offer themselves well for this.
 In the first one the training of the SemGCN can be separated into two parts.
 We first train the SemGCN to predict the z-axis based on 2D ground truth input data.
 Afterwards we use this pre-trained model and stack it on top of our also pre-trained backbone,
 dropping the third dimension of the backbone output to feed it into the SemGCN.
 The second approach simply stacks the untrained SemGCN on top of the backbone and trains it
 together from scratch.
-The best variant making use of pre-training on ground-truth data achieves an error of 54,
-while not pre-training gets 66.
 
-We further differentiate between the case of freezing the backbone model completely, and only
-freezing its last layer.
-Freezing the backbone completely achieved a validation error of 66, while having the last
-layer unfrozen gets a validation error of 54.
+On top of that we differentiate between the case of freezing the backbone model completely, and only
+freezing its last layer and respective head.
 
 \subsection{Evolutionary Training Data}
 Finally, in order to train the mapping of joints from 2D to 3D we have used an evolutionary technique for augmenting the dataset as proposed in ~\cite{Li_2020_CVPR}. In order to implement the evolutionary data augmentation, joints of the human 3D skeleton are represented by a set of bones organized hierarchically in a kinematic tree, this way the dependence of adjacent joints with tree edges is captured. This can be seen in Fig. ~\ref{skeleton}. Assuming that $\textbf{p}^j$ is the \emph{j}-th joint and \emph{parent(i)} returns the parent joint index of the \emph{i}-th bone vector, then each pose \textbf{p} corresponds to a set of bone vectors $\{\textbf{b}^i\}_{i=1} ^{w}$ and every bone vector is defined as
 
 $$\textbf{b}^i = \textbf{p}^{child(i)} - \textbf{p}^{parent(i)}$$
 
-\begin{figure}
-    \includegraphics[height=4cm, width=7cm]{skeleton.png}
-    \caption{\todo{remove if > 3 pages} Hierarchical human representation. Left: 3D key-points organized in a kinematic tree where red arrows point from parent joints to children joints. Right: Zoom-in view of a local coordinate system, source ~\cite{Li_2020_CVPR}}
-    \label{skeleton}
-\end{figure}
+%\begin{figure}
+%    \includegraphics[height=4cm, width=7cm]{skeleton.png}
+%    \caption{\todo{remove if > 3 pages} Hierarchical human representation. Left: 3D key-points organized in a kinematic tree where red arrows point from parent joints to children joints. Right: Zoom-in view of a local coordinate system, source ~\cite{Li_2020_CVPR}}
+%    \label{skeleton}
+%\end{figure}
 
 Every parent node has attached a local coordinate system which can be seen in Fig. ~\ref{skeleton}. For $\textbf{p}^{parent(i)}$ local coordinate system is represented by the rotation matrix $\textbf{R}^i = [\textbf{i}^i, \textbf{j}^i, \textbf{k}^i]$, which is used to transform the bone vector into the local coordinate system with the following equation:
 
@@ -165,6 +160,9 @@ we have tried [0, 1]-normalization instead of the original z-standardization.
 Preliminary experiments showed that this does not improve the score, hinting at a slight decrease
 which is why it was not further used. Furthermore, although ensemble methods were not allowed, using dropout layer was allowed. We have experimented using dropout layer after the heatmaps, however it did not give a better score than our best model.
 
+Exploiting GCN's resemblance to the human skeleton, a comparison is also made between using 2D and 3D
+joints as input data.
+In the latter case the SemGCN would act as a final refinement step.
 
 denoising autoencoder
 bone loss
@@ -215,6 +213,26 @@ bone loss
 
 \textbf{Effect of additional validation set}:
 
+\subsubsection*{SemGCN}
+In regards to the SemGCN model, only the scores of the z-axis matter as the other 2D input is the ground truth.
+Thus, the following error scores for the SemGCN are not directly comparable to the others.
+
+The best variant making use of pre-training on ground-truth data achieves a validation error of 54,
+while not pre-training achieves 66.
+This best pre-trained SemGCN on top leaves the last layer unfrozen, while freezing
+the backbone completely achieved a validation error of 66 when using a pre-trained model.
+
+As mentioned above, we compare different ways of adding the missing 17th joint,
+ranging from simple concatenation and group removing
+to more sophisticated grouping with other joints and reordering.
+Surprisingly the grouping methods even in combination with joint reordering perform similarly bad
+with scores around 60 using pre-trained models.
+
+Removing the grouping altogether seems to prove most useful, being able to get a validation error of 46.
+This holds for the case where we change the architecture to not consider grouping as well as when
+we simply change the group size to 1 instead of 2.
+This might be explained due to the model's robustness
+and the possibility that few of the joints make up for most of the information lying underneath.
 
 \section{Discussion}
 In this section we give possible explanations as to why some approaches fared better
@@ -227,7 +245,17 @@ If you do not have failed attempts that would warrant their own section, this is
 
 
 \section{Conclusion}
-Conclude your report with a brief summary. This can be very short, i.e. 2-3 sentences.
+%Conclude your report with a brief summary. This can be very short, i.e. 2-3 sentences.
+In this paper we compare a variety of different architectures and techniques for the
+task of 3D Human Pose prediction on the H36M dataset \todo{cite}.
+We provide an extensive benchmark study analyzing direct image-to-3D-joint prediction
+as well as image-to-2D-joint prediction with a final 3D regression.
+
+Our best model makes use of Occlusion, Volumetric Heatmap Regression in combination with
+a ResNext101 backbone and is able to beat the state of the art in the
+single camera, single frame h36m benchmark~\cite{h36msinglecam}.
+
+% maybe add another sentence about our best 3D regressor SemGCN model
 
 \clearpage
 

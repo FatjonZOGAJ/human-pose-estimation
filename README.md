@@ -63,6 +63,7 @@ Make sure to consider default values so that when no argument is passed, the con
 + `bjobs` list jobs (`-l` for details)
 + `bkill 0` kill all jobs
 + `bpeek` see output of jobs (`watch "bpeek | tail -n 30"` for continuous output)
++ `module load eth_proxy` allow network connection, necessary for downloading pre-trained models
 
 ## Recreating score
 
