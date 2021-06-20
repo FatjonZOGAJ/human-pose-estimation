@@ -163,7 +163,7 @@ In addition to the approaches above, we have combined them with a variety of fur
 As the official PyTorch documentation recommends loading in the data in the range of [0, 1],
 we have tried [0, 1]-normalization instead of the original z-standardization.
 Preliminary experiments showed that this does not improve the score, hinting at a slight decrease
-which is why it was not further used.
+which is why it was not further used. Furthermore, although ensemble methods were not allowed, using dropout layer was allowed. We have experimented using dropout layer after the heatmaps, however it did not give a better score than our best model.
 
 
 denoising autoencoder
@@ -182,36 +182,36 @@ bone loss
     3D-Regression (R), Higher Resolution (H), Bone Loss (B)}
     \label{tab:ablation}
     \centering
-    \begin{tabular}{|| c | c | c | c ||}
+    \begin{tabular}{|| c | c | c ||}
         \hline
-        \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}$_{valid}$ & \textbf{MPJPE}$_{test}$      \\
+        \textbf{Backbone} & \textbf{Extensions} & \textbf{MPJPE}$_{test}$      \\
         \hline\hline
-        AlexNet           & R                   &                          & 141.50                       \\
+        AlexNet           & R                   &   141.50                       \\
         \hline
-        AlexNet           & O                   &                          & $84.50_{\downarrow 40.28\%}$ \\
+        AlexNet           & O                   &   $84.50_{\downarrow 40.28\%}$ \\
         \hline
-        ResNet50          & I                   &                          & $72.15_{\downarrow 49.01\%}$ \\
+        ResNet50          & I                   &   $72.15_{\downarrow 49.01\%}$ \\
         \hline
-        ResNet50          & I,O                 &                          & $63.01_{\downarrow 12.69\%}$ \\
+        ResNet50          & I,O                 &   $63.01_{\downarrow 12.69\%}$ \\
         \hline
-        ResNext101        & I,O,A               &                          & $54.14_{\downarrow 14.08\%}$ \\
+        ResNext101        & I,O,A               &   $54.14_{\downarrow 14.08\%}$ \\
         \hline
-        ResNet152         & I,O,A,H,E           &                          & $50.94$                      \\
+        ResNet152         & I,O,A,H,E           &   $50.94$                      \\
         \hline
-        ResNext101        & I,O,A,H,E           &                          & $48.95$                      \\
+        ResNext101        & I,O,A,H,E           &   $48.95$                      \\
         \hline
-        SemGCN            & O                   &                          &                              \\
+        SemGCN            & O                   &                              \\
         \hline
-        ResNext101        & I,O,A,B             &                          & $54.6^*$                     \\
+        ResNext101        & I,O,A,B             &   $54.6^*$                     \\
         \hline
     \end{tabular}
 \end{table}
 
-\textbf{Effect of synthetic occlusion}: TODO
+\textbf{Effect of synthetic occlusion}: using the given sample code with the AlexNet as the backbone of the model synthetic occlusion gives an impressive improvement to the score lowering it for 40.28\%.
 
-\textbf{Effect of model backbone}: TODO
+\textbf{Effect of model backbone}: stronger backbone plays a significant role when it comes to improving the score. Using the ResNet50 with integral heatmap regression improved the score from the initial model for 49.01\% adding synthetic occlusion to that gives a score which has 12.69\% lower MPJPE on the test set. Furthermore, using even more powerful backbone such as ResNext101 with integral heatmap regression, synthetic occlusion and standard augmentation improved the model to a score of 54.14 MPJPE. One can compare using ResNext101 to ResNext152 with identical extensions as shown in ~\ref{tab:ablation} to see that ResNext101 gets a score better for 3.91\%, this can be explained : \todo{explain}
 
-\textbf{Effect of larger image size/depth resolution}: TODO
+\textbf{Effect of larger image size/depth resolution}: \todo{larger image and additionaö set into one category? not separated in the scores?}
 
 \textbf{Effect of additional validation set}:
 
