@@ -2,6 +2,8 @@
 
 The project was tested on Leonhard with Python 3.7.4, PyTorch 1.8.1, CUDA 10.1 and cuDNN 7.6.4. 
 
+For an in depth description, check our [report](mp-report.pdf).
+
 ## Recreating final score
 
 1. Clone this repo (directory that you cloned from now on denoted by `${ROOT}`) and create the virtual 
@@ -96,6 +98,8 @@ Important commandline arguments:
 ### Leonhard commands
 + `bsubs` add jobs
 + `bjobs` list jobs (`-l` for details)
++ `bbjobs` better bjobs
 + `bkill 0` kill job
 + `bpeek` see output of jobs (`watch "bpeek | tail -n 30"` for continuous output)
 + `module load eth_proxy` allow network connection, necessary for downloading pre-trained models
++ `bqueues` show how much in use the server is
